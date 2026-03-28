@@ -1,0 +1,384 @@
+import { LitElement, html, css } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import './components/slide-renderer.js';
+import './components/thumbnail-strip.js';
+import './components/viewer-toolbar.js';
+import './components/nav-arrows.js';
+import './components/slide-counter.js';
+import './components/image-drop-zone.js';
+
+interface Deck {
+  deck_id: string;
+  title: string;
+  theme: string;
+  slides: Array<{ layout: string; content: Record<string, unknown> }>;
+  created_at: string;
+  updated_at: string;
+}
+
+@customElement('viewer-app')
+export class ViewerApp extends LitElement {
+  static styles = css`
+    :host {
+      display: block;
+      width: 100%;
+      height: 100vh;
+      background: #f5f5f5;
+    }
+
+    .viewer-layout {
+      display: flex;
+      height: calc(100% - 48px);
+      width: 100%;
+    }
+
+    .thumbnail-panel {
+      width: 140px;
+      flex-shrink: 0;
+      overflow-y: auto;
+      padding: 12px 8px;
+      background: #eee;
+      border-right: 1px solid #ddd;
+    }
+
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 24px;
+      overflow: hidden;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .slide-container {
+      position: relative;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .slide-container.print-mode {
+      box-shadow: none;
+      border-radius: 0;
+      max-width: none;
+    }
+
+    .bottom-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      width: 100%;
+      max-width: 960px;
+      padding: 8px 0;
+    }
+
+    .loading, .error {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-size: 18px;
+      color: #666;
+    }
+
+    .error { color: #c00; }
+
+    /* Print mode: all slides stacked */
+    .print-layout {
+      width: 100%;
+      padding: 0;
+    }
+
+    .print-layout .slide-container {
+      width: 100%;
+      max-width: none;
+      page-break-after: always;
+      margin: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    @media (max-width: 768px) {
+      .thumbnail-panel { display: none; }
+      .main-area { padding: 8px; }
+    }
+  `;
+
+  @state() private deck: Deck | null = null;
+  @state() private currentIndex = 0;
+  @state() private loading = true;
+  @state() private error = '';
+  @state() private editMode = false;
+  @state() private printMode = false;
+  @state() private saveStatus: 'idle' | 'saving' | 'saved' = 'idle';
+  @state() private slideWidth = 960;
+  @state() private slideHeight = 540;
+
+  private saveTimeout: ReturnType<typeof setTimeout> | null = null;
+  private resizeObserver: ResizeObserver | null = null;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.printMode = new URLSearchParams(window.location.search).has('print');
+    this.loadDeck();
+    if (!this.printMode) {
+      window.addEventListener('keydown', this.onKeyDown);
+      window.addEventListener('hashchange', this.onHashChange);
+      this.readHash();
+    }
+  }
+
+  protected firstUpdated() {
+    if (this.printMode) return;
+    const mainArea = this.shadowRoot?.querySelector('.main-area');
+    if (mainArea) {
+      this.resizeObserver = new ResizeObserver((entries) => {
+        const { width, height } = entries[0].contentRect;
+        const pad = 48; // total vertical padding for bottom-bar
+        const availW = width - 48; // padding
+        const availH = height - pad - 48; // padding + bottom-bar
+        // Fit 16:9 into available space
+        const byWidth = { w: availW, h: availW * 9 / 16 };
+        const byHeight = { w: availH * 16 / 9, h: availH };
+        if (byWidth.h <= availH) {
+          this.slideWidth = byWidth.w;
+          this.slideHeight = byWidth.h;
+        } else {
+          this.slideWidth = byHeight.w;
+          this.slideHeight = byHeight.h;
+        }
+      });
+      this.resizeObserver.observe(mainArea);
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('keydown', this.onKeyDown);
+    window.removeEventListener('hashchange', this.onHashChange);
+    this.resizeObserver?.disconnect();
+  }
+
+  private readHash() {
+    const match = window.location.hash.match(/slide=(\d+)/);
+    if (match) {
+      this.currentIndex = Math.max(0, parseInt(match[1], 10) - 1);
+    }
+  }
+
+  private onHashChange = () => this.readHash();
+
+  private onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.nextSlide();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.prevSlide();
+    }
+  };
+
+  private getDeckId(): string | null {
+    const match = window.location.pathname.match(/\/d\/([^/]+)/);
+    return match?.[1] ?? null;
+  }
+
+  private async loadDeck() {
+    const deckId = this.getDeckId();
+    if (!deckId) {
+      this.error = 'No deck ID in URL';
+      this.loading = false;
+      return;
+    }
+
+    try {
+      const res = await fetch(`/v1/decks/${deckId}`);
+      if (!res.ok) {
+        const body = await res.json();
+        this.error = body.error?.message || 'Failed to load deck';
+        this.loading = false;
+        return;
+      }
+      this.deck = await res.json();
+      this.loading = false;
+
+      // Signal print readiness
+      if (this.printMode) {
+        requestAnimationFrame(() => {
+          document.documentElement.setAttribute('data-ready', 'true');
+        });
+      }
+    } catch {
+      this.error = 'Failed to connect to API';
+      this.loading = false;
+    }
+  }
+
+  private nextSlide() {
+    if (this.deck && this.currentIndex < this.deck.slides.length - 1) {
+      this.currentIndex++;
+      window.location.hash = `slide=${this.currentIndex + 1}`;
+    }
+  }
+
+  private prevSlide() {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+      window.location.hash = `slide=${this.currentIndex + 1}`;
+    }
+  }
+
+  private onThumbnailClick(e: CustomEvent<number>) {
+    this.currentIndex = e.detail;
+    window.location.hash = `slide=${this.currentIndex + 1}`;
+  }
+
+  private onToggleEdit() {
+    this.editMode = !this.editMode;
+  }
+
+  private onSlideContentChanged(e: CustomEvent<{ field: string; value: unknown }>) {
+    if (!this.deck) return;
+
+    const slide = this.deck.slides[this.currentIndex];
+    const updated = { ...slide, content: { ...slide.content, [e.detail.field]: e.detail.value } };
+    const newSlides = [...this.deck.slides];
+    newSlides[this.currentIndex] = updated;
+    this.deck = { ...this.deck, slides: newSlides };
+
+    this.debouncedSave();
+  }
+
+  private async onImageUploaded(e: CustomEvent<{ url: string }>) {
+    if (!this.deck) return;
+
+    const slide = this.deck.slides[this.currentIndex];
+    const updated = { ...slide, content: { ...slide.content, image_url: e.detail.url } };
+    const newSlides = [...this.deck.slides];
+    newSlides[this.currentIndex] = updated;
+    this.deck = { ...this.deck, slides: newSlides };
+
+    await this.saveDeck();
+  }
+
+  private async onImageRemoved() {
+    if (!this.deck) return;
+
+    const slide = this.deck.slides[this.currentIndex];
+    const { image_url: _, ...rest } = slide.content as Record<string, unknown>;
+    const updated = { ...slide, content: rest };
+    const newSlides = [...this.deck.slides];
+    newSlides[this.currentIndex] = updated;
+    this.deck = { ...this.deck, slides: newSlides };
+
+    await this.saveDeck();
+  }
+
+  private debouncedSave() {
+    if (this.saveTimeout) clearTimeout(this.saveTimeout);
+    this.saveTimeout = setTimeout(() => this.saveDeck(), 1000);
+  }
+
+  private async saveDeck() {
+    if (!this.deck) return;
+    this.saveStatus = 'saving';
+
+    try {
+      const slide = this.deck.slides[this.currentIndex];
+      await fetch(`/v1/decks/${this.deck.deck_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slides: [{ index: this.currentIndex, content: slide.content }],
+        }),
+      });
+      this.saveStatus = 'saved';
+      setTimeout(() => { this.saveStatus = 'idle'; }, 2000);
+    } catch {
+      this.saveStatus = 'idle';
+    }
+  }
+
+  private async onExportPdf() {
+    if (!this.deck) return;
+    window.open(`/v1/decks/${this.deck.deck_id}/export/pdf`, '_blank');
+  }
+
+  render() {
+    if (this.loading) return html`<div class="loading">Loading deck...</div>`;
+    if (this.error) return html`<div class="error">${this.error}</div>`;
+    if (!this.deck) return html`<div class="error">No deck data</div>`;
+
+    if (this.printMode) return this.renderPrintMode();
+
+    const slide = this.deck.slides[this.currentIndex];
+    const themeClass = `theme-${this.deck.theme}`;
+
+    return html`
+      <viewer-toolbar
+        .title=${this.deck.title}
+        .editMode=${this.editMode}
+        .saveStatus=${this.saveStatus}
+        @toggle-edit=${this.onToggleEdit}
+        @export-pdf=${this.onExportPdf}
+      ></viewer-toolbar>
+      <div class="viewer-layout">
+        <div class="thumbnail-panel">
+          <thumbnail-strip
+            .slides=${this.deck.slides}
+            .currentIndex=${this.currentIndex}
+            .theme=${this.deck.theme}
+            @thumbnail-click=${this.onThumbnailClick}
+          ></thumbnail-strip>
+        </div>
+        <div class="main-area">
+          <nav-arrows
+            .hasPrev=${this.currentIndex > 0}
+            .hasNext=${this.currentIndex < this.deck.slides.length - 1}
+            @nav-prev=${this.prevSlide}
+            @nav-next=${this.nextSlide}
+          ></nav-arrows>
+          <div class="slide-container ${themeClass}" style="width:${this.slideWidth}px;height:${this.slideHeight}px">
+            <slide-renderer
+              .slide=${slide}
+              .editable=${this.editMode}
+              @slide-content-changed=${this.onSlideContentChanged}
+            ></slide-renderer>
+            ${this.editMode && slide.layout !== 'section_break' ? html`
+              <image-drop-zone
+                .hasImage=${!!(slide.content as Record<string, unknown>).image_url}
+                @image-uploaded=${this.onImageUploaded}
+                @image-removed=${this.onImageRemoved}
+              ></image-drop-zone>
+            ` : ''}
+          </div>
+          <div class="bottom-bar">
+            <slide-counter
+              .current=${this.currentIndex + 1}
+              .total=${this.deck.slides.length}
+            ></slide-counter>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderPrintMode() {
+    if (!this.deck) return html``;
+    const themeClass = `theme-${this.deck.theme}`;
+    return html`
+      <div class="print-layout">
+        ${this.deck.slides.map(slide => html`
+          <div class="slide-container print-mode ${themeClass}">
+            <slide-renderer .slide=${slide} .editable=${false}></slide-renderer>
+          </div>
+        `)}
+      </div>
+    `;
+  }
+}
