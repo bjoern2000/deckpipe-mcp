@@ -33,7 +33,6 @@ export class ThumbnailStrip extends LitElement {
       width: 960px;
       height: 540px;
       transform-origin: top left;
-      transform: scale(calc(120 / 960));
       pointer-events: none;
     }
 
@@ -50,6 +49,22 @@ export class ThumbnailStrip extends LitElement {
   @property({ type: Array }) slides: Array<{ layout: string; content: Record<string, unknown> }> = [];
   @property({ type: Number }) currentIndex = 0;
   @property() theme = 'minimal';
+
+  private getScale(el: HTMLElement): number {
+    // Scale the 960px inner to fit the thumbnail's actual width
+    return el.clientWidth / 960;
+  }
+
+  protected updated() {
+    const thumbs = this.shadowRoot?.querySelectorAll('.thumbnail');
+    thumbs?.forEach((thumb) => {
+      const inner = thumb.querySelector('.thumbnail-inner') as HTMLElement;
+      if (inner) {
+        const scale = this.getScale(thumb as HTMLElement);
+        inner.style.transform = `scale(${scale})`;
+      }
+    });
+  }
 
   render() {
     return html`
