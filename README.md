@@ -27,10 +27,10 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 |------|-------------|
 | `create_deck` | Create a new deck and get a shareable viewer URL |
 | `get_deck` | Retrieve a deck by ID |
-| `update_deck` | Update title, theme, or individual slides by index |
+| `update_deck` | Update title, font, accent color, or individual slides by index |
 | `delete_deck` | Delete a deck permanently |
 | `upload_image` | Upload a base64 image, get a hosted URL |
-| `list_layouts` | List available layouts, fields, and themes |
+| `list_layouts` | List available layouts and customization options |
 
 ## Layouts
 
@@ -44,15 +44,20 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 | `section_break` | `title` |
 | `image_and_text` | `title`, `body`, `image_url` |
 
-## Themes
+## Customization
 
-- **minimal** — Inter, clean and light
-- **modern** — DM Sans, purple accent
-- **classic** — Playfair Display headings, earth tones
+Both `create_deck` and `update_deck` accept optional styling fields:
 
-## Example prompt
+| Field | Description | Default |
+|-------|-------------|---------|
+| `custom_font` | Any Google Font name (e.g. `"Roboto Slab"`, `"Playfair Display"`) | DM Sans |
+| `accent_color` | Hex color (e.g. `"#ff6600"`) | `#7c3aed` (purple) |
 
-> Create a 10-slide deck about the history of the internet. Use the modern theme. Include a timeline, key milestones as bullets, and a comparison table of early vs modern internet speeds.
+## Example prompts
+
+> Create a 10-slide deck about the history of the internet. Include a timeline, key milestones as bullets, and a comparison table of early vs modern internet speeds.
+
+> Make a deck about coffee brewing methods. Use the font "Playfair Display" and accent color "#8b4513".
 
 ## Configuration
 
