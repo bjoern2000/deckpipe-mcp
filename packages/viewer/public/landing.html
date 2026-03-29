@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deckpipe — Agent-first slide decks</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", "Consolas", monospace;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 80px 24px 60px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 640px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .tagline {
+      margin-top: 12px;
+      font-size: 0.95rem;
+      color: #888;
+    }
+
+    .value-prop {
+      margin-top: 48px;
+      font-size: 0.875rem;
+      color: #aaa;
+      border-left: 2px solid #333;
+      padding-left: 16px;
+    }
+
+    .value-prop p + p {
+      margin-top: 12px;
+    }
+
+    h2 {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 56px;
+      margin-bottom: 16px;
+    }
+
+    .steps {
+      list-style: none;
+      counter-reset: step;
+    }
+
+    .steps li {
+      counter-increment: step;
+      font-size: 0.875rem;
+      color: #aaa;
+      padding: 12px 0;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .steps li::before {
+      content: counter(step) ".";
+      color: #555;
+      margin-right: 12px;
+      font-weight: 500;
+    }
+
+    pre {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-top: 8px;
+      overflow-x: auto;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #ccc;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    .inline-code {
+      background: #1a1a1a;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.85em;
+      color: #ccc;
+    }
+
+    .comment {
+      color: #555;
+    }
+
+    .string {
+      color: #98c379;
+    }
+
+    .key {
+      color: #e5c07b;
+    }
+
+    .section + .section {
+      margin-top: 48px;
+    }
+
+    .tools {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    .tools span {
+      display: inline-block;
+      background: #151515;
+      border: 1px solid #222;
+      border-radius: 4px;
+      padding: 3px 8px;
+      margin: 3px 4px 3px 0;
+      color: #999;
+    }
+
+    .footer {
+      margin-top: 80px;
+      font-size: 0.75rem;
+      color: #444;
+    }
+
+    a {
+      color: #888;
+      text-decoration: none;
+      border-bottom: 1px solid #333;
+    }
+
+    a:hover {
+      color: #ccc;
+      border-color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>deckpipe</h1>
+    <p class="tagline">Agent-first slide deck engine. Describe slides as JSON. Get rendered decks.</p>
+
+    <div class="value-prop">
+      <p>Deckpipe lets AI agents create, edit, and export presentation decks through a simple API. No GUI needed. Agents describe slides using structured JSON with layouts, content, and themes &mdash; Deckpipe handles rendering, styling, and PDF export.</p>
+      <p>Built for the agentic workflow: your AI assistant creates the deck, you review it in the browser, edit inline, and export.</p>
+    </div>
+
+    <div class="section">
+      <h2>Install the MCP Server</h2>
+
+      <p style="font-size: 0.875rem; color: #aaa; margin-bottom: 16px;">Add Deckpipe to Claude Code, Cursor, or any MCP-compatible client:</p>
+
+<pre><span class="comment"># Claude Code</span>
+claude mcp add deckpipe -- npx @deckpipe/mcp-server</pre>
+
+      <p style="font-size: 0.875rem; color: #aaa; margin-top: 24px; margin-bottom: 8px;">Or add to your MCP config manually:</p>
+
+<pre>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"deckpipe"</span>: {
+      <span class="key">"command"</span>: <span class="string">"npx"</span>,
+      <span class="key">"args"</span>: [<span class="string">"-y"</span>, <span class="string">"@deckpipe/mcp-server"</span>]
+    }
+  }
+}</pre>
+    </div>
+
+    <div class="section">
+      <h2>How It Works</h2>
+      <ol class="steps">
+        <li>Install the MCP server in your AI coding tool</li>
+        <li>Ask your agent to create a slide deck on any topic</li>
+        <li>The agent calls <span class="inline-code">create_deck</span> with structured slide data</li>
+        <li>Open the returned viewer URL to see your rendered deck</li>
+        <li>Edit slides inline in the browser, or ask the agent to update them</li>
+      </ol>
+    </div>
+
+    <div class="section">
+      <h2>Available Tools</h2>
+      <div class="tools">
+        <span>create_deck</span>
+        <span>get_deck</span>
+        <span>update_deck</span>
+        <span>delete_deck</span>
+        <span>upload_image</span>
+        <span>list_layouts</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Layouts</h2>
+      <div class="tools">
+        <span>title</span>
+        <span>title_and_body</span>
+        <span>title_and_bullets</span>
+        <span>title_and_table</span>
+        <span>two_columns</span>
+        <span>section_break</span>
+        <span>image_and_text</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Themes</h2>
+      <div class="tools">
+        <span>minimal</span>
+        <span>modern</span>
+        <span>classic</span>
+      </div>
+    </div>
+
+    <p class="footer">deckpipe is open source &mdash; <a href="https://github.com/deckpipe/deckpipe">github</a></p>
+  </div>
+</body>
+</html>
