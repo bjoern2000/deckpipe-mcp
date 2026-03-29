@@ -10,7 +10,8 @@ import './components/image-drop-zone.js';
 interface Deck {
   deck_id: string;
   title: string;
-  theme: string;
+  custom_font?: string | null;
+  accent_color?: string | null;
   slides: Array<{ layout: string; content: Record<string, unknown> }>;
   created_at: string;
   updated_at: string;
@@ -60,6 +61,13 @@ export class ViewerApp extends LitElement {
       border-radius: 4px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
       overflow: hidden;
+    }
+
+    .slide-scaler {
+      width: 960px;
+      height: 540px;
+      transform-origin: top left;
+      position: relative;
     }
 
     .slide-container.print-mode {
@@ -207,6 +215,15 @@ export class ViewerApp extends LitElement {
       this.deck = await res.json();
       this.loading = false;
 
+      // Load custom Google Font if specified
+      if (this.deck.custom_font) {
+        const fontUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(this.deck.custom_font)}:wght@300;400;500;600;700&display=swap`;
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = fontUrl;
+        document.head.appendChild(link);
+      }
+
       // Signal print readiness
       if (this.printMode) {
         requestAnimationFrame(() => {
@@ -317,7 +334,8 @@ export class ViewerApp extends LitElement {
     if (this.printMode) return this.renderPrintMode();
 
     const slide = this.deck.slides[this.currentIndex];
-    const themeClass = `theme-${this.deck.theme}`;
+    const customVars = this.getCustomCssVars();
+    const scaleFactor = this.slideWidth / 960;
 
     return html`
       <viewer-toolbar
@@ -332,7 +350,8 @@ export class ViewerApp extends LitElement {
           <thumbnail-strip
             .slides=${this.deck.slides}
             .currentIndex=${this.currentIndex}
-            .theme=${this.deck.theme}
+            .customFont=${this.deck.custom_font ?? ''}
+            .accentColor=${this.deck.accent_color ?? ''}
             @thumbnail-click=${this.onThumbnailClick}
           ></thumbnail-strip>
         </div>
@@ -343,19 +362,21 @@ export class ViewerApp extends LitElement {
             @nav-prev=${this.prevSlide}
             @nav-next=${this.nextSlide}
           ></nav-arrows>
-          <div class="slide-container ${themeClass}" style="width:${this.slideWidth}px;height:${this.slideHeight}px">
-            <slide-renderer
-              .slide=${slide}
-              .editable=${this.editMode}
-              @slide-content-changed=${this.onSlideContentChanged}
-            ></slide-renderer>
-            ${this.editMode && slide.layout !== 'section_break' ? html`
-              <image-drop-zone
-                .hasImage=${!!(slide.content as Record<string, unknown>).image_url}
-                @image-uploaded=${this.onImageUploaded}
-                @image-removed=${this.onImageRemoved}
-              ></image-drop-zone>
-            ` : ''}
+          <div class="slide-container" style="width:${this.slideWidth}px;height:${this.slideHeight}px;${customVars}">
+            <div class="slide-scaler" style="transform:scale(${scaleFactor})">
+              <slide-renderer
+                .slide=${slide}
+                .editable=${this.editMode}
+                @slide-content-changed=${this.onSlideContentChanged}
+              ></slide-renderer>
+              ${this.editMode && slide.layout !== 'section_break' ? html`
+                <image-drop-zone
+                  .hasImage=${!!(slide.content as Record<string, unknown>).image_url}
+                  @image-uploaded=${this.onImageUploaded}
+                  @image-removed=${this.onImageRemoved}
+                ></image-drop-zone>
+              ` : ''}
+            </div>
           </div>
           <div class="bottom-bar">
             <slide-counter
@@ -368,13 +389,25 @@ export class ViewerApp extends LitElement {
     `;
   }
 
+  private getCustomCssVars(): string {
+    const vars: string[] = [];
+    if (this.deck?.custom_font) {
+      const font = `'${this.deck.custom_font}', sans-serif`;
+      vars.push(`--dp-font-heading:${font};--dp-font-body:${font}`);
+    }
+    if (this.deck?.accent_color) {
+      vars.push(`--dp-accent:${this.deck.accent_color}`);
+    }
+    return vars.join(';');
+  }
+
   private renderPrintMode() {
     if (!this.deck) return html``;
-    const themeClass = `theme-${this.deck.theme}`;
+    const customVars = this.getCustomCssVars();
     return html`
       <div class="print-layout">
         ${this.deck.slides.map(slide => html`
-          <div class="slide-container print-mode ${themeClass}">
+          <div class="slide-container print-mode" style="${customVars}">
             <slide-renderer .slide=${slide} .editable=${false}></slide-renderer>
           </div>
         `)}

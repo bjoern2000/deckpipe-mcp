@@ -1,9 +1,5 @@
 import { z } from 'zod';
 
-// --- Theme ---
-export const ThemeSchema = z.enum(['minimal', 'modern', 'classic']);
-export type Theme = z.infer<typeof ThemeSchema>;
-
 // --- Table ---
 export const TableSchema = z.object({
   headers: z.array(z.string()).min(2).max(6),
@@ -83,7 +79,8 @@ export type Layout = typeof LayoutNames[number];
 // --- Deck creation ---
 export const CreateDeckSchema = z.object({
   title: z.string().min(1),
-  theme: ThemeSchema.default('minimal'),
+  custom_font: z.string().min(1).max(100).optional(),
+  accent_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   slides: z.array(SlideSchema).min(1).max(50),
 });
 export type CreateDeckInput = z.infer<typeof CreateDeckSchema>;
@@ -96,10 +93,11 @@ const SlideUpdateSchema = z.object({
 
 export const UpdateDeckSchema = z.object({
   title: z.string().min(1).optional(),
-  theme: ThemeSchema.optional(),
+  custom_font: z.string().min(1).max(100).optional(),
+  accent_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   slides: z.array(SlideUpdateSchema).optional(),
 }).refine(
-  (data) => data.title !== undefined || data.theme !== undefined || data.slides !== undefined,
+  (data) => data.title !== undefined || data.custom_font !== undefined || data.accent_color !== undefined || data.slides !== undefined,
   { message: 'At least one field must be provided for update' }
 );
 export type UpdateDeckInput = z.infer<typeof UpdateDeckSchema>;
@@ -108,7 +106,8 @@ export type UpdateDeckInput = z.infer<typeof UpdateDeckSchema>;
 export const DeckResponseSchema = z.object({
   deck_id: z.string(),
   title: z.string(),
-  theme: ThemeSchema,
+  custom_font: z.string().nullable().optional(),
+  accent_color: z.string().nullable().optional(),
   slides: z.array(SlideSchema),
   created_at: z.string(),
   updated_at: z.string(),

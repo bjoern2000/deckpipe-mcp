@@ -11,15 +11,15 @@ export const decksRouter = Router();
 // POST /v1/decks — Create a new deck
 decksRouter.post('/', createDeckLimiter, validate(CreateDeckSchema), async (req, res, next) => {
   try {
-    const { title, theme, slides } = req.body;
+    const { title, custom_font, accent_color, slides } = req.body;
     const deckId = generateDeckId();
 
     // Re-host external images
     const processedSlides = await rehostImagesInDeck(slides);
 
     await query(
-      'INSERT INTO decks (deck_id, title, theme, slides) VALUES ($1, $2, $3, $4)',
-      [deckId, title, theme, JSON.stringify(processedSlides)]
+      'INSERT INTO decks (deck_id, title, custom_font, accent_color, slides) VALUES ($1, $2, $3, $4, $5)',
+      [deckId, title, custom_font ?? null, accent_color ?? null, JSON.stringify(processedSlides)]
     );
 
     const result = await query('SELECT created_at FROM decks WHERE deck_id = $1', [deckId]);
@@ -47,7 +47,8 @@ decksRouter.get('/:id', getDeckLimiter, async (req, res, next) => {
     res.json({
       deck_id: deck.deck_id,
       title: deck.title,
-      theme: deck.theme,
+      custom_font: deck.custom_font ?? null,
+      accent_color: deck.accent_color ?? null,
       slides: deck.slides,
       created_at: deck.created_at,
       updated_at: deck.updated_at,
@@ -66,11 +67,12 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
     }
 
     const deck = existing.rows[0];
-    const { title, theme, slides } = req.body;
+    const { title, custom_font, accent_color, slides } = req.body;
 
     // Apply updates
     const newTitle = title ?? deck.title;
-    const newTheme = theme ?? deck.theme;
+    const newCustomFont = custom_font !== undefined ? custom_font : deck.custom_font;
+    const newAccentColor = accent_color !== undefined ? accent_color : deck.accent_color;
     let newSlides = deck.slides;
 
     if (slides) {
@@ -88,8 +90,8 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
     }
 
     await query(
-      'UPDATE decks SET title = $1, theme = $2, slides = $3, updated_at = NOW() WHERE deck_id = $4',
-      [newTitle, newTheme, JSON.stringify(newSlides), req.params.id]
+      'UPDATE decks SET title = $1, custom_font = $2, accent_color = $3, slides = $4, updated_at = NOW() WHERE deck_id = $5',
+      [newTitle, newCustomFont ?? null, newAccentColor ?? null, JSON.stringify(newSlides), req.params.id]
     );
 
     const result = await query('SELECT * FROM decks WHERE deck_id = $1', [req.params.id]);
@@ -98,7 +100,8 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
     res.json({
       deck_id: updated.deck_id,
       title: updated.title,
-      theme: updated.theme,
+      custom_font: updated.custom_font ?? null,
+      accent_color: updated.accent_color ?? null,
       slides: updated.slides,
       created_at: updated.created_at,
       updated_at: updated.updated_at,

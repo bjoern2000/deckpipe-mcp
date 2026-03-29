@@ -48,7 +48,8 @@ export class ThumbnailStrip extends LitElement {
 
   @property({ type: Array }) slides: Array<{ layout: string; content: Record<string, unknown> }> = [];
   @property({ type: Number }) currentIndex = 0;
-  @property() theme = 'minimal';
+  @property() customFont = '';
+  @property() accentColor = '';
 
   private getScale(el: HTMLElement): number {
     // Scale the 960px inner to fit the thumbnail's actual width
@@ -66,11 +67,25 @@ export class ThumbnailStrip extends LitElement {
     });
   }
 
+  private getCustomVars(): string {
+    const vars: string[] = [];
+    if (this.customFont) {
+      const font = `'${this.customFont}', sans-serif`;
+      vars.push(`--dp-font-heading:${font};--dp-font-body:${font}`);
+    }
+    if (this.accentColor) {
+      vars.push(`--dp-accent:${this.accentColor}`);
+    }
+    return vars.join(';');
+  }
+
   render() {
+    const customVars = this.getCustomVars();
     return html`
       ${this.slides.map((slide, i) => html`
         <div
-          class="thumbnail ${i === this.currentIndex ? 'active' : ''} theme-${this.theme}"
+          class="thumbnail ${i === this.currentIndex ? 'active' : ''}"
+          style="${customVars}"
           @click=${() => this.dispatchEvent(new CustomEvent('thumbnail-click', { detail: i, bubbles: true, composed: true }))}
         >
           <span class="thumb-number">${i + 1}</span>

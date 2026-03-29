@@ -159,7 +159,7 @@
     <p class="tagline">Agent-first slide deck engine. Describe slides as JSON. Get rendered decks.</p>
 
     <div class="value-prop">
-      <p>Deckpipe lets AI agents create, edit, and export presentation decks through a simple API. No GUI needed. Agents describe slides using structured JSON with layouts, content, and themes &mdash; Deckpipe handles rendering, styling, and PDF export.</p>
+      <p>Deckpipe lets AI agents create, edit, and export presentation decks through a simple API. No GUI needed. Agents describe slides using structured JSON with layouts and content &mdash; Deckpipe handles rendering, styling, and PDF export.</p>
       <p>Built for the agentic workflow: your AI assistant creates the deck, you review it in the browser, edit inline, and export.</p>
     </div>
 
@@ -169,7 +169,7 @@
       <p style="font-size: 0.875rem; color: #aaa; margin-bottom: 16px;">Add Deckpipe to Claude Code, Cursor, or any MCP-compatible client:</p>
 
 <pre><span class="comment"># Claude Code</span>
-claude mcp add deckpipe -- npx @deckpipe/mcp-server</pre>
+claude mcp add deckpipe -- npx deckpipe-mcp</pre>
 
       <p style="font-size: 0.875rem; color: #aaa; margin-top: 24px; margin-bottom: 8px;">Or add to your MCP config manually:</p>
 
@@ -177,7 +177,7 @@ claude mcp add deckpipe -- npx @deckpipe/mcp-server</pre>
   <span class="key">"mcpServers"</span>: {
     <span class="key">"deckpipe"</span>: {
       <span class="key">"command"</span>: <span class="string">"npx"</span>,
-      <span class="key">"args"</span>: [<span class="string">"-y"</span>, <span class="string">"@deckpipe/mcp-server"</span>]
+      <span class="key">"args"</span>: [<span class="string">"-y"</span>, <span class="string">"deckpipe-mcp"</span>]
     }
   }
 }</pre>
@@ -220,15 +220,16 @@ claude mcp add deckpipe -- npx @deckpipe/mcp-server</pre>
     </div>
 
     <div class="section">
-      <h2>Themes</h2>
+      <h2>Customization</h2>
+      <p style="font-size: 0.875rem; color: #aaa; margin-bottom: 8px;">Set per-deck styling with optional fields:</p>
       <div class="tools">
-        <span>minimal</span>
-        <span>modern</span>
-        <span>classic</span>
+        <span>custom_font — any Google Font</span>
+        <span>accent_color — hex color</span>
       </div>
+      <p style="font-size: 0.8rem; color: #666; margin-top: 8px;">Default: DM Sans, #7c3aed purple accent</p>
     </div>
 
-    <p class="footer">deckpipe is open source &mdash; <a href="https://github.com/deckpipe/deckpipe">github</a></p>
+    <p class="footer">MCP server is open source &mdash; <a href="https://github.com/bjoern2000/deckpipe-mcp">github</a></p>
   </div>
 </body>
 </html>

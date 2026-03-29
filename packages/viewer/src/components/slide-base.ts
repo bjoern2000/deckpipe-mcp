@@ -17,26 +17,26 @@ export class SlideBase extends LitElement {
       display: flex;
       flex-direction: column;
       background: var(--dp-bg, #ffffff);
-      font-family: var(--dp-font-body, 'Inter', sans-serif);
-      font-weight: var(--dp-font-body-weight, 400);
-      color: var(--dp-text-body, #444);
+      font-family: var(--dp-font-body, 'DM Sans', sans-serif);
+      font-weight: 400;
+      color: var(--dp-text-body, #334155);
       position: relative;
       overflow: hidden;
     }
 
     h1 {
-      font-family: var(--dp-font-heading, 'Inter', sans-serif);
-      font-weight: var(--dp-font-heading-weight, 600);
-      color: var(--dp-text-title, #1a1a1a);
+      font-family: var(--dp-font-heading, 'DM Sans', sans-serif);
+      font-weight: 700;
+      color: var(--dp-text-title, #0f172a);
       margin: 0 0 16px 0;
       font-size: 2.2em;
       line-height: 1.2;
     }
 
     h2 {
-      font-family: var(--dp-font-heading, 'Inter', sans-serif);
-      font-weight: var(--dp-font-heading-weight, 600);
-      color: var(--dp-text-title, #1a1a1a);
+      font-family: var(--dp-font-heading, 'DM Sans', sans-serif);
+      font-weight: 700;
+      color: var(--dp-text-title, #0f172a);
       margin: 0 0 12px 0;
       font-size: 1.4em;
       line-height: 1.3;
@@ -45,6 +45,17 @@ export class SlideBase extends LitElement {
     p, li, td {
       font-size: 1.05em;
       line-height: 1.6;
+    }
+
+    ul { list-style-type: square; }
+
+    th {
+      background: #1e1b4b;
+      color: #ffffff;
+    }
+
+    tr:nth-child(even) td {
+      background: var(--dp-table-stripe-bg, #f5f3ff);
     }
 
     img {
@@ -66,9 +77,45 @@ export class SlideBase extends LitElement {
     }
 
     [contenteditable="true"]:focus {
-      box-shadow: 0 0 0 2px var(--dp-accent, #2563eb);
+      box-shadow: 0 0 0 2px var(--dp-accent, #7c3aed);
     }
   `;
+
+  private _fitPending = false;
+
+  protected updated(_changedProperties: Map<string, unknown>) {
+    super.updated(_changedProperties);
+    if (this._fitPending) return;
+    this._fitPending = true;
+    requestAnimationFrame(() => {
+      this.fitContent();
+      this._fitPending = false;
+    });
+  }
+
+  private fitContent() {
+    const slideEl = this.shadowRoot?.querySelector('.slide') as HTMLElement;
+    if (!slideEl) return;
+
+    // Reset to base size
+    slideEl.style.fontSize = '';
+
+    if (slideEl.scrollHeight <= slideEl.clientHeight) return;
+
+    // Binary search for the right font scale
+    let lo = 0.55;
+    let hi = 1.0;
+    while (hi - lo > 0.02) {
+      const mid = (lo + hi) / 2;
+      slideEl.style.fontSize = `${mid}em`;
+      if (slideEl.scrollHeight > slideEl.clientHeight) {
+        hi = mid;
+      } else {
+        lo = mid;
+      }
+    }
+    slideEl.style.fontSize = `${lo}em`;
+  }
 
   protected emitChange(field: string, value: unknown) {
     this.dispatchEvent(new CustomEvent('slide-content-changed', {
