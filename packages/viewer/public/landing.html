@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deckpipe — Agent-first slide decks</title>
+  <title>deckpipe — agent-first slide decks</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -156,22 +156,19 @@
 <body>
   <div class="container">
     <h1>deckpipe</h1>
-    <p class="tagline">Agent-first slide deck engine. Describe slides as JSON. Get rendered decks.</p>
+    <p class="tagline">agent-first slide decks. describe slides as JSON, get rendered decks.</p>
 
     <div class="value-prop">
-      <p>Deckpipe lets AI agents create, edit, and export presentation decks through a simple API. No GUI needed. Agents describe slides using structured JSON with layouts and content &mdash; Deckpipe handles rendering, styling, and PDF export.</p>
-      <p>Built for the agentic workflow: your AI assistant creates the deck, you review it in the browser, edit inline, and export.</p>
+      <p>AI agents create and edit decks through a simple API. Structured JSON in, rendered slides out. Review in the browser, edit inline.</p>
     </div>
 
     <div class="section">
-      <h2>Install the MCP Server</h2>
-
-      <p style="font-size: 0.875rem; color: #aaa; margin-bottom: 16px;">Add Deckpipe to Claude Code, Cursor, or any MCP-compatible client:</p>
+      <h2>Install</h2>
 
 <pre><span class="comment"># Claude Code</span>
 claude mcp add deckpipe -- npx deckpipe-mcp</pre>
 
-      <p style="font-size: 0.875rem; color: #aaa; margin-top: 24px; margin-bottom: 8px;">Or add to your MCP config manually:</p>
+      <p style="font-size: 0.875rem; color: #aaa; margin-top: 24px; margin-bottom: 8px;">Or add manually:</p>
 
 <pre>{
   <span class="key">"mcpServers"</span>: {
@@ -184,18 +181,7 @@ claude mcp add deckpipe -- npx deckpipe-mcp</pre>
     </div>
 
     <div class="section">
-      <h2>How It Works</h2>
-      <ol class="steps">
-        <li>Install the MCP server in your AI coding tool</li>
-        <li>Ask your agent to create a slide deck on any topic</li>
-        <li>The agent calls <span class="inline-code">create_deck</span> with structured slide data</li>
-        <li>Open the returned viewer URL to see your rendered deck</li>
-        <li>Edit slides inline in the browser, or ask the agent to update them</li>
-      </ol>
-    </div>
-
-    <div class="section">
-      <h2>Available Tools</h2>
+      <h2>Tools</h2>
       <div class="tools">
         <span>create_deck</span>
         <span>get_deck</span>
@@ -221,15 +207,13 @@ claude mcp add deckpipe -- npx deckpipe-mcp</pre>
 
     <div class="section">
       <h2>Customization</h2>
-      <p style="font-size: 0.875rem; color: #aaa; margin-bottom: 8px;">Set per-deck styling with optional fields:</p>
       <div class="tools">
         <span>custom_font — any Google Font</span>
         <span>accent_color — hex color</span>
       </div>
-      <p style="font-size: 0.8rem; color: #666; margin-top: 8px;">Default: DM Sans, #7c3aed purple accent</p>
     </div>
 
-    <p class="footer">MCP server is open source &mdash; <a href="https://github.com/bjoern2000/deckpipe-mcp">github</a></p>
+    <p class="footer">mcp server is open source &mdash; <a href="https://github.com/bjoern2000/deckpipe-mcp">github</a></p>
   </div>
 </body>
 </html>

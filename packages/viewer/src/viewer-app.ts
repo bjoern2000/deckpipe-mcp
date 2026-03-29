@@ -321,11 +321,6 @@ export class ViewerApp extends LitElement {
     }
   }
 
-  private async onExportPdf() {
-    if (!this.deck) return;
-    window.open(`/v1/decks/${this.deck.deck_id}/export/pdf`, '_blank');
-  }
-
   render() {
     if (this.loading) return html`<div class="loading">Loading deck...</div>`;
     if (this.error) return html`<div class="error">${this.error}</div>`;
@@ -343,7 +338,6 @@ export class ViewerApp extends LitElement {
         .editMode=${this.editMode}
         .saveStatus=${this.saveStatus}
         @toggle-edit=${this.onToggleEdit}
-        @export-pdf=${this.onExportPdf}
       ></viewer-toolbar>
       <div class="viewer-layout">
         <div class="thumbnail-panel">

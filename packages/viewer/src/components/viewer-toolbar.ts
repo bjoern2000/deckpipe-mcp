@@ -76,10 +76,6 @@ export class ViewerToolbar extends LitElement {
           @click=${() => this.dispatchEvent(new CustomEvent('toggle-edit', { bubbles: true, composed: true }))}
           title="Toggle edit mode"
         >${this.editMode ? 'Editing' : 'Edit'}</button>
-        <button
-          @click=${() => this.dispatchEvent(new CustomEvent('export-pdf', { bubbles: true, composed: true }))}
-          title="Export as PDF"
-        >Export PDF</button>
       </div>
     `;
   }
