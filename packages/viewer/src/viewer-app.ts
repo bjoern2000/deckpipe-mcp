@@ -55,22 +55,22 @@ export class ViewerApp extends LitElement {
       min-width: 0;
     }
 
-    .slide-container {
+    .slide-wrapper {
       position: relative;
+    }
+
+    .slide-container {
+      width: 960px;
+      height: 540px;
+      transform-origin: top left;
       background: white;
       border-radius: 4px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
       overflow: hidden;
     }
 
-    .slide-scaler {
-      width: 960px;
-      height: 540px;
-      transform-origin: top left;
-      position: relative;
-    }
 
-    .slide-container.print-mode {
+    .slide-wrapper.print-mode {
       box-shadow: none;
       border-radius: 0;
       max-width: none;
@@ -102,7 +102,7 @@ export class ViewerApp extends LitElement {
       padding: 0;
     }
 
-    .print-layout .slide-container {
+    .print-layout .slide-wrapper {
       width: 100%;
       max-width: none;
       page-break-after: always;
@@ -141,16 +141,16 @@ export class ViewerApp extends LitElement {
     }
   }
 
-  protected firstUpdated() {
-    if (this.printMode) return;
+  protected updated(changedProperties: Map<string, unknown>) {
+    super.updated(changedProperties);
+    if (this.printMode || this.resizeObserver) return;
     const mainArea = this.shadowRoot?.querySelector('.main-area');
     if (mainArea) {
       this.resizeObserver = new ResizeObserver((entries) => {
         const { width, height } = entries[0].contentRect;
-        const pad = 48; // total vertical padding for bottom-bar
-        const availW = width - 48; // padding
-        const availH = height - pad - 48; // padding + bottom-bar
-        // Fit 16:9 into available space
+        const pad = 48;
+        const availW = width - 48;
+        const availH = height - pad - 48;
         const byWidth = { w: availW, h: availW * 9 / 16 };
         const byHeight = { w: availH * 16 / 9, h: availH };
         if (byWidth.h <= availH) {
@@ -160,6 +160,7 @@ export class ViewerApp extends LitElement {
           this.slideWidth = byHeight.w;
           this.slideHeight = byHeight.h;
         }
+        console.log(`[deckpipe] resize: ${this.slideWidth.toFixed(0)}x${this.slideHeight.toFixed(0)}, scale=${(this.slideWidth/960).toFixed(2)}`);
       });
       this.resizeObserver.observe(mainArea);
     }
@@ -356,8 +357,8 @@ export class ViewerApp extends LitElement {
             @nav-prev=${this.prevSlide}
             @nav-next=${this.nextSlide}
           ></nav-arrows>
-          <div class="slide-container" style="width:${this.slideWidth}px;height:${this.slideHeight}px;${customVars}">
-            <div class="slide-scaler" style="transform:scale(${scaleFactor})">
+          <div class="slide-wrapper" style="width:${this.slideWidth}px;height:${this.slideHeight}px">
+            <div class="slide-container" style="transform:scale(${scaleFactor});${customVars}">
               <slide-renderer
                 .slide=${slide}
                 .editable=${this.editMode}
@@ -401,8 +402,10 @@ export class ViewerApp extends LitElement {
     return html`
       <div class="print-layout">
         ${this.deck.slides.map(slide => html`
-          <div class="slide-container print-mode" style="${customVars}">
-            <slide-renderer .slide=${slide} .editable=${false}></slide-renderer>
+          <div class="slide-wrapper print-mode">
+            <div class="slide-container" style="${customVars}">
+              <slide-renderer .slide=${slide} .editable=${false}></slide-renderer>
+            </div>
           </div>
         `)}
       </div>
