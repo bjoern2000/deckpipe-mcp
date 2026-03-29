@@ -1,6 +1,6 @@
 # deckpipe-mcp
 
-MCP server for [Deckpipe](https://deckpipe.com) — create, edit, and export slide decks from any AI agent.
+MCP server for [deckpipe](https://deckpipe.com) — create and edit slide decks from any AI agent.
 
 ## Install
 
