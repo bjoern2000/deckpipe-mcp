@@ -15,7 +15,6 @@ server.tool(
   `Create a new slide deck and get a shareable viewer URL.
 
 Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text".
-Themes: "minimal" (clean, Inter font), "modern" (bold, DM Sans), "classic" (serif headings, earth tones).
 
 Content fields per layout:
 - title: { title, subtitle?, image_url? }
@@ -26,10 +25,12 @@ Content fields per layout:
 - section_break: { title }
 - image_and_text: { title, body, image_url (required) }
 
+Optionally set custom_font (any Google Font name) and accent_color (hex like "#ff6600") to customize the look.
 Use upload_image first to get hosted URLs for any images.`,
   {
     title: z.string().describe('Deck title'),
-    theme: z.enum(['minimal', 'modern', 'classic']).optional().describe('Visual theme (default: minimal)'),
+    custom_font: z.string().optional().describe('Google Font name (e.g. "Roboto Slab"). Overrides default DM Sans font.'),
+    accent_color: z.string().optional().describe('Hex color (e.g. "#ff6600"). Overrides default purple accent.'),
     slides: z.array(z.object({
       layout: z.enum(['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text']),
       content: z.record(z.unknown()).describe('Content fields (vary by layout)'),
@@ -65,13 +66,14 @@ server.tool(
 // --- update_deck ---
 server.tool(
   'update_deck',
-  `Update a deck's title, theme, or individual slide content. Slides are updated by index with partial content merge.
+  `Update a deck's title, font, accent color, or individual slide content. Slides are updated by index with partial content merge.
 
 Example: { "deck_id": "dk_abc", "slides": [{ "index": 2, "content": { "title": "New Title" } }] }`,
   {
     deck_id: z.string().describe('Deck ID to update'),
     title: z.string().optional().describe('New deck title'),
-    theme: z.enum(['minimal', 'modern', 'classic']).optional().describe('New theme'),
+    custom_font: z.string().optional().describe('Google Font name (e.g. "Roboto Slab")'),
+    accent_color: z.string().optional().describe('Hex color (e.g. "#ff6600")'),
     slides: z.array(z.object({
       index: z.number().describe('Zero-based slide index'),
       content: z.record(z.unknown()).describe('Partial content to merge'),
@@ -149,8 +151,11 @@ server.tool(
       { name: 'section_break', description: 'Bold section divider on accent bg.', fields: 'title (required)' },
       { name: 'image_and_text', description: 'Image-primary (~60%) + text.', fields: 'title (required), body (required), image_url (required)' },
     ];
-    const themes = ['minimal', 'modern', 'classic'];
-    return { content: [{ type: 'text' as const, text: JSON.stringify({ layouts, themes }, null, 2) }] };
+    const customization = {
+      custom_font: 'Optional Google Font name (e.g. "Roboto Slab", "Playfair Display"). Default: DM Sans.',
+      accent_color: 'Optional hex color (e.g. "#ff6600"). Default: #7c3aed (purple).',
+    };
+    return { content: [{ type: 'text' as const, text: JSON.stringify({ layouts, customization }, null, 2) }] };
   }
 );
 
