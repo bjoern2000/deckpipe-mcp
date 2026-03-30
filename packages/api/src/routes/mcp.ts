@@ -185,10 +185,9 @@ mcpRouter.post('/', async (req, res) => {
   const mcpServer = new McpServer({ name: 'deckpipe', version: '0.1.2' });
   registerTools(mcpServer);
   await mcpServer.connect(transport);
+  await transport.handleRequest(req, res);
 
   if (transport.sessionId) transports.set(transport.sessionId, transport);
-
-  await transport.handleRequest(req, res);
 });
 
 mcpRouter.get('/', async (req, res) => {
