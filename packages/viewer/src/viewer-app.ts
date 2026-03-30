@@ -31,17 +31,17 @@ export class ViewerApp extends LitElement {
 
     .viewer-layout {
       display: flex;
-      height: calc(100% - 48px);
+      height: 100%;
       width: 100%;
     }
 
     .thumbnail-panel {
-      width: 160px;
+      width: 180px;
       flex-shrink: 0;
+      padding: 16px;
+      background: #e0e0e0;
       overflow-y: auto;
-      padding: 12px 14px;
-      background: #eee;
-      border-right: 1px solid #ddd;
+      overflow-x: hidden;
     }
 
     .main-area {
@@ -55,6 +55,24 @@ export class ViewerApp extends LitElement {
       overflow: hidden;
       min-height: 0;
       min-width: 0;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 960px;
+      padding: 0 0 12px 0;
+    }
+
+    .deck-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #333;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .slide-wrapper {
@@ -412,14 +430,6 @@ export class ViewerApp extends LitElement {
     const scaleFactor = this.slideWidth / 960;
 
     return html`
-      <viewer-toolbar
-        .title=${this.deck.title}
-        .editMode=${this.editMode}
-        .canEdit=${this.canEdit}
-        .saveStatus=${this.saveStatus}
-        @toggle-edit=${this.onToggleEdit}
-        @share-deck=${this.onShare}
-      ></viewer-toolbar>
       <div class="viewer-layout">
         <div class="thumbnail-panel">
           <thumbnail-strip
@@ -438,6 +448,16 @@ export class ViewerApp extends LitElement {
             @nav-prev=${this.prevSlide}
             @nav-next=${this.nextSlide}
           ></nav-arrows>
+          <div class="top-bar" style="max-width:${this.slideWidth}px">
+            <span class="deck-title">${this.deck.title}</span>
+            <viewer-toolbar
+              .editMode=${this.editMode}
+              .canEdit=${this.canEdit}
+              .saveStatus=${this.saveStatus}
+              @toggle-edit=${this.onToggleEdit}
+              @share-deck=${this.onShare}
+            ></viewer-toolbar>
+          </div>
           <div class="slide-wrapper" style="width:${this.slideWidth}px;height:${this.slideHeight}px">
             <div class="slide-container" style="transform:scale(${scaleFactor});${customVars}">
               <slide-renderer

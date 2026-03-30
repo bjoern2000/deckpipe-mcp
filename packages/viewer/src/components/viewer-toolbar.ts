@@ -5,24 +5,9 @@ import { customElement, property, state } from 'lit/decorators.js';
 export class ViewerToolbar extends LitElement {
   static styles = css`
     :host {
-      display: block;
-      height: 48px;
-      background: #fff;
-      border-bottom: 1px solid #eee;
-      padding: 0 20px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      z-index: 10;
-    }
-
-    .title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #333;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      gap: 8px;
     }
 
     .actions {
@@ -87,7 +72,6 @@ export class ViewerToolbar extends LitElement {
 
   render() {
     return html`
-      <div class="title">${this.title}</div>
       <div class="actions">
         <span class="save-indicator">
           ${this.saveStatus === 'saving' ? 'Saving...' : this.saveStatus === 'saved' ? 'Saved' : ''}

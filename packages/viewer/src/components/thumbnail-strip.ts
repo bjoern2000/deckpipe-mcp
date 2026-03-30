@@ -5,13 +5,15 @@ import './slide-renderer.js';
 @customElement('thumbnail-strip')
 export class ThumbnailStrip extends LitElement {
   static styles = css`
-    :host { display: block; }
+    :host {
+      display: block;
+    }
 
     .thumbnail {
       width: 100%;
       aspect-ratio: 16 / 9;
       margin-bottom: 8px;
-      border-radius: 2px;
+      border-radius: 6px;
       overflow: hidden;
       cursor: pointer;
       border: 2px solid transparent;
