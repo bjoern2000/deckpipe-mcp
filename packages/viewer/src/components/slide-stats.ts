@@ -20,7 +20,7 @@ export class SlideStats extends SlideBase {
         font-family: var(--dp-font-heading, 'DM Sans', sans-serif);
         font-size: 2.4em;
         font-weight: 700;
-        color: var(--dp-accent, #7c3aed);
+        color: var(--dp-text-title, var(--dp-accent, #7c3aed));
         line-height: 1.1;
         display: flex;
         align-items: center;
