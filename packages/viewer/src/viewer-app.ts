@@ -122,20 +122,25 @@ export class ViewerApp extends LitElement {
     :host(.mobile) {
       height: auto;
       min-height: 100vh;
+      overflow-y: auto;
     }
 
     .mobile-layout {
       width: 100%;
-      padding: 0;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
     .mobile-layout .mobile-slide {
       width: 100%;
       aspect-ratio: 16 / 9;
       background: white;
-      border-bottom: 1px solid #e5e5e5;
       overflow: hidden;
       position: relative;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
     }
 
     .mobile-layout .mobile-slide .slide-container {
