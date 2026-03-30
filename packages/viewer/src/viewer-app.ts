@@ -474,7 +474,7 @@ export class ViewerApp extends LitElement {
               ` : ''}
             </div>
           </div>
-          <div class="bottom-bar">
+          <div class="bottom-bar" style="max-width:${this.slideWidth}px">
             <slide-counter
               .current=${this.currentIndex + 1}
               .total=${this.deck.slides.length}
