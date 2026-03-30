@@ -130,19 +130,21 @@ export class SlideBase extends LitElement {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       background: #f1f5f9;
       width: 100%;
       height: 100%;
       min-height: 60px;
       border-radius: 4px;
     }
-    .img-error svg {
+    .img-error .img-error-label {
+      font-size: 0.5em;
       color: #94a3b8;
+      font-weight: 500;
     }
-    .img-error .img-error-msg {
-      font-size: 0.45em;
-      color: #94a3b8;
+    .img-error .img-error-url {
+      font-size: 7px;
+      color: #b0b8c4;
       max-width: 80%;
       text-align: center;
       word-break: break-all;
@@ -214,10 +216,39 @@ export class SlideBase extends LitElement {
     const src = img.src || 'unknown';
     const placeholder = document.createElement('div');
     placeholder.className = 'img-error';
-    placeholder.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M10.41 10.41a2 2 0 1 1-2.83-2.83"/><line x1="13.5" y1="5.5" x2="16" y2="3"/><line x1="18" y1="5" x2="21" y2="3"/><path d="M2 12.5V5a2 2 0 0 1 2-2h14"/><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7"/><path d="m22 15-3.34-3.34a2 2 0 0 0-2.83 0L13 14.5"/></svg>
-      <span class="img-error-msg">${src}</span>
-    `;
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('width', '24');
+    svg.setAttribute('height', '24');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', '#94a3b8');
+    svg.setAttribute('stroke-width', '1.5');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    const paths = [
+      'M2 2 20 20', 'M10.41 10.41a2 2 0 1 1-2.83-2.83',
+      'M2 12.5V5a2 2 0 0 1 2-2h14', 'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7',
+      'm22 15-3.34-3.34a2 2 0 0 0-2.83 0L13 14.5',
+    ];
+    for (const d of paths) {
+      const p = document.createElementNS(svgNS, 'path');
+      p.setAttribute('d', d);
+      svg.appendChild(p);
+    }
+
+    const label = document.createElement('span');
+    label.className = 'img-error-label';
+    label.textContent = 'Failed to load image';
+
+    const url = document.createElement('span');
+    url.className = 'img-error-url';
+    url.textContent = src;
+
+    placeholder.appendChild(svg);
+    placeholder.appendChild(label);
+    placeholder.appendChild(url);
     img.replaceWith(placeholder);
   }
 
