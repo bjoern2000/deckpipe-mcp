@@ -183,7 +183,6 @@ export const DeckResponseSchema = z.object({
   body_font: z.string().nullable().optional(),
   accent_color: z.string().nullable().optional(),
   slides: z.array(SlideSchema),
-  image_status: z.enum(['processing', 'ready']).nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -196,7 +195,6 @@ export const CreateDeckResponseSchema = z.object({
   share_url: z.string(),
   created_at: z.string(),
   slide_count: z.number(),
-  image_status: z.enum(['processing', 'ready']).nullable().optional(),
 });
 export type CreateDeckResponse = z.infer<typeof CreateDeckResponseSchema>;
 

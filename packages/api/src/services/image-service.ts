@@ -7,7 +7,6 @@ import { config } from '../config.js';
 import { query } from '../db/client.js';
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
-const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
 function extFromContentType(ct: string): string {
   const map: Record<string, string> = {
@@ -16,27 +15,6 @@ function extFromContentType(ct: string): string {
     'image/webp': 'webp',
   };
   return map[ct] || 'png';
-}
-
-export async function saveUploadedImage(file: Express.Multer.File) {
-  const imageId = generateImageId();
-  const ext = extFromContentType(file.mimetype);
-  const filename = `${imageId}.${ext}`;
-  const filepath = path.join(config.imageStoragePath, filename);
-
-  fs.writeFileSync(filepath, file.buffer);
-
-  await query(
-    'INSERT INTO images (image_id, original_filename, content_type, size_bytes) VALUES ($1, $2, $3, $4)',
-    [imageId, file.originalname, file.mimetype, file.size]
-  );
-
-  return {
-    image_id: imageId,
-    url: `${config.apiUrl}/v1/images/${filename}`,
-    size_bytes: file.size,
-    content_type: file.mimetype,
-  };
 }
 
 async function detectFocalPoint(buffer: Buffer): Promise<{ x: number; y: number }> {
@@ -54,157 +32,26 @@ async function detectFocalPoint(buffer: Buffer): Promise<{ x: number; y: number 
   }
 }
 
-async function fetchWithRetry(url: string, retries = 5): Promise<Response | null> {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const response = await fetch(url, {
-        signal: AbortSignal.timeout(30000),
-        headers: { 'User-Agent': 'deckpipe/1.0 (https://deckpipe.com; image rehost)' },
-      });
-      if (response.status === 429) {
-        const retryAfter = parseInt(response.headers.get('retry-after') || '5', 10);
-        const delay = Math.min(retryAfter, 15) * 1000;
-        console.log(`[rehost] 429 for ${url.slice(0, 80)}... retry ${i + 1}/${retries}, waiting ${delay}ms`);
-        await new Promise(r => setTimeout(r, delay));
-        continue;
-      }
-      if (!response.ok) {
-        console.log(`[rehost] HTTP ${response.status} for ${url.slice(0, 80)}...`);
-        return null;
-      }
-      return response;
-    } catch (err) {
-      console.log(`[rehost] fetch error for ${url.slice(0, 80)}...: ${err}`);
-      if (i < retries - 1) await new Promise(r => setTimeout(r, 3000));
-    }
-  }
-  return null;
-}
+export async function saveUploadedImage(file: Express.Multer.File) {
+  const imageId = generateImageId();
+  const ext = extFromContentType(file.mimetype);
+  const filename = `${imageId}.${ext}`;
+  const filepath = path.join(config.imageStoragePath, filename);
 
-export async function rehostExternalImage(imageUrl: string): Promise<{ url: string; focus: { x: number; y: number } } | null> {
-  try {
-    console.log(`[rehost] downloading ${imageUrl.slice(0, 80)}...`);
-    const response = await fetchWithRetry(imageUrl);
-    if (!response) {
-      console.log(`[rehost] failed to fetch ${imageUrl.slice(0, 80)}...`);
-      return null;
-    }
+  fs.writeFileSync(filepath, file.buffer);
 
-    const contentType = response.headers.get('content-type')?.split(';')[0] || '';
-    if (!ALLOWED_TYPES.includes(contentType)) {
-      console.log(`[rehost] rejected content-type: ${contentType} for ${imageUrl.slice(0, 80)}...`);
-      return null;
-    }
+  await query(
+    'INSERT INTO images (image_id, original_filename, content_type, size_bytes) VALUES ($1, $2, $3, $4)',
+    [imageId, file.originalname, file.mimetype, file.size]
+  );
 
-    const buffer = Buffer.from(await response.arrayBuffer());
-    if (buffer.length > MAX_SIZE) return null;
+  const focus = await detectFocalPoint(file.buffer);
 
-    const imageId = generateImageId();
-    const ext = extFromContentType(contentType);
-    const filename = `${imageId}.${ext}`;
-    const filepath = path.join(config.imageStoragePath, filename);
-
-    fs.writeFileSync(filepath, buffer);
-
-    await query(
-      'INSERT INTO images (image_id, original_filename, content_type, size_bytes) VALUES ($1, $2, $3, $4)',
-      [imageId, imageUrl, contentType, buffer.length]
-    );
-
-    const focus = await detectFocalPoint(buffer);
-
-    return {
-      url: `${config.apiUrl}/v1/images/${filename}`,
-      focus,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function isExternalUrl(url: string): boolean {
-  return url.startsWith('http') && !url.startsWith(config.apiUrl);
-}
-
-export function hasExternalImages(slides: unknown[]): boolean {
-  for (const slide of slides) {
-    const content = (slide as { content: Record<string, unknown> }).content;
-    if (content.image_url && typeof content.image_url === 'string' && isExternalUrl(content.image_url)) return true;
-    if (Array.isArray(content.images) && content.images.some((u: unknown) => typeof u === 'string' && isExternalUrl(u))) return true;
-  }
-  return false;
-}
-
-export function rehostImagesInBackground(deckId: string, slides: unknown[]): void {
-  (async () => {
-    try {
-      console.log(`[rehost] starting background rehosting for deck ${deckId}`);
-      const processed = await rehostImagesInDeck(slides);
-      await query(
-        'UPDATE decks SET slides = $1, image_status = $2, updated_at = NOW() WHERE deck_id = $3',
-        [JSON.stringify(processed), 'ready', deckId]
-      );
-      console.log(`[rehost] finished background rehosting for deck ${deckId}`);
-    } catch (err) {
-      console.error(`[rehost] background rehosting failed for deck ${deckId}:`, err);
-      try {
-        await query(
-          'UPDATE decks SET image_status = $1, updated_at = NOW() WHERE deck_id = $2',
-          ['ready', deckId]
-        );
-      } catch (updateErr) {
-        console.error(`[rehost] failed to update status for deck ${deckId}:`, updateErr);
-      }
-    }
-  })();
-}
-
-export async function rehostImagesInDeck(slides: unknown[]): Promise<unknown[]> {
-  const result = JSON.parse(JSON.stringify(slides));
-  const cache = new Map<string, { url: string; focus: { x: number; y: number } }>();
-  let downloadCount = 0;
-
-  async function rehostWithDelay(imageUrl: string) {
-    if (cache.has(imageUrl)) return cache.get(imageUrl)!;
-    if (downloadCount > 0) await new Promise(r => setTimeout(r, 3000));
-    downloadCount++;
-    const rehosted = await rehostExternalImage(imageUrl);
-    if (rehosted) cache.set(imageUrl, rehosted);
-    return rehosted;
-  }
-
-  for (const slide of result) {
-    const content = (slide as { content: Record<string, unknown> }).content;
-
-    // Handle single image_url
-    if (content.image_url && typeof content.image_url === 'string' && isExternalUrl(content.image_url)) {
-      const rehosted = await rehostWithDelay(content.image_url);
-      if (rehosted) {
-        content.image_url = rehosted.url;
-        content.image_focus = rehosted.focus;
-      }
-    }
-
-    // Handle images array (image_gallery layout)
-    if (Array.isArray(content.images)) {
-      const focuses: Array<{ x: number; y: number }> = [];
-      for (let i = 0; i < content.images.length; i++) {
-        const imgUrl = content.images[i];
-        if (typeof imgUrl === 'string' && isExternalUrl(imgUrl)) {
-          const rehosted = await rehostWithDelay(imgUrl);
-          if (rehosted) {
-            content.images[i] = rehosted.url;
-            focuses.push(rehosted.focus);
-          } else {
-            focuses.push({ x: 0.5, y: 0.5 });
-          }
-        } else {
-          focuses.push({ x: 0.5, y: 0.5 });
-        }
-      }
-      content.image_focuses = focuses;
-    }
-  }
-
-  return result;
+  return {
+    image_id: imageId,
+    url: `${config.apiUrl}/v1/images/${filename}`,
+    size_bytes: file.size,
+    content_type: file.mimetype,
+    focus,
+  };
 }
