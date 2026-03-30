@@ -24,7 +24,7 @@ export class ViewerToolbar extends LitElement {
       border: 1px solid #ddd;
       border-radius: 6px;
       padding: 6px 12px;
-      font-size: 13px;
+      font-size: 15px;
       cursor: pointer;
       color: #555;
       transition: all 0.15s;
@@ -50,13 +50,13 @@ export class ViewerToolbar extends LitElement {
     }
 
     .save-indicator {
-      font-size: 12px;
+      font-size: 14px;
       color: #999;
       min-width: 50px;
     }
 
     .share-feedback {
-      font-size: 12px;
+      font-size: 14px;
       color: #22c55e;
     }
   `;

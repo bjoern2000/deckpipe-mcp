@@ -68,7 +68,7 @@ export class ViewerApp extends LitElement {
 
     .deck-title {
       font-family: "Inconsolata", monospace;
-      font-size: 15px;
+      font-size: 17px;
       font-weight: 700;
       color: #333;
       overflow: hidden;

@@ -6,7 +6,7 @@ export class SlideCounter extends LitElement {
   static styles = css`
     :host {
       font-family: "Inconsolata", monospace;
-      font-size: 13px;
+      font-size: 15px;
       color: #999;
     }
   `;
