@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { SlideBase } from './slide-base.js';
+import { mdInline } from '../utils/markdown.js';
 
 @customElement('slide-title-and-bullets')
 export class SlideTitleAndBullets extends SlideBase {
@@ -24,6 +25,8 @@ export class SlideTitleAndBullets extends SlideBase {
       li {
         margin-bottom: 10px;
       }
+      li a { color: var(--dp-accent, #7c3aed); text-decoration: underline; }
+      li code { background: #f1f5f9; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
       .image-area {
         flex: 0 0 40%;
         display: flex;
@@ -64,7 +67,7 @@ export class SlideTitleAndBullets extends SlideBase {
             </ul>
           `, []) : html`
             <ul>
-              ${this.bullets.map(b => html`<li>${b}</li>`)}
+              ${this.bullets.map(b => html`<li>${mdInline(b)}</li>`)}
             </ul>
           `}
           ${hasImage

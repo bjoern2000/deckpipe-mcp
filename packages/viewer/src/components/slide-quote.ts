@@ -1,6 +1,7 @@
 import { html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { SlideBase } from './slide-base.js';
+import { mdInline } from '../utils/markdown.js';
 
 @customElement('slide-quote')
 export class SlideQuote extends SlideBase {
@@ -62,7 +63,7 @@ export class SlideQuote extends SlideBase {
           <blockquote contenteditable="true"
             @blur=${(e: FocusEvent) => this.emitChange('quote', (e.target as HTMLElement).textContent)}
           >${this.quote}</blockquote>
-        `) : html`<blockquote>${this.quote}</blockquote>`}
+        `) : html`<blockquote>${mdInline(this.quote)}</blockquote>`}
         ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         ${this.attribution || this.editable
           ? this.editable

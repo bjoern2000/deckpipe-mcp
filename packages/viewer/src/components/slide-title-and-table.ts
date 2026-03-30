@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { SlideBase } from './slide-base.js';
+import { mdInline } from '../utils/markdown.js';
 
 interface TableData {
   headers: string[];
@@ -92,11 +93,11 @@ export class SlideTitleAndTable extends SlideBase {
         `, null) : html`
           <table>
             <thead>
-              <tr>${headers.map((h, ci) => html`<th class="${ci === highlight_column ? 'highlight' : ''}">${h}</th>`)}</tr>
+              <tr>${headers.map((h, ci) => html`<th class="${ci === highlight_column ? 'highlight' : ''}">${mdInline(h)}</th>`)}</tr>
             </thead>
             <tbody>
               ${rows.map(row => html`
-                <tr>${row.map((cell, ci) => html`<td class="${ci === highlight_column ? 'highlight' : ''}">${cell}</td>`)}</tr>
+                <tr>${row.map((cell, ci) => html`<td class="${ci === highlight_column ? 'highlight' : ''}">${mdInline(cell)}</td>`)}</tr>
               `)}
             </tbody>
           </table>

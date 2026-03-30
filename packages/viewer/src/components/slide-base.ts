@@ -1,4 +1,5 @@
 import { LitElement, css, html, nothing } from 'lit';
+import { mdInline } from '../utils/markdown.js';
 
 export class SlideBase extends LitElement {
   static baseStyles = css`
@@ -76,6 +77,9 @@ export class SlideBase extends LitElement {
       margin: 0 0 32px 0;
       font-family: var(--dp-font-body, 'DM Sans', sans-serif);
     }
+
+    .key-takeaway a { color: var(--dp-accent, #7c3aed); text-decoration: underline; }
+    .key-takeaway code { background: rgba(0,0,0,0.06); padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
 
     [contenteditable="true"] {
       outline: none;
@@ -169,7 +173,7 @@ export class SlideBase extends LitElement {
         >${keyTakeaway}</div>
       `);
     }
-    return html`<div class="key-takeaway">${keyTakeaway}</div>`;
+    return html`<div class="key-takeaway">${mdInline(keyTakeaway)}</div>`;
   }
 
   protected wrapDeletable(field: string, content: unknown, emptyValue: unknown = '') {

@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { SlideBase } from './slide-base.js';
+import { md } from '../utils/markdown.js';
 
 @customElement('slide-title-and-body')
 export class SlideTitleAndBody extends SlideBase {
@@ -19,6 +20,13 @@ export class SlideTitleAndBody extends SlideBase {
         justify-content: center;
       }
       .body-text { white-space: pre-wrap; }
+      .body-md { }
+      .body-md p { margin: 0 0 0.5em 0; }
+      .body-md p:last-child { margin-bottom: 0; }
+      .body-md ol, .body-md ul { padding-left: 24px; margin: 0 0 0.5em 0; }
+      .body-md li { margin-bottom: 4px; }
+      .body-md a { color: var(--dp-accent, #7c3aed); text-decoration: underline; }
+      .body-md code { background: #f1f5f9; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
     `,
   ];
 
@@ -43,7 +51,7 @@ export class SlideTitleAndBody extends SlideBase {
             <p class="body-text" contenteditable="true"
               @blur=${(e: FocusEvent) => this.emitChange('body', (e.target as HTMLElement).textContent)}
             >${this.body}</p>
-          `) : html`<p class="body-text">${this.body}</p>`}
+          `) : html`<div class="body-md">${md(this.body)}</div>`}
         </div>
         ${hasImage
           ? this.editable

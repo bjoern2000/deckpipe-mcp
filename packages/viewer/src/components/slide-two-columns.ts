@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { SlideBase } from './slide-base.js';
+import { md } from '../utils/markdown.js';
 
 @customElement('slide-two-columns')
 export class SlideTwoColumns extends SlideBase {
@@ -21,6 +22,13 @@ export class SlideTwoColumns extends SlideBase {
       .column p {
         white-space: pre-wrap;
       }
+      .body-md { }
+      .body-md p { margin: 0 0 0.5em 0; }
+      .body-md p:last-child { margin-bottom: 0; }
+      .body-md ol, .body-md ul { padding-left: 24px; margin: 0 0 0.5em 0; }
+      .body-md li { margin-bottom: 4px; }
+      .body-md a { color: var(--dp-accent, #7c3aed); text-decoration: underline; }
+      .body-md code { background: #f1f5f9; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
       .bottom-image {
         margin-top: 16px;
         text-align: center;
@@ -60,7 +68,7 @@ export class SlideTwoColumns extends SlideBase {
           `, null) : html`
             <div class="column">
               <h2>${this.left.heading}</h2>
-              <p>${this.left.body}</p>
+              <div class="body-md">${md(this.left.body)}</div>
             </div>
           `}
           ${this.editable ? this.wrapDeletable('right', html`
@@ -75,7 +83,7 @@ export class SlideTwoColumns extends SlideBase {
           `, null) : html`
             <div class="column">
               <h2>${this.right.heading}</h2>
-              <p>${this.right.body}</p>
+              <div class="body-md">${md(this.right.body)}</div>
             </div>
           `}
         </div>
