@@ -7,11 +7,10 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w packages/shared && npm run build -w packages/api && npm run build -w packages/viewer && npm run build -w packages/mcp-server",
+    "build": "npm run build -w packages/shared && npm run build -w packages/api && npm run build -w packages/viewer",
     "build:shared": "npm run build -w packages/shared",
     "dev:api": "npm run dev -w packages/api",
     "dev:viewer": "npm run dev -w packages/viewer",
-    "dev:mcp": "npm run dev -w packages/mcp-server",
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:viewer\"",
     "db:migrate": "npm run migrate -w packages/api",
     "db:reset": "docker compose down -v && docker compose up -d"
