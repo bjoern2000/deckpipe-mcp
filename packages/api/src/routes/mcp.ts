@@ -42,15 +42,25 @@ Use upload_image first to get hosted URLs for any images.`,
       })).describe('Array of slides'),
     },
     async (args) => {
-      const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
-      const res = await fetch(`${apiUrl}/v1/decks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(args),
-      });
-      const data = await res.json();
-      if (!res.ok) return { content: [{ type: 'text' as const, text: `Error: ${JSON.stringify(data)}` }] };
-      return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
+      console.log(`[mcp] tool: create_deck "${(args as Record<string, unknown>).title}"`);
+      try {
+        const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
+        const res = await fetch(`${apiUrl}/v1/decks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(args),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          console.log(`[mcp] create_deck failed: ${JSON.stringify(data)}`);
+          return { content: [{ type: 'text' as const, text: `Error: ${JSON.stringify(data)}` }] };
+        }
+        console.log(`[mcp] create_deck success: ${(data as Record<string, unknown>).deck_id}`);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
+      } catch (err) {
+        console.error(`[mcp] create_deck error:`, err);
+        return { content: [{ type: 'text' as const, text: `Error: ${err}` }] };
+      }
     }
   );
 
@@ -165,29 +175,39 @@ const transports = new Map<string, StreamableHTTPServerTransport>();
 export const mcpRouter = Router();
 
 mcpRouter.post('/', async (req, res) => {
-  const sessionId = req.headers['mcp-session-id'] as string | undefined;
+  try {
+    const sessionId = req.headers['mcp-session-id'] as string | undefined;
+    console.log(`[mcp] POST session=${sessionId || 'new'}`);
 
-  if (sessionId && transports.has(sessionId)) {
-    const transport = transports.get(sessionId)!;
+    if (sessionId && transports.has(sessionId)) {
+      const transport = transports.get(sessionId)!;
+      await transport.handleRequest(req, res);
+      return;
+    }
+
+    // New session
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
+    });
+
+    transport.onclose = () => {
+      console.log(`[mcp] session ${transport.sessionId} closed`);
+      if (transport.sessionId) transports.delete(transport.sessionId);
+    };
+
+    const mcpServer = new McpServer({ name: 'deckpipe', version: '0.1.2' });
+    registerTools(mcpServer);
+    await mcpServer.connect(transport);
     await transport.handleRequest(req, res);
-    return;
+
+    if (transport.sessionId) {
+      console.log(`[mcp] new session ${transport.sessionId}`);
+      transports.set(transport.sessionId, transport);
+    }
+  } catch (err) {
+    console.error(`[mcp] POST error:`, err);
+    if (!res.headersSent) res.status(500).json({ error: 'MCP server error' });
   }
-
-  // New session
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: () => randomUUID(),
-  });
-
-  transport.onclose = () => {
-    if (transport.sessionId) transports.delete(transport.sessionId);
-  };
-
-  const mcpServer = new McpServer({ name: 'deckpipe', version: '0.1.2' });
-  registerTools(mcpServer);
-  await mcpServer.connect(transport);
-  await transport.handleRequest(req, res);
-
-  if (transport.sessionId) transports.set(transport.sessionId, transport);
 });
 
 mcpRouter.get('/', async (req, res) => {

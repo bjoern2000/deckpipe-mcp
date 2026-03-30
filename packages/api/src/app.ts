@@ -22,6 +22,14 @@ export function createApp() {
 
   app.use(cors());
 
+  // Request logging
+  app.use((req, _res, next) => {
+    if (req.path !== '/health') {
+      console.log(`[api] ${req.method} ${req.path}`);
+    }
+    next();
+  });
+
   // MCP endpoint (before JSON parser — transport reads raw body)
   app.use('/mcp', mcpRouter);
 
