@@ -42,7 +42,7 @@ export function createApp() {
     }
 
     // Inject OG meta tags for deck URLs (link previews in Slack, Discord, etc.)
-    app.get('/d/:deckId', async (req, res) => {
+    app.get('/d/:deckId/:slug?', async (req, res) => {
       const htmlPath = path.join(viewerDist, 'index.html');
       let htmlContent = fs.readFileSync(htmlPath, 'utf-8');
 

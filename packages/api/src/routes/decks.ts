@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { CreateDeckSchema, UpdateDeckSchema, generateDeckId, ApiError } from '@deckpipe/shared';
+import { CreateDeckSchema, UpdateDeckSchema, generateDeckId, generateEditKey, slugify, ApiError } from '@deckpipe/shared';
 import { validate } from '../middleware/validate.js';
 import { createDeckLimiter, getDeckLimiter, updateDeckLimiter, exportPdfLimiter } from '../middleware/rate-limiter.js';
 import { query } from '../db/client.js';
@@ -13,20 +13,24 @@ decksRouter.post('/', createDeckLimiter, validate(CreateDeckSchema), async (req,
   try {
     const { title, heading_font, body_font, accent_color, slides } = req.body;
     const deckId = generateDeckId();
+    const editKey = generateEditKey();
+    const slug = slugify(title);
 
     // Re-host external images
     const processedSlides = await rehostImagesInDeck(slides);
 
     await query(
-      'INSERT INTO decks (deck_id, title, heading_font, body_font, accent_color, slides) VALUES ($1, $2, $3, $4, $5, $6)',
-      [deckId, title, heading_font ?? null, body_font ?? null, accent_color ?? null, JSON.stringify(processedSlides)]
+      'INSERT INTO decks (deck_id, title, heading_font, body_font, accent_color, slides, edit_key) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [deckId, title, heading_font ?? null, body_font ?? null, accent_color ?? null, JSON.stringify(processedSlides), editKey]
     );
 
     const result = await query('SELECT created_at FROM decks WHERE deck_id = $1', [deckId]);
+    const shareUrl = `${config.viewerUrl}/d/${deckId}/${slug}`;
 
     res.status(201).json({
       deck_id: deckId,
-      viewer_url: `${config.viewerUrl}/d/${deckId}`,
+      viewer_url: `${shareUrl}?key=${editKey}`,
+      share_url: shareUrl,
       created_at: result.rows[0].created_at,
       slide_count: processedSlides.length,
     });
@@ -51,6 +55,7 @@ decksRouter.get('/:id', getDeckLimiter, async (req, res, next) => {
       body_font: deck.body_font ?? null,
       accent_color: deck.accent_color ?? null,
       slides: deck.slides,
+      edit_key: deck.edit_key,
       created_at: deck.created_at,
       updated_at: deck.updated_at,
     });

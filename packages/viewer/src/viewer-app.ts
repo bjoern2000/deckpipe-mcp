@@ -14,6 +14,7 @@ interface Deck {
   body_font?: string | null;
   accent_color?: string | null;
   slides: Array<{ layout: string; content: Record<string, unknown> }>;
+  edit_key?: string;
   created_at: string;
   updated_at: string;
 }
@@ -198,6 +199,22 @@ export class ViewerApp extends LitElement {
     return match?.[1] ?? null;
   }
 
+  private getEditKey(): string | null {
+    return new URLSearchParams(window.location.search).get('key');
+  }
+
+  private get canEdit(): boolean {
+    if (!this.deck?.edit_key) return false;
+    return this.getEditKey() === this.deck.edit_key;
+  }
+
+  private getShareUrl(): string {
+    const deckId = this.deck?.deck_id ?? '';
+    const title = this.deck?.title ?? '';
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+    return `${window.location.origin}/d/${deckId}/${slug}`;
+  }
+
   private async loadDeck() {
     const deckId = this.getDeckId();
     if (!deckId) {
@@ -260,7 +277,13 @@ export class ViewerApp extends LitElement {
   }
 
   private onToggleEdit() {
+    if (!this.canEdit) return;
     this.editMode = !this.editMode;
+  }
+
+  private onShare() {
+    const url = this.getShareUrl();
+    navigator.clipboard.writeText(url);
   }
 
   private onSlideContentChanged(e: CustomEvent<{ field: string; value: unknown }>) {
@@ -340,8 +363,10 @@ export class ViewerApp extends LitElement {
       <viewer-toolbar
         .title=${this.deck.title}
         .editMode=${this.editMode}
+        .canEdit=${this.canEdit}
         .saveStatus=${this.saveStatus}
         @toggle-edit=${this.onToggleEdit}
+        @share-deck=${this.onShare}
       ></viewer-toolbar>
       <div class="viewer-layout">
         <div class="thumbnail-panel">

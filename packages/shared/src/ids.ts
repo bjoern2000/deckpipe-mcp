@@ -11,3 +11,15 @@ export function generateDeckId(): string {
 export function generateImageId(): string {
   return `img_${randomId(8)}`;
 }
+
+export function generateEditKey(): string {
+  return randomId(16);
+}
+
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}

@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 @customElement('viewer-toolbar')
 export class ViewerToolbar extends LitElement {
@@ -40,6 +40,9 @@ export class ViewerToolbar extends LitElement {
       cursor: pointer;
       color: #555;
       transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
     button:hover {
@@ -53,16 +56,34 @@ export class ViewerToolbar extends LitElement {
       border-color: var(--dp-accent, #2563eb);
     }
 
+    button svg {
+      width: 14px;
+      height: 14px;
+    }
+
     .save-indicator {
       font-size: 12px;
       color: #999;
       min-width: 50px;
     }
+
+    .share-feedback {
+      font-size: 12px;
+      color: #22c55e;
+    }
   `;
 
   @property() title = '';
   @property({ type: Boolean }) editMode = false;
+  @property({ type: Boolean }) canEdit = false;
   @property() saveStatus: 'idle' | 'saving' | 'saved' = 'idle';
+  @state() private shareConfirm = false;
+
+  private onShare() {
+    this.dispatchEvent(new CustomEvent('share-deck', { bubbles: true, composed: true }));
+    this.shareConfirm = true;
+    setTimeout(() => { this.shareConfirm = false; }, 2000);
+  }
 
   render() {
     return html`
@@ -71,11 +92,18 @@ export class ViewerToolbar extends LitElement {
         <span class="save-indicator">
           ${this.saveStatus === 'saving' ? 'Saving...' : this.saveStatus === 'saved' ? 'Saved' : ''}
         </span>
-        <button
-          class="${this.editMode ? 'active' : ''}"
-          @click=${() => this.dispatchEvent(new CustomEvent('toggle-edit', { bubbles: true, composed: true }))}
-          title="Toggle edit mode"
-        >${this.editMode ? 'Editing' : 'Edit'}</button>
+        ${this.shareConfirm ? html`<span class="share-feedback">Link copied</span>` : ''}
+        <button @click=${this.onShare} title="Copy share link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          Share
+        </button>
+        ${this.canEdit ? html`
+          <button
+            class="${this.editMode ? 'active' : ''}"
+            @click=${() => this.dispatchEvent(new CustomEvent('toggle-edit', { bubbles: true, composed: true }))}
+            title="Toggle edit mode"
+          >${this.editMode ? 'Editing' : 'Edit'}</button>
+        ` : ''}
       </div>
     `;
   }

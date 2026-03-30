@@ -171,6 +171,7 @@ export type DeckResponse = z.infer<typeof DeckResponseSchema>;
 export const CreateDeckResponseSchema = z.object({
   deck_id: z.string(),
   viewer_url: z.string(),
+  share_url: z.string(),
   created_at: z.string(),
   slide_count: z.number(),
 });
