@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { decksRouter } from './routes/decks.js';
 import { imagesRouter } from './routes/images.js';
+import { mcpRouter } from './routes/mcp.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { query } from './db/client.js';
 import { config } from './config.js';
@@ -20,6 +21,10 @@ export function createApp() {
   app.set('trust proxy', 1);
 
   app.use(cors());
+
+  // MCP endpoint (before JSON parser — transport reads raw body)
+  app.use('/mcp', mcpRouter);
+
   app.use(express.json({ limit: '1mb' }));
 
   // Routes
