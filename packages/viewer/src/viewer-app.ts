@@ -127,10 +127,10 @@ export class ViewerApp extends LitElement {
 
     .mobile-layout {
       width: 100%;
-      padding: 0;
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 12px;
     }
 
     .mobile-layout .mobile-slide {
@@ -139,6 +139,8 @@ export class ViewerApp extends LitElement {
       background: white;
       overflow: hidden;
       position: relative;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
     }
 
     .mobile-layout .mobile-slide .slide-container {
@@ -158,9 +160,11 @@ export class ViewerApp extends LitElement {
   @state() private slideWidth = 960;
   @state() private slideHeight = 540;
   @state() private isMobile = false;
+  @state() private mobileSlideWidth = 0;
 
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  private mobileResizeObserver: ResizeObserver | null = null;
   private mobileQuery: MediaQueryList | null = null;
 
   connectedCallback() {
@@ -181,6 +185,19 @@ export class ViewerApp extends LitElement {
 
   protected updated(changedProperties: Map<string, unknown>) {
     super.updated(changedProperties);
+
+    // Mobile: observe first slide card to get actual width for scaling
+    if (this.isMobile && !this.mobileResizeObserver) {
+      const firstSlide = this.shadowRoot?.querySelector('.mobile-slide');
+      if (firstSlide) {
+        this.mobileResizeObserver = new ResizeObserver((entries) => {
+          this.mobileSlideWidth = entries[0].contentRect.width;
+        });
+        this.mobileResizeObserver.observe(firstSlide);
+      }
+      return;
+    }
+
     if (this.printMode || this.resizeObserver) return;
     const mainArea = this.shadowRoot?.querySelector('.main-area');
     if (mainArea) {
@@ -209,6 +226,7 @@ export class ViewerApp extends LitElement {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('hashchange', this.onHashChange);
     this.resizeObserver?.disconnect();
+    this.mobileResizeObserver?.disconnect();
     this.mobileQuery?.removeEventListener('change', this.onMobileChange);
   }
 
@@ -483,8 +501,7 @@ export class ViewerApp extends LitElement {
   private renderMobileMode() {
     if (!this.deck) return html``;
     const customVars = this.getCustomCssVars();
-    const vw = window.innerWidth;
-    const scale = vw / 960;
+    const scale = this.mobileSlideWidth ? this.mobileSlideWidth / 960 : (window.innerWidth - 24) / 960;
     return html`
       <div class="mobile-layout">
         ${this.deck.slides.map(slide => html`
