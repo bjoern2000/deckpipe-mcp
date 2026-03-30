@@ -83,11 +83,17 @@ const ImageAndTextContentSchema = z.object({
 });
 
 // --- New layout content schemas ---
+const ImageDetailSchema = z.object({
+  title: z.string().optional(),
+  caption: z.string().optional(),
+});
+
 const ImageGalleryContentSchema = z.object({
   ...BaseContentFields,
   title: z.string().optional(),
   caption: z.string().optional(),
   images: z.array(z.string().url()).min(2).max(5),
+  image_details: z.array(ImageDetailSchema).optional(),
   image_focuses: z.array(FocalPointSchema).optional(),
 });
 

@@ -29,11 +29,19 @@ export class SlideImageGallery extends SlideBase {
         height: 100%;
         object-fit: cover;
       }
+      .gallery-item .item-title {
+        text-align: center;
+        font-family: var(--dp-font-heading, 'DM Sans', sans-serif);
+        font-weight: 600;
+        color: var(--dp-text-title, #0f172a);
+        font-size: 0.75em;
+        margin-top: 8px;
+      }
       .gallery-item .item-caption {
         text-align: center;
         color: var(--dp-text-body, #64748b);
-        font-size: 0.75em;
-        margin-top: 8px;
+        font-size: 0.7em;
+        margin-top: 2px;
       }
     `,
   ];
@@ -41,17 +49,40 @@ export class SlideImageGallery extends SlideBase {
   @property() title = '';
   @property() caption = '';
   @property({ type: Array }) images: string[] = [];
+  @property({ type: Array }) imageDetails: Array<{ title?: string; caption?: string }> = [];
   @property({ type: Array }) imageFocuses: Array<{ x: number; y: number }> = [];
   @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
-  private get captions(): string[] {
+  /** Fallback: split legacy caption string into per-image captions */
+  private get legacyCaptions(): string[] {
     if (!this.caption) return [];
     return this.caption.split(/\s*[•·|]\s*/).map(s => s.trim()).filter(Boolean);
   }
 
+  private itemTitle(i: number): string {
+    return this.imageDetails[i]?.title || '';
+  }
+
+  private itemCaption(i: number): string {
+    return this.imageDetails[i]?.caption || this.legacyCaptions[i] || '';
+  }
+
+  private renderGalleryItem(src: string, i: number) {
+    const title = this.itemTitle(i);
+    const caption = this.itemCaption(i);
+    return html`
+      <div class="gallery-item">
+        <div class="image-wrap">
+          <img src="${src}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocuses[i])}" />
+        </div>
+        ${title ? html`<div class="item-title">${title}</div>` : nothing}
+        ${caption ? html`<div class="item-caption">${caption}</div>` : nothing}
+      </div>
+    `;
+  }
+
   render() {
-    const caps = this.captions;
     return html`
       <div class="slide">
         ${this.title
@@ -66,25 +97,11 @@ export class SlideImageGallery extends SlideBase {
         ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         ${this.editable ? this.wrapDeletable('images', html`
           <div class="gallery">
-            ${this.images.map((src, i) => html`
-              <div class="gallery-item">
-                <div class="image-wrap">
-                  <img src="${src}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocuses[i])}" />
-                </div>
-                ${caps[i] ? html`<div class="item-caption">${caps[i]}</div>` : nothing}
-              </div>
-            `)}
+            ${this.images.map((src, i) => this.renderGalleryItem(src, i))}
           </div>
         `, []) : html`
           <div class="gallery">
-            ${this.images.map((src, i) => html`
-              <div class="gallery-item">
-                <div class="image-wrap">
-                  <img src="${src}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocuses[i])}" />
-                </div>
-                ${caps[i] ? html`<div class="item-caption">${caps[i]}</div>` : nothing}
-              </div>
-            `)}
+            ${this.images.map((src, i) => this.renderGalleryItem(src, i))}
           </div>
         `}
       </div>

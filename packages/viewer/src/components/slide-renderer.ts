@@ -106,6 +106,7 @@ export class SlideRenderer extends LitElement {
           .title=${c.title || ''}
           .caption=${c.caption || ''}
           .images=${(c.images as string[]) || []}
+          .imageDetails=${(c.image_details as Array<{title?: string, caption?: string}>) || []}
           .imageFocuses=${(c.image_focuses as Array<{x: number, y: number}>) || []}
           key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
