@@ -4,7 +4,7 @@ import { validate } from '../middleware/validate.js';
 import { createDeckLimiter, getDeckLimiter, updateDeckLimiter, exportPdfLimiter } from '../middleware/rate-limiter.js';
 import { query } from '../db/client.js';
 import { config } from '../config.js';
-import { rehostImagesInDeck } from '../services/image-service.js';
+import { hasExternalImages, rehostImagesInBackground } from '../services/image-service.js';
 
 export const decksRouter = Router();
 
@@ -15,14 +15,17 @@ decksRouter.post('/', createDeckLimiter, validate(CreateDeckSchema), async (req,
     const deckId = generateDeckId();
     const editKey = generateEditKey();
     const slug = slugify(title);
-
-    // Re-host external images
-    const processedSlides = await rehostImagesInDeck(slides);
+    const imageStatus = hasExternalImages(slides) ? 'processing' : null;
 
     await query(
-      'INSERT INTO decks (deck_id, title, heading_font, body_font, accent_color, slides, edit_key) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [deckId, title, heading_font ?? null, body_font ?? null, accent_color ?? null, JSON.stringify(processedSlides), editKey]
+      'INSERT INTO decks (deck_id, title, heading_font, body_font, accent_color, slides, edit_key, image_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      [deckId, title, heading_font ?? null, body_font ?? null, accent_color ?? null, JSON.stringify(slides), editKey, imageStatus]
     );
+
+    // Fire-and-forget background rehosting
+    if (imageStatus === 'processing') {
+      rehostImagesInBackground(deckId, slides);
+    }
 
     const result = await query('SELECT created_at FROM decks WHERE deck_id = $1', [deckId]);
     const shareUrl = `${config.viewerUrl}/d/${deckId}/${slug}`;
@@ -32,7 +35,8 @@ decksRouter.post('/', createDeckLimiter, validate(CreateDeckSchema), async (req,
       viewer_url: `${shareUrl}?key=${editKey}`,
       share_url: shareUrl,
       created_at: result.rows[0].created_at,
-      slide_count: processedSlides.length,
+      slide_count: slides.length,
+      image_status: imageStatus,
     });
   } catch (err) {
     next(err);
@@ -56,6 +60,7 @@ decksRouter.get('/:id', getDeckLimiter, async (req, res, next) => {
       accent_color: deck.accent_color ?? null,
       slides: deck.slides,
       edit_key: deck.edit_key,
+      image_status: deck.image_status ?? null,
       created_at: deck.created_at,
       updated_at: deck.updated_at,
     });
@@ -111,6 +116,7 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
       body_font: updated.body_font ?? null,
       accent_color: updated.accent_color ?? null,
       slides: updated.slides,
+      image_status: updated.image_status ?? null,
       created_at: updated.created_at,
       updated_at: updated.updated_at,
     });

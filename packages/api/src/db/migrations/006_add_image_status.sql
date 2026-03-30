@@ -1,0 +1,1 @@
+ALTER TABLE decks ADD COLUMN image_status TEXT DEFAULT NULL;

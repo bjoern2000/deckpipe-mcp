@@ -126,6 +126,39 @@ function isExternalUrl(url: string): boolean {
   return url.startsWith('http') && !url.startsWith(config.apiUrl);
 }
 
+export function hasExternalImages(slides: unknown[]): boolean {
+  for (const slide of slides) {
+    const content = (slide as { content: Record<string, unknown> }).content;
+    if (content.image_url && typeof content.image_url === 'string' && isExternalUrl(content.image_url)) return true;
+    if (Array.isArray(content.images) && content.images.some((u: unknown) => typeof u === 'string' && isExternalUrl(u))) return true;
+  }
+  return false;
+}
+
+export function rehostImagesInBackground(deckId: string, slides: unknown[]): void {
+  (async () => {
+    try {
+      console.log(`[rehost] starting background rehosting for deck ${deckId}`);
+      const processed = await rehostImagesInDeck(slides);
+      await query(
+        'UPDATE decks SET slides = $1, image_status = $2, updated_at = NOW() WHERE deck_id = $3',
+        [JSON.stringify(processed), 'ready', deckId]
+      );
+      console.log(`[rehost] finished background rehosting for deck ${deckId}`);
+    } catch (err) {
+      console.error(`[rehost] background rehosting failed for deck ${deckId}:`, err);
+      try {
+        await query(
+          'UPDATE decks SET image_status = $1, updated_at = NOW() WHERE deck_id = $2',
+          ['ready', deckId]
+        );
+      } catch (updateErr) {
+        console.error(`[rehost] failed to update status for deck ${deckId}:`, updateErr);
+      }
+    }
+  })();
+}
+
 export async function rehostImagesInDeck(slides: unknown[]): Promise<unknown[]> {
   const result = JSON.parse(JSON.stringify(slides));
   const cache = new Map<string, { url: string; focus: { x: number; y: number } }>();
