@@ -2,7 +2,7 @@ import { config } from '../config.js';
 
 export const updateDeckTool = {
   name: 'update_deck',
-  description: `Update an existing deck's title, theme, or individual slide content.
+  description: `Update an existing deck's title, theme, or individual slide content. All text content fields support markdown (**bold**, *italic*, \`code\`, [links](url), numbered/bulleted lists).
 
 INPUT:
 - deck_id (string, required): The deck ID to update.

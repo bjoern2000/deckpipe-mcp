@@ -4,6 +4,8 @@ export const createDeckTool = {
   name: 'create_deck',
   description: `Create a new slide deck and get a shareable viewer URL.
 
+MARKDOWN: All text content fields support markdown rendering. Use **bold**, *italic*, \`code\`, [links](url), and lists (1. ordered, - unordered) in body, subtitle, bullets, table cells, and key_takeaway fields. Body text fields support full block markdown including numbered and bulleted lists.
+
 INPUT:
 - title (string, required): The deck title.
 - theme (string, optional): Visual theme. One of: "minimal" (clean, light, Inter font), "modern" (bold, vibrant, DM Sans), "classic" (warm, serif headings, earth tones). Default: "minimal".
