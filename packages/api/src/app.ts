@@ -6,8 +6,14 @@ import { fileURLToPath } from 'node:url';
 import { decksRouter } from './routes/decks.js';
 import { imagesRouter } from './routes/images.js';
 import { errorHandler } from './middleware/error-handler.js';
+import { query } from './db/client.js';
+import { config } from './config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 export function createApp() {
   const app = express();
@@ -34,6 +40,51 @@ export function createApp() {
         res.sendFile(landingPage);
       });
     }
+
+    // Inject OG meta tags for deck URLs (link previews in Slack, Discord, etc.)
+    app.get('/d/:deckId', async (req, res) => {
+      const htmlPath = path.join(viewerDist, 'index.html');
+      let htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+      try {
+        const result = await query('SELECT title, slides FROM decks WHERE deck_id = $1', [req.params.deckId]);
+        if (result.rows.length > 0) {
+          const deck = result.rows[0];
+          const deckUrl = `${config.viewerUrl}/d/${req.params.deckId}`;
+          const slideCount = deck.slides?.length ?? 0;
+          const description = `${slideCount}-slide deck — view and edit on deckpipe`;
+
+          // Find first available image from slides for og:image
+          let ogImage = '';
+          for (const slide of deck.slides || []) {
+            const url = slide.content?.image_url;
+            if (url) { ogImage = url; break; }
+            const images = slide.content?.images;
+            if (Array.isArray(images) && images.length > 0) { ogImage = images[0]; break; }
+          }
+
+          const ogTags = [
+            `<meta property="og:title" content="${escapeHtml(deck.title)}" />`,
+            `<meta property="og:description" content="${escapeHtml(description)}" />`,
+            `<meta property="og:url" content="${escapeHtml(deckUrl)}" />`,
+            `<meta property="og:type" content="website" />`,
+            `<meta name="twitter:card" content="summary" />`,
+            `<meta name="twitter:title" content="${escapeHtml(deck.title)}" />`,
+            `<meta name="twitter:description" content="${escapeHtml(description)}" />`,
+            ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}" />` : '',
+            ogImage ? `<meta name="twitter:image" content="${escapeHtml(ogImage)}" />` : '',
+            `<title>${escapeHtml(deck.title)} — deckpipe</title>`,
+          ].filter(Boolean).join('\n    ');
+
+          htmlContent = htmlContent.replace('</head>', `    ${ogTags}\n  </head>`);
+        }
+      } catch {
+        // On error, serve plain index.html without OG tags
+      }
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(htmlContent);
+    });
 
     app.use(express.static(viewerDist));
     app.get('*', (_req, res) => {

@@ -69,6 +69,7 @@ export class SlideBase extends LitElement {
       background: #f1f5f9;
       color: #475569;
       font-size: 0.95em;
+      font-weight: 600;
       line-height: 1.5;
       padding: 10px 16px;
       border-radius: 8px;
@@ -89,6 +90,35 @@ export class SlideBase extends LitElement {
 
     [contenteditable="true"]:focus {
       box-shadow: 0 0 0 2px var(--dp-accent, #7c3aed);
+    }
+
+    .field-wrap {
+      position: relative;
+    }
+
+    .field-wrap .delete-btn {
+      display: none;
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: #fff;
+      border: 2px solid #fff;
+      font-size: 11px;
+      line-height: 1;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      padding: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .field-wrap:hover .delete-btn {
+      display: flex;
     }
   `;
 
@@ -128,9 +158,27 @@ export class SlideBase extends LitElement {
     slideEl.style.fontSize = `${lo}em`;
   }
 
-  protected renderKeyTakeaway(keyTakeaway: string | undefined) {
+  protected renderKeyTakeaway(keyTakeaway: string | undefined, editable = false) {
+    if (!keyTakeaway && !editable) return nothing;
     if (!keyTakeaway) return nothing;
+    if (editable) {
+      return this.wrapDeletable('key_takeaway', html`
+        <div class="key-takeaway"
+          contenteditable="true"
+          @blur=${(e: FocusEvent) => this.emitChange('key_takeaway', (e.target as HTMLElement).textContent)}
+        >${keyTakeaway}</div>
+      `);
+    }
     return html`<div class="key-takeaway">${keyTakeaway}</div>`;
+  }
+
+  protected wrapDeletable(field: string, content: unknown, emptyValue: unknown = '') {
+    return html`
+      <div class="field-wrap">
+        ${content}
+        <button class="delete-btn" @click=${(e: Event) => { e.stopPropagation(); this.emitChange(field, emptyValue); }}>×</button>
+      </div>
+    `;
   }
 
   protected emitChange(field: string, value: unknown) {

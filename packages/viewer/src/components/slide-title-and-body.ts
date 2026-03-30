@@ -33,21 +33,25 @@ export class SlideTitleAndBody extends SlideBase {
     return html`
       <div class="slide ${hasImage ? 'with-image' : ''}">
         <div class="text-area">
-          <h1
-            ?contenteditable=${this.editable}
-            @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
-          >${this.title}</h1>
-          ${this.renderKeyTakeaway(this.keyTakeaway)}
-          <p class="body-text"
-            ?contenteditable=${this.editable}
-            @blur=${(e: FocusEvent) => this.emitChange('body', (e.target as HTMLElement).textContent)}
-          >${this.body}</p>
+          ${this.editable ? this.wrapDeletable('title', html`
+            <h1 contenteditable="true"
+              @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
+            >${this.title}</h1>
+          `) : html`<h1>${this.title}</h1>`}
+          ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
+          ${this.editable ? this.wrapDeletable('body', html`
+            <p class="body-text" contenteditable="true"
+              @blur=${(e: FocusEvent) => this.emitChange('body', (e.target as HTMLElement).textContent)}
+            >${this.body}</p>
+          `) : html`<p class="body-text">${this.body}</p>`}
         </div>
-        ${hasImage ? html`
-          <div class="image-area">
-            <img src="${this.imageUrl}" alt="" />
-          </div>
-        ` : ''}
+        ${hasImage
+          ? this.editable
+            ? this.wrapDeletable('image_url', html`
+                <div class="image-area"><img src="${this.imageUrl}" alt="" /></div>
+              `, null)
+            : html`<div class="image-area"><img src="${this.imageUrl}" alt="" /></div>`
+          : ''}
       </div>
     `;
   }

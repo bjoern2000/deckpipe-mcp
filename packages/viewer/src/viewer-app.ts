@@ -35,10 +35,10 @@ export class ViewerApp extends LitElement {
     }
 
     .thumbnail-panel {
-      width: 140px;
+      width: 160px;
       flex-shrink: 0;
       overflow-y: auto;
-      padding: 12px 8px;
+      padding: 12px 14px;
       background: #eee;
       border-right: 1px solid #ddd;
     }
@@ -65,7 +65,7 @@ export class ViewerApp extends LitElement {
       height: 540px;
       transform-origin: top left;
       background: white;
-      border-radius: 4px;
+      border-radius: 8px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
       overflow: hidden;
     }

@@ -27,11 +27,12 @@ export class SlideSectionBreak extends SlideBase {
   render() {
     return html`
       <div class="slide">
-        <h1
-          ?contenteditable=${this.editable}
-          @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
-        >${this.title}</h1>
-        ${this.renderKeyTakeaway(this.keyTakeaway)}
+        ${this.editable ? this.wrapDeletable('title', html`
+          <h1 contenteditable="true"
+            @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
+          >${this.title}</h1>
+        `) : html`<h1>${this.title}</h1>`}
+        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
       </div>
     `;
   }

@@ -41,27 +41,42 @@ export class SlideImageGallery extends SlideBase {
   render() {
     return html`
       <div class="slide">
-        ${this.title ? html`
-          <h1
-            ?contenteditable=${this.editable}
-            @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
-          >${this.title}</h1>
-        ` : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway)}
-        <div class="gallery">
-          ${this.images.map(src => html`
-            <div class="gallery-item">
-              <img src="${src}" alt="" />
-            </div>
-          `)}
-        </div>
-        ${this.caption ? html`
-          <div
-            class="caption"
-            ?contenteditable=${this.editable}
-            @blur=${(e: FocusEvent) => this.emitChange('caption', (e.target as HTMLElement).textContent)}
-          >${this.caption}</div>
-        ` : nothing}
+        ${this.title
+          ? this.editable
+            ? this.wrapDeletable('title', html`
+                <h1 contenteditable="true"
+                  @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
+                >${this.title}</h1>
+              `)
+            : html`<h1>${this.title}</h1>`
+          : nothing}
+        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
+        ${this.editable ? this.wrapDeletable('images', html`
+          <div class="gallery">
+            ${this.images.map(src => html`
+              <div class="gallery-item">
+                <img src="${src}" alt="" />
+              </div>
+            `)}
+          </div>
+        `, []) : html`
+          <div class="gallery">
+            ${this.images.map(src => html`
+              <div class="gallery-item">
+                <img src="${src}" alt="" />
+              </div>
+            `)}
+          </div>
+        `}
+        ${this.caption || this.editable
+          ? this.editable
+            ? this.wrapDeletable('caption', html`
+                <div class="caption" contenteditable="true"
+                  @blur=${(e: FocusEvent) => this.emitChange('caption', (e.target as HTMLElement).textContent)}
+                >${this.caption}</div>
+              `)
+            : html`<div class="caption">${this.caption}</div>`
+          : nothing}
       </div>
     `;
   }

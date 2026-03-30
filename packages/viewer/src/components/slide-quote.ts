@@ -58,20 +58,31 @@ export class SlideQuote extends SlideBase {
   render() {
     return html`
       <div class="slide">
-        <blockquote
-          ?contenteditable=${this.editable}
-          @blur=${(e: FocusEvent) => this.emitChange('quote', (e.target as HTMLElement).textContent)}
-        >${this.quote}</blockquote>
-        ${this.renderKeyTakeaway(this.keyTakeaway)}
-        ${this.attribution ? html`
-          <div class="attribution">
-            ${this.imageUrl ? html`<img class="avatar" src="${this.imageUrl}" alt="" />` : nothing}
-            <span
-              ?contenteditable=${this.editable}
-              @blur=${(e: FocusEvent) => this.emitChange('attribution', (e.target as HTMLElement).textContent)}
-            >${this.attribution}</span>
-          </div>
-        ` : nothing}
+        ${this.editable ? this.wrapDeletable('quote', html`
+          <blockquote contenteditable="true"
+            @blur=${(e: FocusEvent) => this.emitChange('quote', (e.target as HTMLElement).textContent)}
+          >${this.quote}</blockquote>
+        `) : html`<blockquote>${this.quote}</blockquote>`}
+        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
+        ${this.attribution || this.editable
+          ? this.editable
+            ? this.wrapDeletable('attribution', html`
+                <div class="attribution">
+                  ${this.imageUrl
+                    ? this.wrapDeletable('image_url', html`<img class="avatar" src="${this.imageUrl}" alt="" />`, null)
+                    : nothing}
+                  <span contenteditable="true"
+                    @blur=${(e: FocusEvent) => this.emitChange('attribution', (e.target as HTMLElement).textContent)}
+                  >${this.attribution}</span>
+                </div>
+              `)
+            : html`
+              <div class="attribution">
+                ${this.imageUrl ? html`<img class="avatar" src="${this.imageUrl}" alt="" />` : nothing}
+                <span>${this.attribution}</span>
+              </div>
+            `
+          : nothing}
       </div>
     `;
   }

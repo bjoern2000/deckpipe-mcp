@@ -18,7 +18,7 @@ export class ViewerToolbar extends LitElement {
 
     .title {
       font-size: 15px;
-      font-weight: 500;
+      font-weight: 700;
       color: #333;
       overflow: hidden;
       text-overflow: ellipsis;

@@ -43,29 +43,37 @@ export class SlideTitleAndBullets extends SlideBase {
     const hasImage = !!this.imageUrl;
     return html`
       <div class="slide ${hasImage ? 'with-image' : ''}">
-        <h1
-          ?contenteditable=${this.editable}
-          @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
-        >${this.title}</h1>
-        ${this.renderKeyTakeaway(this.keyTakeaway)}
+        ${this.editable ? this.wrapDeletable('title', html`
+          <h1 contenteditable="true"
+            @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
+          >${this.title}</h1>
+        `) : html`<h1>${this.title}</h1>`}
+        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         <div class="body-area">
-          <ul>
-            ${this.bullets.map((b, i) => html`
-              <li
-                ?contenteditable=${this.editable}
-                @blur=${(e: FocusEvent) => {
-                  const newBullets = [...this.bullets];
-                  newBullets[i] = (e.target as HTMLElement).textContent || '';
-                  this.emitChange('bullets', newBullets);
-                }}
-              >${b}</li>
-            `)}
-          </ul>
-          ${hasImage ? html`
-            <div class="image-area">
-              <img src="${this.imageUrl}" alt="" />
-            </div>
-          ` : ''}
+          ${this.editable ? this.wrapDeletable('bullets', html`
+            <ul>
+              ${this.bullets.map((b, i) => html`
+                <li contenteditable="true"
+                  @blur=${(e: FocusEvent) => {
+                    const newBullets = [...this.bullets];
+                    newBullets[i] = (e.target as HTMLElement).textContent || '';
+                    this.emitChange('bullets', newBullets);
+                  }}
+                >${b}</li>
+              `)}
+            </ul>
+          `, []) : html`
+            <ul>
+              ${this.bullets.map(b => html`<li>${b}</li>`)}
+            </ul>
+          `}
+          ${hasImage
+            ? this.editable
+              ? this.wrapDeletable('image_url', html`
+                  <div class="image-area"><img src="${this.imageUrl}" alt="" /></div>
+                `, null)
+              : html`<div class="image-area"><img src="${this.imageUrl}" alt="" /></div>`
+            : ''}
         </div>
       </div>
     `;

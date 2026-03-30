@@ -11,7 +11,7 @@ export class ThumbnailStrip extends LitElement {
       width: 100%;
       aspect-ratio: 16 / 9;
       margin-bottom: 8px;
-      border-radius: 4px;
+      border-radius: 2px;
       overflow: hidden;
       cursor: pointer;
       border: 2px solid transparent;

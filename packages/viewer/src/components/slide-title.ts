@@ -40,19 +40,26 @@ export class SlideTitle extends SlideBase {
   render() {
     return html`
       <div class="slide">
-        ${this.imageUrl ? html`<img class="bg-image" src="${this.imageUrl}" alt="" />` : ''}
+        ${this.imageUrl
+          ? this.editable
+            ? this.wrapDeletable('image_url', html`<img class="bg-image" src="${this.imageUrl}" alt="" />`, null)
+            : html`<img class="bg-image" src="${this.imageUrl}" alt="" />`
+          : ''}
         <div class="content">
-          <h1
-            ?contenteditable=${this.editable}
-            @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
-          >${this.title}</h1>
-          ${this.renderKeyTakeaway(this.keyTakeaway)}
-          ${this.subtitle ? html`
-            <p class="subtitle"
-              ?contenteditable=${this.editable}
-              @blur=${(e: FocusEvent) => this.emitChange('subtitle', (e.target as HTMLElement).textContent)}
-            >${this.subtitle}</p>
-          ` : ''}
+          ${this.editable ? this.wrapDeletable('title', html`
+            <h1 contenteditable="true"
+              @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
+            >${this.title}</h1>
+          `) : html`<h1>${this.title}</h1>`}
+          ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
+          ${this.subtitle || this.editable ? this.editable
+            ? this.wrapDeletable('subtitle', html`
+                <p class="subtitle" contenteditable="true"
+                  @blur=${(e: FocusEvent) => this.emitChange('subtitle', (e.target as HTMLElement).textContent)}
+                >${this.subtitle}</p>
+              `)
+            : html`<p class="subtitle">${this.subtitle}</p>`
+          : ''}
         </div>
       </div>
     `;

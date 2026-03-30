@@ -41,36 +41,51 @@ export class SlideTwoColumns extends SlideBase {
   render() {
     return html`
       <div class="slide">
-        <h1
-          ?contenteditable=${this.editable}
-          @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
-        >${this.title}</h1>
-        ${this.renderKeyTakeaway(this.keyTakeaway)}
+        ${this.editable ? this.wrapDeletable('title', html`
+          <h1 contenteditable="true"
+            @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
+          >${this.title}</h1>
+        `) : html`<h1>${this.title}</h1>`}
+        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         <div class="columns">
-          <div class="column">
-            <h2
-              ?contenteditable=${this.editable}
-              @blur=${(e: FocusEvent) => this.emitChange('left', { ...this.left, heading: (e.target as HTMLElement).textContent || '' })}
-            >${this.left.heading}</h2>
-            <p
-              ?contenteditable=${this.editable}
-              @blur=${(e: FocusEvent) => this.emitChange('left', { ...this.left, body: (e.target as HTMLElement).textContent || '' })}
-            >${this.left.body}</p>
-          </div>
-          <div class="column">
-            <h2
-              ?contenteditable=${this.editable}
-              @blur=${(e: FocusEvent) => this.emitChange('right', { ...this.right, heading: (e.target as HTMLElement).textContent || '' })}
-            >${this.right.heading}</h2>
-            <p
-              ?contenteditable=${this.editable}
-              @blur=${(e: FocusEvent) => this.emitChange('right', { ...this.right, body: (e.target as HTMLElement).textContent || '' })}
-            >${this.right.body}</p>
-          </div>
+          ${this.editable ? this.wrapDeletable('left', html`
+            <div class="column">
+              <h2 contenteditable="true"
+                @blur=${(e: FocusEvent) => this.emitChange('left', { ...this.left, heading: (e.target as HTMLElement).textContent || '' })}
+              >${this.left.heading}</h2>
+              <p contenteditable="true"
+                @blur=${(e: FocusEvent) => this.emitChange('left', { ...this.left, body: (e.target as HTMLElement).textContent || '' })}
+              >${this.left.body}</p>
+            </div>
+          `, null) : html`
+            <div class="column">
+              <h2>${this.left.heading}</h2>
+              <p>${this.left.body}</p>
+            </div>
+          `}
+          ${this.editable ? this.wrapDeletable('right', html`
+            <div class="column">
+              <h2 contenteditable="true"
+                @blur=${(e: FocusEvent) => this.emitChange('right', { ...this.right, heading: (e.target as HTMLElement).textContent || '' })}
+              >${this.right.heading}</h2>
+              <p contenteditable="true"
+                @blur=${(e: FocusEvent) => this.emitChange('right', { ...this.right, body: (e.target as HTMLElement).textContent || '' })}
+              >${this.right.body}</p>
+            </div>
+          `, null) : html`
+            <div class="column">
+              <h2>${this.right.heading}</h2>
+              <p>${this.right.body}</p>
+            </div>
+          `}
         </div>
-        ${this.imageUrl ? html`
-          <div class="bottom-image"><img src="${this.imageUrl}" alt="" /></div>
-        ` : ''}
+        ${this.imageUrl
+          ? this.editable
+            ? this.wrapDeletable('image_url', html`
+                <div class="bottom-image"><img src="${this.imageUrl}" alt="" /></div>
+              `, null)
+            : html`<div class="bottom-image"><img src="${this.imageUrl}" alt="" /></div>`
+          : ''}
       </div>
     `;
   }

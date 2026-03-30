@@ -50,43 +50,57 @@ export class SlideTitleAndTable extends SlideBase {
     const { headers, rows, highlight_column } = this.table;
     return html`
       <div class="slide">
-        <h1
-          ?contenteditable=${this.editable}
-          @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
-        >${this.title}</h1>
-        ${this.renderKeyTakeaway(this.keyTakeaway)}
-        <table>
-          <thead>
-            <tr>
-              ${headers.map((h, ci) => html`
-                <th class="${ci === highlight_column ? 'highlight' : ''}"
-                  ?contenteditable=${this.editable}
-                  @blur=${(e: FocusEvent) => {
-                    const newHeaders = [...headers];
-                    newHeaders[ci] = (e.target as HTMLElement).textContent || '';
-                    this.emitChange('table', { ...this.table, headers: newHeaders });
-                  }}
-                >${h}</th>
-              `)}
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map((row, ri) => html`
+        ${this.editable ? this.wrapDeletable('title', html`
+          <h1 contenteditable="true"
+            @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
+          >${this.title}</h1>
+        `) : html`<h1>${this.title}</h1>`}
+        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
+        ${this.editable ? this.wrapDeletable('table', html`
+          <table>
+            <thead>
               <tr>
-                ${row.map((cell, ci) => html`
-                  <td class="${ci === highlight_column ? 'highlight' : ''}"
-                    ?contenteditable=${this.editable}
+                ${headers.map((h, ci) => html`
+                  <th class="${ci === highlight_column ? 'highlight' : ''}"
+                    contenteditable="true"
                     @blur=${(e: FocusEvent) => {
-                      const newRows = rows.map(r => [...r]);
-                      newRows[ri][ci] = (e.target as HTMLElement).textContent || '';
-                      this.emitChange('table', { ...this.table, rows: newRows });
+                      const newHeaders = [...headers];
+                      newHeaders[ci] = (e.target as HTMLElement).textContent || '';
+                      this.emitChange('table', { ...this.table, headers: newHeaders });
                     }}
-                  >${cell}</td>
+                  >${h}</th>
                 `)}
               </tr>
-            `)}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${rows.map((row, ri) => html`
+                <tr>
+                  ${row.map((cell, ci) => html`
+                    <td class="${ci === highlight_column ? 'highlight' : ''}"
+                      contenteditable="true"
+                      @blur=${(e: FocusEvent) => {
+                        const newRows = rows.map(r => [...r]);
+                        newRows[ri][ci] = (e.target as HTMLElement).textContent || '';
+                        this.emitChange('table', { ...this.table, rows: newRows });
+                      }}
+                    >${cell}</td>
+                  `)}
+                </tr>
+              `)}
+            </tbody>
+          </table>
+        `, null) : html`
+          <table>
+            <thead>
+              <tr>${headers.map((h, ci) => html`<th class="${ci === highlight_column ? 'highlight' : ''}">${h}</th>`)}</tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => html`
+                <tr>${row.map((cell, ci) => html`<td class="${ci === highlight_column ? 'highlight' : ''}">${cell}</td>`)}</tr>
+              `)}
+            </tbody>
+          </table>
+        `}
       </div>
     `;
   }

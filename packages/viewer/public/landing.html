@@ -3,8 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>deckpipe — agent-first slide decks</title>
+  <title>deckpipe — AI slide deck creator | Agent-first presentation tool via MCP</title>
+  <meta name="description" content="Create polished slide decks from any AI agent. 11 layouts, custom Google Fonts, image galleries, stats, quotes. Install the MCP server and start prompting." />
+  <meta name="keywords" content="AI slide deck, MCP server, AI presentations, Claude slides, agent-first, slide deck API, AI presentation tool, deckpipe" />
+  <link rel="canonical" href="https://deckpipe.com" />
+  <meta property="og:title" content="deckpipe — AI slide deck creator" />
+  <meta property="og:description" content="Create polished slide decks from any AI agent. 11 layouts, custom fonts, images, stats, and quotes. Install via MCP and start prompting." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://deckpipe.com" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="deckpipe — AI slide deck creator" />
+  <meta name="twitter:description" content="Create polished slide decks from any AI agent via MCP. 11 layouts, custom fonts, images." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 11V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1'/><path d='M14 2v5a1 1 0 0 0 1 1h5'/><path d='M2 15h10'/><path d='m9 18 3-3-3-3'/></svg>" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "deckpipe",
+    "description": "Agent-first slide deck renderer. AI agents describe slides as JSON; deckpipe renders, themes, and exports them. Available as an MCP server for Claude, Cursor, and other AI tools.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "url": "https://deckpipe.com",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Person", "name": "Bjorn Schefzyk" }
+  }
+  </script>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -71,6 +96,8 @@
       color: #aaa;
       padding: 12px 0;
       border-bottom: 1px solid #1a1a1a;
+      position: relative;
+      padding-right: 36px;
     }
 
     .steps li::before {
@@ -78,6 +105,31 @@
       color: #555;
       margin-right: 12px;
       font-weight: 500;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 0;
+      background: none;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 3px 6px;
+      cursor: pointer;
+      color: #555;
+      font-size: 0.7rem;
+      transition: color 0.15s, border-color 0.15s;
+      line-height: 1;
+    }
+
+    .copy-btn:hover {
+      color: #aaa;
+      border-color: #555;
+    }
+
+    .copy-btn.copied {
+      color: #98c379;
+      border-color: #98c379;
     }
 
     pre {
@@ -199,28 +251,48 @@ claude mcp add deckpipe -- npx deckpipe-mcp</pre>
         <span>two_columns</span>
         <span>section_break</span>
         <span>image_and_text</span>
+        <span>image_gallery</span>
+        <span>stats</span>
+        <span>quote</span>
+        <span>full_image</span>
       </div>
     </div>
 
     <div class="section">
       <h2>Customization</h2>
       <div class="tools">
-        <span>custom_font — any Google Font</span>
-        <span>accent_color — hex color</span>
+        <span>heading_font &mdash; Google Font for headings</span>
+        <span>body_font &mdash; Google Font for body text</span>
+        <span>accent_color &mdash; hex color</span>
+        <span>key_takeaway &mdash; per-slide highlight box</span>
       </div>
     </div>
 
     <div class="section">
       <h2>Try it</h2>
       <ol class="steps">
-        <li>Create a 10-slide deck about the Apollo moon landing. Include key technologies, a timeline, and comparison tables.</li>
-        <li>Make a pitch deck for a SaaS startup that helps restaurants manage reservations. Use the font "Inter" and accent color "#0ea5e9".</li>
-        <li>Build a lecture deck on how neural networks learn. Use diagrams described in bullet points and a table comparing activation functions.</li>
-        <li>Create a project retrospective deck with sections for what went well, what didn't, and action items.</li>
+        <li>Create a deck about the rise of electric vehicles. Search the web for relevant photos and use them. Use heading font "Space Grotesk", body font "Inter", and accent color "#0ea5e9".<button class="copy-btn" onclick="copyPrompt(this)" title="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></li>
+        <li>Create a deck about the Apollo 11 moon landing. Search the web for historic NASA photos and use them as full-bleed images. Include a timeline of the mission, stats on the Saturn V rocket, and a famous quote from Neil Armstrong. Use heading font "Libre Baskerville" and accent color "#1e3a5f".<button class="copy-btn" onclick="copyPrompt(this)" title="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></li>
+        <li>Build a lecture deck on how neural networks learn. Use a comparison table for activation functions, bullet points for key concepts, and add a key takeaway to each slide.<button class="copy-btn" onclick="copyPrompt(this)" title="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></li>
+        <li>Create a travel guide deck for Tokyo. Search the web for photos and include an image gallery of must-visit spots, stats on tourism, and a full-bleed image cover slide.<button class="copy-btn" onclick="copyPrompt(this)" title="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></li>
       </ol>
     </div>
 
     <p class="footer">&copy; 2025 Bj&ouml;rn Schefzyk. All rights reserved. &mdash; <a href="https://github.com/bjoern2000/deckpipe-mcp">github</a> &middot; <a href="/terms.html">terms</a> &middot; <a href="/privacy.html">privacy</a></p>
   </div>
+
+  <script>
+    const clipboardSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+    const checkSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    function copyPrompt(btn) {
+      const li = btn.closest('li');
+      const text = li.textContent.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = checkSvg;
+        btn.classList.add('copied');
+        setTimeout(() => { btn.innerHTML = clipboardSvg; btn.classList.remove('copied'); }, 1500);
+      });
+    }
+  </script>
 </body>
 </html>
