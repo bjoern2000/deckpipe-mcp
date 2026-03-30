@@ -236,7 +236,7 @@ async function main() {
 
       const mcpServer = new McpServer({
         name: 'deckpipe',
-        version: '0.2.0',
+        version: '0.1.2',
       });
       registerTools(mcpServer);
       await mcpServer.connect(transport);
