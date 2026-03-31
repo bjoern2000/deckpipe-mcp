@@ -14,23 +14,35 @@ export class SlideTitleAndTable extends SlideBase {
   static styles = [
     SlideBase.baseStyles,
     css`
+      :host {
+        --table-cell-padding-v: 7px;
+        --table-cell-padding-h: 12px;
+      }
+      h1 {
+        margin-bottom: 16px;
+        font-size: 1.9em;
+      }
+      .key-takeaway {
+        margin-bottom: 16px;
+      }
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 8px;
-        font-size: 0.95em;
+        margin-top: 4px;
+        font-size: 0.9em;
       }
       th {
         background: var(--dp-table-header-bg, #f1f5f9);
         font-weight: 600;
         text-align: left;
-        padding: 10px 14px;
+        padding: var(--table-cell-padding-v) var(--table-cell-padding-h);
         color: var(--dp-text-title, #1a1a1a);
         border-bottom: 2px solid var(--dp-accent, #2563eb);
       }
       td {
-        padding: 9px 14px;
+        padding: var(--table-cell-padding-v) var(--table-cell-padding-h);
         border-bottom: 1px solid #eee;
+        line-height: 1.4;
       }
       tr:nth-child(even) td {
         background: var(--dp-table-stripe-bg, #f8fafc);

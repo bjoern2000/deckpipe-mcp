@@ -312,7 +312,7 @@ export class SlideBase extends LitElement {
     if (slideEl.scrollHeight <= slideEl.clientHeight) return;
 
     // Binary search for the right font scale
-    let lo = 0.55;
+    let lo = 0.42;
     let hi = 1.0;
     while (hi - lo > 0.02) {
       const mid = (lo + hi) / 2;
