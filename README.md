@@ -45,8 +45,20 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 | `image_and_text` | Image-primary (~60%) + text | `title`, `body`, `image_url` |
 | `image_gallery` | Horizontal row of portrait images | `images[]` (2-5 URLs), optional `title`, `caption` |
 | `stats` | Big metrics/numbers with labels | `metrics[]: { value, label }` (2-4), optional `title` |
-| `quote` | Large pull-quote with attribution | `quote`, optional `attribution`, `image_url` |
+| `quote` | Inline curly quotation marks with attribution | `quote`, optional `attribution`, `image_url` |
 | `full_image` | Full-bleed background image with overlay text | `image_url`, optional `title`, `subtitle` |
+| `timeline` | Continuous timeline with positioned milestones | `events[]: { label, title, description?, position? }` (3-6). `position` (0-1) places milestone at relative point; events alternate above/below line |
+| `comparison` | Side-by-side comparison with verdict | `left: { heading, bullets[] }`, `right: { heading, bullets[] }`, optional `title`, `verdict` |
+| `code` | Syntax-highlighted code block (18 languages) | `code`, optional `title`, `language`, `caption` |
+| `callout` | Large featured value with context | `value`, optional `title`, `label`, `body` |
+| `icons_and_text` | Icon grid with headings and descriptions | `items[]: { icon, heading, description? }` (3-6), optional `title` |
+| `team` | Team member cards with roles and bios | `members[]: { name, role, bio?, image_url? }` (1-6), optional `title` |
+| `embed` | Full-slide iframe embed (90% area) | `url`, optional `caption`, `aspect_ratio` |
+| `pros_and_cons` | Two-column pros vs cons list | `pros[]`, `cons[]`, optional `title`, `pros_heading`, `cons_heading` |
+| `agenda` | Numbered agenda items with durations | `items[]: { topic, duration?, description? }` (1-10), optional `title` |
+| `swot` | Four-quadrant SWOT analysis with emoji headers | `strengths[]`, `weaknesses[]`, `opportunities[]`, `threats[]` (1-5 each), optional `title` |
+| `quadrant` | 2D scatter plot with labeled axes and items | `items[]: { label, x: 0-1, y: 0-1 }` (1-12), optional `title`, `body`, `bullets[]`, `x_label`, `y_label`, `quadrant_labels[4]` |
+| `closing` | Accent-colored ending slide with contact info | optional `heading`, `subheading`, `contact_lines[]`, `image_url` |
 
 All layouts support an optional `key_takeaway` field — a highlighted sentence rendered below the title.
 
