@@ -68,6 +68,10 @@ export class ThumbnailStrip extends LitElement {
         inner.style.transform = `scale(${scale})`;
       }
     });
+
+    // Scroll active thumbnail into view
+    const active = this.shadowRoot?.querySelector('.thumbnail.active');
+    active?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   private getCustomVars(): string {
