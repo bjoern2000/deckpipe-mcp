@@ -1,4 +1,4 @@
-import { html, css } from 'lit';
+import { html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { SlideBase } from './slide-base.js';
 import { md } from '../utils/markdown.js';
@@ -19,11 +19,6 @@ export class SlideImageAndText extends SlideBase {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-      }
-      .image-area.placeholder-only {
-        flex: 0 0 auto;
-        align-self: flex-start;
-        margin-top: 4px;
       }
       .image-area img {
         width: 100%;
@@ -59,13 +54,13 @@ export class SlideImageAndText extends SlideBase {
   render() {
     return html`
       <div class="slide">
-        <div class="image-area ${!this.imageUrl && this.imagePrompt ? 'placeholder-only' : ''}">
-          ${this.imageUrl
-            ? this.editable
+        ${this.imageUrl ? html`
+          <div class="image-area">
+            ${this.editable
               ? this.wrapDeletable('image_url', html`<img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />`, null)
-              : html`<img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />`
-            : this.renderImagePrompt(this.imagePrompt)}
-        </div>
+              : html`<img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />`}
+          </div>
+        ` : nothing}
         <div class="text-area">
           ${this.editable ? this.wrapDeletable('title', html`
             <h1 contenteditable="true"
