@@ -1,6 +1,6 @@
 import { config } from '../config.js';
 
-const LAYOUTS = ['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'closing', 'swot', 'quadrant', 'venn_diagram'] as const;
+const LAYOUTS = ['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'swot', 'quadrant', 'venn_diagram', 'closing'] as const;
 
 export const createDeckTool = {
   name: 'create_deck',
@@ -10,12 +10,14 @@ Keep slide copy short and scannable — use shorthand phrases, not full sentence
 
 MARKDOWN: All text content fields support markdown rendering. Use **bold**, *italic*, \`code\`, [links](url), and lists (1. ordered, - unordered) in body, subtitle, bullets, table cells, and key_takeaway fields. Body text fields support full block markdown including numbered and bulleted lists.
 
-Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text", "image_gallery", "stats", "quote", "full_image", "timeline", "comparison", "code", "callout", "icons_and_text", "team", "embed", "pros_and_cons", "agenda", "closing", "swot", "quadrant", "venn_diagram".
+Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text", "image_gallery", "stats", "quote", "full_image", "timeline", "comparison", "code", "callout", "icons_and_text", "team", "embed", "pros_and_cons", "agenda", "swot", "quadrant", "venn_diagram", "closing".
+
+RICH BULLETS: In title_and_bullets, comparison, and pros_and_cons, bullets can be strings OR objects: { text, detail?, sources?[{ label, url? }] }. detail shows as an info tooltip on hover. sources render as numbered footnotes.
 
 Content fields per layout (all layouts support optional key_takeaway):
 - title: { title, subtitle?, image_url? }
 - title_and_body: { title, body, image_url?, image_prompt? }
-- title_and_bullets: { title, bullets[], image_url?, image_prompt? }
+- title_and_bullets: { title, bullets[] (strings or { text, detail?, sources?[] }), image_url?, image_prompt? }
 - title_and_table: { title, table: { headers[], rows[][], highlight_column? } }
 - two_columns: { title, left: { heading, body }, right: { heading, body }, image_url?, image_prompt? }
 - section_break: { title }

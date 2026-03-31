@@ -56,8 +56,8 @@ export const listLayoutsTool = {
       { name: 'agenda', fields: 'items[]: { topic, duration?, description? } (1-10 items, required), title?, key_takeaway?' },
       { name: 'swot', fields: 'strengths[], weaknesses[], opportunities[], threats[] (1-5 items each, all required), title?, key_takeaway?' },
       { name: 'quadrant', fields: 'items[]: { label, x: 0-1, y: 0-1 } (1-12 items, required), title?, body?, bullets?[], x_label?, y_label?, quadrant_labels?[4], key_takeaway?' },
-      { name: 'closing', fields: 'heading?, subheading?, contact_lines?[], image_url?, key_takeaway?' },
       { name: 'venn_diagram', fields: 'circles[]: { label, items?[] } (2-3 circles, required), overlaps?[]: { sets: number[], label } (max 4), title?, key_takeaway?' },
+      { name: 'closing', fields: 'heading?, subheading?, contact_lines?[], image_url?, key_takeaway?' },
     ];
 
     const customization = {
