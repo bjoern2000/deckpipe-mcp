@@ -42,11 +42,11 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 | `title_and_table` | Title + data table | `title`, `table: { headers[], rows[][] }` |
 | `two_columns` | Title + two columns | `title`, `left: { heading, body }`, `right: { heading, body }` |
 | `section_break` | Bold section divider | `title` |
-| `image_and_text` | Image-primary (~60%) + text | `title`, `body`, `image_url` |
+| `image_and_text` | Image-primary (~60%) + text | `title`, `body`, `image_url` or `image_prompt` |
 | `image_gallery` | Horizontal row of portrait images | `images[]` (2-5 URLs), optional `title`, `caption` |
 | `stats` | Big metrics/numbers with labels | `metrics[]: { value, label }` (2-4), optional `title` |
 | `quote` | Inline curly quotation marks with attribution | `quote`, optional `attribution`, `image_url` |
-| `full_image` | Full-bleed background image with overlay text | `image_url`, optional `title`, `subtitle` |
+| `full_image` | Full-bleed background image with overlay text | `image_url` or `image_prompt`, optional `title`, `subtitle` |
 | `timeline` | Continuous timeline with positioned milestones | `events[]: { label, title, description?, position? }` (3-6). `position` (0-1) places milestone at relative point; events alternate above/below line |
 | `comparison` | Side-by-side comparison with verdict | `left: { heading, bullets[] }`, `right: { heading, bullets[] }`, optional `title`, `verdict` |
 | `code` | Syntax-highlighted code block (18 languages) | `code`, optional `title`, `language`, `caption` |
@@ -58,9 +58,46 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 | `agenda` | Numbered agenda items with durations | `items[]: { topic, duration?, description? }` (1-10), optional `title` |
 | `swot` | Four-quadrant SWOT analysis with emoji headers | `strengths[]`, `weaknesses[]`, `opportunities[]`, `threats[]` (1-5 each), optional `title` |
 | `quadrant` | 2D scatter plot with labeled axes and items | `items[]: { label, x: 0-1, y: 0-1 }` (1-12), optional `title`, `body`, `bullets[]`, `x_label`, `y_label`, `quadrant_labels[4]` |
+| `venn_diagram` | 2 or 3 overlapping circles with labels and items | `circles[]: { label, items[]? }` (2-3), optional `title`, `body`, `overlaps[]: { sets[], label }` |
 | `closing` | Accent-colored ending slide with contact info | optional `heading`, `subheading`, `contact_lines[]`, `image_url` |
 
 All layouts support an optional `key_takeaway` field — a highlighted sentence rendered below the title.
+
+**[See all 24 layouts in action →](https://deckpipe.com/d/dk_CsHBYjLY/building-a-saas-startup-from-idea-to-ipo)**
+
+## Image placeholders
+
+Any layout that accepts `image_url` also accepts `image_prompt` as an alternative. When set, a dashed placeholder box is rendered showing the prompt text — useful when you want to create a complete deck without sourcing images, letting the user drop them in later.
+
+```json
+{
+  "layout": "title_and_bullets",
+  "content": {
+    "title": "Electric Vehicles",
+    "bullets": ["Range anxiety solved", "Charging network expansion"],
+    "image_prompt": "Hero shot of a sleek EV on a mountain road at golden hour"
+  }
+}
+```
+
+## Rich bullets
+
+Any `bullets[]`, `pros[]`, `cons[]`, `strengths[]`, `weaknesses[]`, `opportunities[]`, or `threats[]` field accepts either plain strings or rich bullet objects:
+
+```json
+{
+  "text": "Model 3 leads in range",
+  "detail": "EPA-rated 358 miles; closest competitor is 270 miles",
+  "sources": [
+    { "label": "EPA 2024", "url": "https://fueleconomy.gov" }
+  ]
+}
+```
+
+- `detail` renders as a hover tooltip (ℹ icon) — great for adding nuance without cluttering the slide
+- `sources` render as superscript numbers with a footnote row at the bottom of the slide
+
+Plain strings still work as before (backward compatible).
 
 ## Customization
 
