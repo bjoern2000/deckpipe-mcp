@@ -41,7 +41,7 @@ export class SlideQuote extends SlideBase {
         opacity: 0.3;
         line-height: 0;
         vertical-align: -0.25em;
-        margin-left: 0.05em;
+        margin-left: 0;
       }
       .attribution {
         display: flex;
