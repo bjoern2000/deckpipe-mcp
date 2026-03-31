@@ -17,20 +17,20 @@ Keep slide copy short and scannable — use shorthand phrases, not full sentence
 
 MARKDOWN: All text content fields support markdown rendering. Use **bold**, *italic*, \`code\`, [links](url), and lists (1. ordered, - unordered) in body, subtitle, bullets, table cells, and key_takeaway fields. Body text fields support full block markdown including numbered and bulleted lists.
 
-Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text", "image_gallery", "stats", "quote", "full_image", "timeline", "comparison", "code", "callout", "icons_and_text", "team", "embed", "pros_and_cons", "agenda", "closing", "swot", "quadrant".
+Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text", "image_gallery", "stats", "quote", "full_image", "timeline", "comparison", "code", "callout", "icons_and_text", "team", "embed", "pros_and_cons", "agenda", "closing", "swot", "quadrant", "venn_diagram".
 
 Content fields per layout (all layouts support optional key_takeaway):
 - title: { title, subtitle?, image_url? }
-- title_and_body: { title, body, image_url? }
-- title_and_bullets: { title, bullets[], image_url? }
+- title_and_body: { title, body, image_url?, image_prompt? }
+- title_and_bullets: { title, bullets[], image_url?, image_prompt? }
 - title_and_table: { title, table: { headers[], rows[][], highlight_column? } }
-- two_columns: { title, left: { heading, body }, right: { heading, body }, image_url? }
+- two_columns: { title, left: { heading, body }, right: { heading, body }, image_url?, image_prompt? }
 - section_break: { title }
-- image_and_text: { title, body, image_url (required) }
+- image_and_text: { title, body, image_url (required unless image_prompt provided), image_prompt? }
 - image_gallery: { title?, caption?, images[] (2-5 URLs) }
 - stats: { title?, metrics[]: { value, label } (2-4 items) }
 - quote: { quote, attribution?, image_url? }
-- full_image: { image_url (required), title?, subtitle? }
+- full_image: { image_url (required unless image_prompt provided), image_prompt?, title?, subtitle? }
 - timeline: { title?, events[]: { label, title, description? } (3-6 items) }
 - comparison: { title?, left: { heading, bullets[] }, right: { heading, bullets[] }, verdict? }
 - code: { title?, code (required), language?, caption? }
@@ -43,6 +43,11 @@ Content fields per layout (all layouts support optional key_takeaway):
 - closing: { heading?, subheading?, contact_lines?[], image_url? }
 - swot: { title?, strengths[], weaknesses[], opportunities[], threats[] (1-5 items each) }
 - quadrant: { title?, x_label?, y_label?, quadrant_labels?[4], items[]: { label, x: 0-1, y: 0-1 } (1-12 items) }
+- venn_diagram: { title?, body?, circles[]: { label, items?[] } (2-3 circles, required), overlaps?[]: { sets: [circle indices], label } (max 4) }
+
+IMAGE PLACEHOLDERS: Use image_prompt (any layout that supports image_url) to suggest an image without providing one. Renders as a dashed placeholder box with your prompt text so the user knows what image to drop in. Example: image_prompt: "Screenshot of the iOS app home screen". When the user drops in an image, it replaces the placeholder.
+
+RICH BULLETS: In any layout with bullets (title_and_bullets, comparison, swot, pros_and_cons, quadrant), bullets can be plain strings OR objects: { text, detail?, sources?: [{ label, url? }] }. Use "detail" for hover-accessible explanations (info icon tooltip). Use "sources" for citation footnotes (superscript numbers at bottom of slide).
 
 Optionally set heading_font and body_font (any Google Font name) and accent_color (hex like "#ff6600") to customize the look.
 Use upload_image first to get hosted URLs for any images.`,
@@ -52,7 +57,7 @@ Use upload_image first to get hosted URLs for any images.`,
       body_font: z.string().optional().describe('Google Font for body text (e.g. "Inter"). Default: DM Sans.'),
       accent_color: z.string().optional().describe('Hex color (e.g. "#ff6600"). Overrides default purple accent.'),
       slides: z.array(z.object({
-        layout: z.enum(['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'closing', 'swot', 'quadrant']),
+        layout: z.enum(['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'closing', 'swot', 'quadrant', 'venn_diagram']),
         content: z.record(z.unknown()).describe('Content fields (vary by layout). All layouts support optional key_takeaway.'),
       })).describe('Array of slides'),
     },
@@ -165,16 +170,16 @@ Accepts PNG, JPG, WebP up to 10MB. Upload first, then use the returned URL when 
     async () => {
       const layouts = [
         { name: 'title', description: 'Large centered title slide.', fields: 'title (required), subtitle?, image_url?, key_takeaway?' },
-        { name: 'title_and_body', description: 'Title + paragraph.', fields: 'title (required), body (required), image_url?, key_takeaway?' },
-        { name: 'title_and_bullets', description: 'Title + bullet list.', fields: 'title (required), bullets[] (required), image_url?, key_takeaway?' },
+        { name: 'title_and_body', description: 'Title + paragraph.', fields: 'title (required), body (required), image_url?, image_prompt?, key_takeaway?' },
+        { name: 'title_and_bullets', description: 'Title + bullet list.', fields: 'title (required), bullets[] (required), image_url?, image_prompt?, key_takeaway?' },
         { name: 'title_and_table', description: 'Title + data table.', fields: 'title (required), table: { headers[], rows[][], highlight_column? }, key_takeaway?' },
-        { name: 'two_columns', description: 'Title + two columns.', fields: 'title (required), left: { heading, body }, right: { heading, body }, image_url?, key_takeaway?' },
+        { name: 'two_columns', description: 'Title + two columns.', fields: 'title (required), left: { heading, body }, right: { heading, body }, image_url?, image_prompt?, key_takeaway?' },
         { name: 'section_break', description: 'Bold section divider on accent bg.', fields: 'title (required), key_takeaway?' },
-        { name: 'image_and_text', description: 'Image-primary (~60%) + text.', fields: 'title (required), body (required), image_url (required), key_takeaway?' },
+        { name: 'image_and_text', description: 'Image-primary (~60%) + text.', fields: 'title (required), body (required), image_url or image_prompt (one required), key_takeaway?' },
         { name: 'image_gallery', description: 'Horizontal row of portrait images — ideal for screenshot galleries.', fields: 'images[] (2-5 URLs, required), title?, caption?, key_takeaway?' },
         { name: 'stats', description: 'Big metrics/numbers with labels.', fields: 'metrics[]: { value, label } (2-4 items, required), title?, key_takeaway?' },
         { name: 'quote', description: 'Large pull-quote with optional attribution.', fields: 'quote (required), attribution?, image_url?, key_takeaway?' },
-        { name: 'full_image', description: 'Full-bleed background image with optional overlay text.', fields: 'image_url (required), title?, subtitle?, key_takeaway?' },
+        { name: 'full_image', description: 'Full-bleed background image with optional overlay text.', fields: 'image_url or image_prompt (one required), title?, subtitle?, key_takeaway?' },
         { name: 'timeline', description: 'Horizontal timeline with 3-6 events.', fields: 'events[]: { label, title, description? } (3-6 items, required), title?, key_takeaway?' },
         { name: 'comparison', description: 'Side-by-side A vs B with optional verdict.', fields: 'left: { heading, bullets[], image_url? }, right: { heading, bullets[], image_url? } (required), title?, verdict?, key_takeaway?' },
         { name: 'code', description: 'Styled code block with language badge.', fields: 'code (required), title?, language?, caption?, key_takeaway?' },
@@ -187,6 +192,7 @@ Accepts PNG, JPG, WebP up to 10MB. Upload first, then use the returned URL when 
         { name: 'closing', description: 'Thank you / contact info slide.', fields: 'heading?, subheading?, contact_lines?[], image_url?, key_takeaway?' },
         { name: 'swot', description: '2x2 SWOT analysis grid.', fields: 'strengths[], weaknesses[], opportunities[], threats[] (1-5 items each, all required), title?, key_takeaway?' },
         { name: 'quadrant', description: 'X/Y positioning grid with labeled dots.', fields: 'items[]: { label, x: 0-1, y: 0-1 } (1-12 items, required), title?, x_label?, y_label?, quadrant_labels?[4], key_takeaway?' },
+        { name: 'venn_diagram', description: 'Venn diagram with 2 or 3 overlapping circles. Centered when no text; text-left/diagram-right when title/body provided.', fields: 'circles[]: { label, items?[] } (2-3 items, required), overlaps?[]: { sets: [circle indices], label } (max 4), title?, body?, key_takeaway?' },
       ];
       const customization = {
         heading_font: 'Optional Google Font for headings (e.g. "Playfair Display"). Default: DM Sans.',
@@ -196,6 +202,8 @@ Accepts PNG, JPG, WebP up to 10MB. Upload first, then use the returned URL when 
       const style_guide = {
         copy: 'Keep text short and scannable. Use shorthand phrases, not full sentences. Bullets: 5-8 words max. Stats: abbreviate large numbers (e.g. "2.4M" not "2,400,000"). Quotes: under 30 words.',
         images: 'Use upload_image to host images. image_gallery works best with 2-5 portrait images of consistent aspect ratio. full_image needs high-res landscape images.',
+        rich_bullets: 'Bullets in title_and_bullets, comparison, swot, pros_and_cons, and quadrant can be plain strings or objects: { text, detail?, sources?: [{ label, url? }] }. Use detail for hover tooltips. Use sources for footnote citations.',
+        image_prompt: 'Use image_prompt instead of image_url to suggest an image the user should provide. Renders as a dashed placeholder with your descriptive text. Example: "Screenshot of the competitor app onboarding flow". User drops in the real image later.',
       };
       return { content: [{ type: 'text' as const, text: JSON.stringify({ layouts, customization, style_guide }, null, 2) }] };
     }
