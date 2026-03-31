@@ -23,6 +23,7 @@ import './slide-agenda.js';
 import './slide-closing.js';
 import './slide-swot.js';
 import './slide-quadrant.js';
+import './slide-venn-diagram.js';
 
 interface SlideData {
   layout: string;
@@ -269,6 +270,16 @@ export class SlideRenderer extends LitElement {
           key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-quadrant>`;
+
+      case 'venn_diagram':
+        return html`<slide-venn-diagram
+          .title=${c.title || ''}
+          .body=${c.body || ''}
+          .circles=${(c.circles as Array<{label: string, items?: string[]}>) || []}
+          .overlaps=${(c.overlaps as Array<{sets: number[], label: string}>) || []}
+          key-takeaway=${c.key_takeaway || ''}
+          .editable=${this.editable}
+        ></slide-venn-diagram>`;
 
       default:
         return html`<div style="padding:48px;color:#c00">Unknown layout: ${layout}</div>`;

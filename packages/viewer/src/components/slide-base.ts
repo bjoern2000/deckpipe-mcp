@@ -1,5 +1,12 @@
-import { LitElement, css, html, nothing } from 'lit';
+import { LitElement, css, html, nothing, TemplateResult } from 'lit';
 import { mdInline } from '../utils/markdown.js';
+
+export type BulletItem = string | { text: string; detail?: string; sources?: Array<{ label: string; url?: string }> };
+
+export function normalizeBullet(b: BulletItem): { text: string; detail?: string; sources?: Array<{ label: string; url?: string }> } {
+  if (typeof b === 'string') return { text: b };
+  return b;
+}
 
 export class SlideBase extends LitElement {
   static baseStyles = css`
@@ -150,6 +157,103 @@ export class SlideBase extends LitElement {
       word-break: break-all;
       line-height: 1.3;
     }
+
+    /* --- Rich bullet: detail tooltip --- */
+    .bullet-content {
+      display: inline;
+    }
+    .bullet-detail-trigger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #64748b;
+      font-size: 0.5em;
+      font-weight: 700;
+      font-style: normal;
+      cursor: default;
+      margin-left: 5px;
+      vertical-align: 3px;
+      position: relative;
+      line-height: 1;
+    }
+    .bullet-detail-trigger:hover .bullet-tooltip,
+    .bullet-detail-trigger:focus-within .bullet-tooltip {
+      display: block;
+    }
+    .bullet-tooltip {
+      display: none;
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #f1f5f9;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 1.6em;
+      font-weight: 400;
+      line-height: 1.4;
+      max-width: 280px;
+      width: max-content;
+      z-index: 100;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      text-align: left;
+    }
+    .bullet-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid #1e293b;
+    }
+
+    /* --- Rich bullet: source superscripts --- */
+    .source-sup {
+      font-size: 0.55em;
+      vertical-align: super;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-left: 1px;
+      line-height: 1;
+    }
+
+    /* --- Footnotes section --- */
+    .footnotes {
+      position: absolute;
+      bottom: 20px;
+      left: 56px;
+      right: 56px;
+      padding-top: 0;
+      border-top: none;
+      font-size: 0.42em;
+      color: #b0b8c4;
+      line-height: 1.3;
+    }
+    .footnotes .footnote-list {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 14px;
+    }
+    .footnotes .footnote-item {
+      margin: 0;
+      font-size: 1em;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .footnotes a {
+      color: #94a3b8;
+      text-decoration: underline;
+    }
   `;
 
   private _fitPending = false;
@@ -253,6 +357,51 @@ export class SlideBase extends LitElement {
     placeholder.appendChild(label);
     placeholder.appendChild(url);
     img.replaceWith(placeholder);
+  }
+
+  protected renderBulletItem(
+    bullet: BulletItem,
+    sourceStartIndex: number,
+  ): { tmpl: TemplateResult; sourceCount: number } {
+    const b = normalizeBullet(bullet);
+    const sources = b.sources || [];
+    return {
+      tmpl: html`<li>
+        <span class="bullet-content">${mdInline(b.text)}</span>${b.detail ? html`<span class="bullet-detail-trigger" tabindex="0">i<span class="bullet-tooltip">${b.detail}</span></span>` : nothing}${sources.map((_, j) => html`<span class="source-sup">${sourceStartIndex + j + 1}</span>`)}
+      </li>`,
+      sourceCount: sources.length,
+    };
+  }
+
+  protected collectSources(bullets: BulletItem[]): Array<{ label: string; url?: string }> {
+    const sources: Array<{ label: string; url?: string }> = [];
+    for (const b of bullets) {
+      const norm = normalizeBullet(b);
+      if (norm.sources) sources.push(...norm.sources);
+    }
+    return sources;
+  }
+
+  protected renderFootnotes(sources: Array<{ label: string; url?: string }>): TemplateResult | typeof nothing {
+    if (!sources.length) return nothing;
+    return html`
+      <div class="footnotes">
+        <div class="footnote-list">
+          ${sources.map((s, i) => html`<span class="footnote-item">${i + 1}. ${s.url ? html`<a href="${s.url}" target="_blank" rel="noopener">${s.label}</a>` : s.label}</span>`)}
+        </div>
+      </div>
+    `;
+  }
+
+  protected renderBulletList(bullets: BulletItem[]): TemplateResult {
+    let sourceIndex = 0;
+    const items: TemplateResult[] = [];
+    for (const b of bullets) {
+      const { tmpl, sourceCount } = this.renderBulletItem(b, sourceIndex);
+      items.push(tmpl);
+      sourceIndex += sourceCount;
+    }
+    return html`<ul>${items}</ul>`;
   }
 
   protected emitChange(field: string, value: unknown) {

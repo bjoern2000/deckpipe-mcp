@@ -23,6 +23,26 @@ export const TableSchema = z.object({
 );
 export type Table = z.infer<typeof TableSchema>;
 
+// --- Rich bullet items (backward-compatible: string | object) ---
+const BulletSourceSchema = z.object({
+  label: z.string().min(1),
+  url: z.string().url().optional(),
+});
+
+const RichBulletSchema = z.object({
+  text: z.string().min(1),
+  detail: z.string().optional(),
+  sources: z.array(BulletSourceSchema).max(3).optional(),
+});
+
+export const BulletItemSchema = z.union([z.string(), RichBulletSchema]);
+export type BulletItem = z.infer<typeof BulletItemSchema>;
+
+export function normalizeBullet(b: BulletItem): { text: string; detail?: string; sources?: Array<{ label: string; url?: string }> } {
+  if (typeof b === 'string') return { text: b };
+  return b;
+}
+
 // --- Layout content schemas ---
 const TitleContentSchema = z.object({
   ...BaseContentFields,
@@ -44,7 +64,7 @@ const TitleAndBodyContentSchema = z.object({
 const TitleAndBulletsContentSchema = z.object({
   ...BaseContentFields,
   title: z.string().min(1),
-  bullets: z.array(z.string()).min(1),
+  bullets: z.array(BulletItemSchema).min(1),
   image_url: z.string().url().optional(),
   image_focus: FocalPointSchema.optional(),
 });
@@ -141,7 +161,7 @@ const TimelineContentSchema = z.object({
 // --- Comparison ---
 const ComparisonSideSchema = z.object({
   heading: z.string().min(1),
-  bullets: z.array(z.string()).min(1).max(6),
+  bullets: z.array(BulletItemSchema).min(1).max(6),
   image_url: z.string().url().optional(),
   image_focus: FocalPointSchema.optional(),
 });
@@ -215,8 +235,8 @@ const ProsAndConsContentSchema = z.object({
   title: z.string().optional(),
   pros_heading: z.string().optional(),
   cons_heading: z.string().optional(),
-  pros: z.array(z.string()).min(1).max(8),
-  cons: z.array(z.string()).min(1).max(8),
+  pros: z.array(BulletItemSchema).min(1).max(8),
+  cons: z.array(BulletItemSchema).min(1).max(8),
 });
 
 // --- Agenda ---
@@ -246,10 +266,10 @@ const ClosingContentSchema = z.object({
 const SwotContentSchema = z.object({
   ...BaseContentFields,
   title: z.string().optional(),
-  strengths: z.array(z.string()).min(1).max(5),
-  weaknesses: z.array(z.string()).min(1).max(5),
-  opportunities: z.array(z.string()).min(1).max(5),
-  threats: z.array(z.string()).min(1).max(5),
+  strengths: z.array(BulletItemSchema).min(1).max(5),
+  weaknesses: z.array(BulletItemSchema).min(1).max(5),
+  opportunities: z.array(BulletItemSchema).min(1).max(5),
+  threats: z.array(BulletItemSchema).min(1).max(5),
 });
 
 // --- Quadrant ---
@@ -263,11 +283,30 @@ const QuadrantContentSchema = z.object({
   ...BaseContentFields,
   title: z.string().optional(),
   body: z.string().optional(),
-  bullets: z.array(z.string()).max(6).optional(),
+  bullets: z.array(BulletItemSchema).max(6).optional(),
   x_label: z.string().optional(),
   y_label: z.string().optional(),
   quadrant_labels: z.array(z.string()).length(4).optional(),
   items: z.array(QuadrantItemSchema).min(1).max(12),
+});
+
+// --- Venn Diagram ---
+const VennCircleSchema = z.object({
+  label: z.string().min(1),
+  items: z.array(z.string()).max(5).optional(),
+});
+
+const VennOverlapSchema = z.object({
+  sets: z.array(z.number().int().min(0).max(2)).min(2).max(3),
+  label: z.string().min(1),
+});
+
+const VennDiagramContentSchema = z.object({
+  ...BaseContentFields,
+  title: z.string().optional(),
+  body: z.string().optional(),
+  circles: z.array(VennCircleSchema).min(2).max(3),
+  overlaps: z.array(VennOverlapSchema).max(4).optional(),
 });
 
 // --- Slide (discriminated union on layout) ---
@@ -295,6 +334,7 @@ export const SlideSchema = z.discriminatedUnion('layout', [
   z.object({ layout: z.literal('closing'), content: ClosingContentSchema }),
   z.object({ layout: z.literal('swot'), content: SwotContentSchema }),
   z.object({ layout: z.literal('quadrant'), content: QuadrantContentSchema }),
+  z.object({ layout: z.literal('venn_diagram'), content: VennDiagramContentSchema }),
 ]);
 export type Slide = z.infer<typeof SlideSchema>;
 
@@ -304,7 +344,7 @@ export const LayoutNames = [
   'image_gallery', 'stats', 'quote', 'full_image',
   'timeline', 'comparison', 'code', 'callout',
   'icons_and_text', 'team', 'embed', 'pros_and_cons',
-  'agenda', 'swot', 'quadrant', 'closing',
+  'agenda', 'swot', 'quadrant', 'venn_diagram', 'closing',
 ] as const;
 export type Layout = typeof LayoutNames[number];
 

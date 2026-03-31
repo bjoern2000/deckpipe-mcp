@@ -1,6 +1,6 @@
 import { html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { SlideBase } from './slide-base.js';
+import { SlideBase, BulletItem, normalizeBullet } from './slide-base.js';
 import { mdInline } from '../utils/markdown.js';
 
 @customElement('slide-pros-and-cons')
@@ -68,14 +68,26 @@ export class SlideProsAndCons extends SlideBase {
   @property() title = '';
   @property({ attribute: 'pros-heading' }) prosHeading = '';
   @property({ attribute: 'cons-heading' }) consHeading = '';
-  @property({ type: Array }) pros: string[] = [];
-  @property({ type: Array }) cons: string[] = [];
+  @property({ type: Array }) pros: BulletItem[] = [];
+  @property({ type: Array }) cons: BulletItem[] = [];
   @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
+
+  private _renderProsConsList(items: BulletItem[], icon: string, sourceOffset: number) {
+    let idx = sourceOffset;
+    return items.map(item => {
+      const b = normalizeBullet(item);
+      const sources = b.sources || [];
+      const startIdx = idx;
+      idx += sources.length;
+      return html`<li><span class="bullet-icon">${icon === '&#10003;' ? '\u2713' : '\u2717'}</span><span class="bullet-content">${mdInline(b.text)}</span>${b.detail ? html`<span class="bullet-detail-trigger" tabindex="0">i<span class="bullet-tooltip">${b.detail}</span></span>` : nothing}${sources.map((_, j) => html`<span class="source-sup">${startIdx + j + 1}</span>`)}</li>`;
+    });
+  }
 
   render() {
     const prosLabel = this.prosHeading || 'Pros';
     const consLabel = this.consHeading || 'Cons';
+    const allSources = [...this.collectSources(this.pros), ...this.collectSources(this.cons)];
 
     return html`
       <div class="slide">
@@ -107,16 +119,18 @@ export class SlideProsAndCons extends SlideBase {
                     <span contenteditable="true"
                       @blur=${(e: FocusEvent) => {
                         const newPros = [...this.pros];
-                        newPros[i] = (e.target as HTMLElement).textContent || '';
+                        const orig = normalizeBullet(this.pros[i]);
+                        const newText = (e.target as HTMLElement).textContent || '';
+                        newPros[i] = orig.detail || orig.sources ? { ...orig, text: newText } : newText;
                         this.emitChange('pros', newPros);
                       }}
-                    >${p}</span>
+                    >${normalizeBullet(p).text}</span>
                   </li>
                 `)}
               </ul>
             `, []) : html`
               <ul>
-                ${this.pros.map(p => html`<li><span class="bullet-icon">&#10003;</span><span>${mdInline(p)}</span></li>`)}
+                ${this._renderProsConsList(this.pros, '&#10003;', 0)}
               </ul>
             `}
           </div>
@@ -137,20 +151,23 @@ export class SlideProsAndCons extends SlideBase {
                     <span contenteditable="true"
                       @blur=${(e: FocusEvent) => {
                         const newCons = [...this.cons];
-                        newCons[i] = (e.target as HTMLElement).textContent || '';
+                        const orig = normalizeBullet(this.cons[i]);
+                        const newText = (e.target as HTMLElement).textContent || '';
+                        newCons[i] = orig.detail || orig.sources ? { ...orig, text: newText } : newText;
                         this.emitChange('cons', newCons);
                       }}
-                    >${c}</span>
+                    >${normalizeBullet(c).text}</span>
                   </li>
                 `)}
               </ul>
             `, []) : html`
               <ul>
-                ${this.cons.map(c => html`<li><span class="bullet-icon">&#10007;</span><span>${mdInline(c)}</span></li>`)}
+                ${this._renderProsConsList(this.cons, '&#10007;', this.collectSources(this.pros).length)}
               </ul>
             `}
           </div>
         </div>
+        ${this.editable ? '' : this.renderFootnotes(allSources)}
       </div>
     `;
   }

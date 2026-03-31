@@ -1,7 +1,6 @@
 import { html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { SlideBase } from './slide-base.js';
-import { mdInline } from '../utils/markdown.js';
+import { SlideBase, BulletItem, normalizeBullet } from './slide-base.js';
 
 @customElement('slide-swot')
 export class SlideSwot extends SlideBase {
@@ -58,14 +57,14 @@ export class SlideSwot extends SlideBase {
   ];
 
   @property() title = '';
-  @property({ type: Array }) strengths: string[] = [];
-  @property({ type: Array }) weaknesses: string[] = [];
-  @property({ type: Array }) opportunities: string[] = [];
-  @property({ type: Array }) threats: string[] = [];
+  @property({ type: Array }) strengths: BulletItem[] = [];
+  @property({ type: Array }) weaknesses: BulletItem[] = [];
+  @property({ type: Array }) opportunities: BulletItem[] = [];
+  @property({ type: Array }) threats: BulletItem[] = [];
   @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
-  private _renderQuadrant(name: string, field: 'strengths' | 'weaknesses' | 'opportunities' | 'threats', items: string[]) {
+  private _renderQuadrant(name: string, field: 'strengths' | 'weaknesses' | 'opportunities' | 'threats', items: BulletItem[]) {
     if (this.editable) {
       return html`
         <div class="quadrant ${field}">
@@ -77,10 +76,12 @@ export class SlideSwot extends SlideBase {
                   <li contenteditable="true"
                     @blur=${(e: FocusEvent) => {
                       const newItems = [...items];
-                      newItems[i] = (e.target as HTMLElement).textContent || '';
+                      const orig = normalizeBullet(items[i]);
+                      const newText = (e.target as HTMLElement).textContent || '';
+                      newItems[i] = orig.detail || orig.sources ? { ...orig, text: newText } : newText;
                       this.emitChange(field, newItems);
                     }}
-                  >${item}</li>
+                  >${normalizeBullet(item).text}</li>
                 `)}
               </ul>
             `, [])}
@@ -92,13 +93,19 @@ export class SlideSwot extends SlideBase {
       <div class="quadrant ${field}">
         <div class="quadrant-header">${name}</div>
         <div class="quadrant-body">
-          <ul>${items.map(item => html`<li>${mdInline(item)}</li>`)}</ul>
+          ${this.renderBulletList(items)}
         </div>
       </div>
     `;
   }
 
   render() {
+    const allSources = [
+      ...this.collectSources(this.strengths),
+      ...this.collectSources(this.weaknesses),
+      ...this.collectSources(this.opportunities),
+      ...this.collectSources(this.threats),
+    ];
     return html`
       <div class="slide">
         ${this.title
@@ -117,6 +124,7 @@ export class SlideSwot extends SlideBase {
           ${this._renderQuadrant('\u{1F680} Opportunities', 'opportunities', this.opportunities)}
           ${this._renderQuadrant('\u{1F6E1}\uFE0F Threats', 'threats', this.threats)}
         </div>
+        ${this.editable ? '' : this.renderFootnotes(allSources)}
       </div>
     `;
   }

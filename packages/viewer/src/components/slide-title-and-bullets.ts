@@ -1,7 +1,6 @@
 import { html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { SlideBase } from './slide-base.js';
-import { mdInline } from '../utils/markdown.js';
+import { SlideBase, BulletItem, normalizeBullet } from './slide-base.js';
 import { focalPointToObjectPosition } from '../utils/focal-point.js';
 
 @customElement('slide-title-and-bullets')
@@ -38,7 +37,7 @@ export class SlideTitleAndBullets extends SlideBase {
   ];
 
   @property() title = '';
-  @property({ type: Array }) bullets: string[] = [];
+  @property({ type: Array }) bullets: BulletItem[] = [];
   @property({ attribute: 'image-url' }) imageUrl = '';
   @property({ type: Object }) imageFocus: { x: number; y: number } | null = null;
   @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
@@ -46,6 +45,7 @@ export class SlideTitleAndBullets extends SlideBase {
 
   render() {
     const hasImage = !!this.imageUrl;
+    const allSources = this.collectSources(this.bullets);
     return html`
       <div class="slide ${hasImage ? 'with-image' : ''}">
         ${this.editable ? this.wrapDeletable('title', html`
@@ -61,16 +61,16 @@ export class SlideTitleAndBullets extends SlideBase {
                 <li contenteditable="true"
                   @blur=${(e: FocusEvent) => {
                     const newBullets = [...this.bullets];
-                    newBullets[i] = (e.target as HTMLElement).textContent || '';
+                    const orig = normalizeBullet(this.bullets[i]);
+                    const newText = (e.target as HTMLElement).textContent || '';
+                    newBullets[i] = orig.detail || orig.sources ? { ...orig, text: newText } : newText;
                     this.emitChange('bullets', newBullets);
                   }}
-                >${b}</li>
+                >${normalizeBullet(b).text}</li>
               `)}
             </ul>
           `, []) : html`
-            <ul>
-              ${this.bullets.map(b => html`<li>${mdInline(b)}</li>`)}
-            </ul>
+            ${this.renderBulletList(this.bullets)}
           `}
           ${hasImage
             ? this.editable
@@ -80,6 +80,7 @@ export class SlideTitleAndBullets extends SlideBase {
               : html`<div class="image-area"><img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} /></div>`
             : ''}
         </div>
+        ${this.editable ? '' : this.renderFootnotes(allSources)}
       </div>
     `;
   }

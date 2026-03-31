@@ -1,7 +1,7 @@
 import { html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { SlideBase } from './slide-base.js';
-import { md, mdInline } from '../utils/markdown.js';
+import { SlideBase, BulletItem, normalizeBullet } from './slide-base.js';
+import { md } from '../utils/markdown.js';
 
 @customElement('slide-quadrant')
 export class SlideQuadrant extends SlideBase {
@@ -176,7 +176,7 @@ export class SlideQuadrant extends SlideBase {
 
   @property() title = '';
   @property() body = '';
-  @property({ type: Array }) bullets: string[] = [];
+  @property({ type: Array }) bullets: BulletItem[] = [];
   @property({ attribute: 'x-label' }) xLabel = '';
   @property({ attribute: 'y-label' }) yLabel = '';
   @property({ type: Array }) quadrantLabels: string[] = [];
@@ -220,17 +220,17 @@ export class SlideQuadrant extends SlideBase {
                           <li contenteditable="true"
                             @blur=${(e: FocusEvent) => {
                               const newBullets = [...this.bullets];
-                              newBullets[i] = (e.target as HTMLElement).textContent || '';
+                              const orig = normalizeBullet(this.bullets[i]);
+                              const newText = (e.target as HTMLElement).textContent || '';
+                              newBullets[i] = orig.detail || orig.sources ? { ...orig, text: newText } : newText;
                               this.emitChange('bullets', newBullets);
                             }}
-                          >${b}</li>
+                          >${normalizeBullet(b).text}</li>
                         `)}
                       </ul>
                     `, [])
                   : html`
-                    <ul class="bullets">
-                      ${this.bullets.map(b => html`<li>${mdInline(b)}</li>`)}
-                    </ul>
+                    ${this.renderBulletList(this.bullets)}
                   `
                 : nothing}
             </div>

@@ -1,6 +1,6 @@
 import { html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { SlideBase } from './slide-base.js';
+import { SlideBase, BulletItem, normalizeBullet } from './slide-base.js';
 import { mdInline } from '../utils/markdown.js';
 import { focalPointToObjectPosition } from '../utils/focal-point.js';
 
@@ -87,8 +87,8 @@ export class SlideComparison extends SlideBase {
   ];
 
   @property() title = '';
-  @property({ type: Object }) left: { heading: string; bullets: string[]; image_url?: string; image_focus?: { x: number; y: number } } = { heading: '', bullets: [] };
-  @property({ type: Object }) right: { heading: string; bullets: string[]; image_url?: string; image_focus?: { x: number; y: number } } = { heading: '', bullets: [] };
+  @property({ type: Object }) left: { heading: string; bullets: BulletItem[]; image_url?: string; image_focus?: { x: number; y: number } } = { heading: '', bullets: [] };
+  @property({ type: Object }) right: { heading: string; bullets: BulletItem[]; image_url?: string; image_focus?: { x: number; y: number } } = { heading: '', bullets: [] };
   @property() verdict = '';
   @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
@@ -106,10 +106,12 @@ export class SlideComparison extends SlideBase {
               <li contenteditable="true"
                 @blur=${(e: FocusEvent) => {
                   const newBullets = [...data.bullets];
-                  newBullets[i] = (e.target as HTMLElement).textContent || '';
+                  const orig = normalizeBullet(data.bullets[i]);
+                  const newText = (e.target as HTMLElement).textContent || '';
+                  newBullets[i] = orig.detail || orig.sources ? { ...orig, text: newText } : newText;
                   this.emitChange(side, { ...data, bullets: newBullets });
                 }}
-              >${b}</li>
+              >${normalizeBullet(b).text}</li>
             `)}
           </ul>
           ${data.image_url ? html`<img src="${data.image_url}" alt="" style="object-position:${focalPointToObjectPosition(data.image_focus || null)}" @error=${this.onImgError} />` : nothing}
@@ -119,13 +121,14 @@ export class SlideComparison extends SlideBase {
     return html`
       <div class="side">
         <h2>${data.heading}</h2>
-        <ul>${data.bullets.map(b => html`<li>${mdInline(b)}</li>`)}</ul>
+        ${this.renderBulletList(data.bullets)}
         ${data.image_url ? html`<img src="${data.image_url}" alt="" style="object-position:${focalPointToObjectPosition(data.image_focus || null)}" @error=${this.onImgError} />` : nothing}
       </div>
     `;
   }
 
   render() {
+    const allSources = [...this.collectSources(this.left.bullets), ...this.collectSources(this.right.bullets)];
     return html`
       <div class="slide">
         ${this.title
@@ -152,6 +155,7 @@ export class SlideComparison extends SlideBase {
               `)
             : html`<div class="verdict">${mdInline(this.verdict)}</div>`
           : nothing}
+        ${this.editable ? '' : this.renderFootnotes(allSources)}
       </div>
     `;
   }
