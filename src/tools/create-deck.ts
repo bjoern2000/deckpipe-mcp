@@ -22,7 +22,7 @@ Content fields per layout (all layouts support optional key_takeaway):
 - two_columns: { title, left: { heading, body }, right: { heading, body }, image_url?, image_prompt? }
 - section_break: { title }
 - image_and_text: { title, body, image_url (required unless image_prompt provided), image_prompt? }
-- image_gallery: { title?, caption?, images[] (2-5 URLs) }
+- image_gallery: { title?, caption?, images[] (2-5 URLs, required unless image_prompt provided), image_prompt? }
 - stats: { title?, metrics[]: { value, label } (2-4 items) }
 - quote: { quote, attribution?, image_url? }
 - full_image: { image_url (required unless image_prompt provided), image_prompt?, title?, subtitle? }

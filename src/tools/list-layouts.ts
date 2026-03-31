@@ -41,7 +41,7 @@ export const listLayoutsTool = {
       { name: 'two_columns', fields: 'title (required), left: { heading, body }, right: { heading, body }, image_url?, image_prompt?, key_takeaway?' },
       { name: 'section_break', fields: 'title (required), key_takeaway?' },
       { name: 'image_and_text', fields: 'title (required), body (required), image_url (required unless image_prompt provided), image_prompt?, key_takeaway?' },
-      { name: 'image_gallery', fields: 'images[] (2-5 URLs, required), title?, caption?, key_takeaway?' },
+      { name: 'image_gallery', fields: 'images[] (2-5 URLs, required unless image_prompt provided), image_prompt?, title?, caption?, key_takeaway?' },
       { name: 'stats', fields: 'metrics[]: { value, label } (2-4 items, required), title?, key_takeaway?' },
       { name: 'quote', fields: 'quote (required), attribution?, image_url?, key_takeaway?' },
       { name: 'full_image', fields: 'image_url (required unless image_prompt provided), image_prompt?, title?, subtitle?, key_takeaway?' },
