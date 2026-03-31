@@ -6,10 +6,49 @@ import { query } from '../db/client.js';
 import { config } from '../config.js';
 export const decksRouter = Router();
 
+function isPlaceholderUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.hostname === 'placehold.co' || u.hostname === 'via.placeholder.com';
+  } catch { return false; }
+}
+
+function extractPlaceholderText(url: string): string {
+  try {
+    const u = new URL(url);
+    const text = u.searchParams.get('text');
+    if (text) return text.replace(/\+/g, ' ');
+    // placehold.co encodes text in the path: /800x500/bg/fg?text=...
+    return '';
+  } catch { return ''; }
+}
+
+function convertPlaceholderUrls(slides: any[]): any[] {
+  return slides.map(slide => {
+    const c = { ...slide.content };
+
+    // Convert image_url placeholder to image_prompt
+    if (c.image_url && isPlaceholderUrl(c.image_url)) {
+      const text = extractPlaceholderText(c.image_url);
+      if (text) c.image_prompt = c.image_prompt || text;
+      delete c.image_url;
+    }
+
+    // Filter placeholder URLs from image_gallery images[]
+    if (Array.isArray(c.images)) {
+      c.images = c.images.filter((img: string) => !isPlaceholderUrl(img));
+      if (c.images.length === 0) delete c.images;
+    }
+
+    return { ...slide, content: c };
+  });
+}
+
 // POST /v1/decks — Create a new deck
 decksRouter.post('/', createDeckLimiter, validate(CreateDeckSchema), async (req, res, next) => {
   try {
-    const { title, heading_font, body_font, accent_color, slides } = req.body;
+    const { title, heading_font, body_font, accent_color, slides: rawSlides } = req.body;
+    const slides = convertPlaceholderUrls(rawSlides);
     const deckId = generateDeckId();
     const editKey = generateEditKey();
     const slug = slugify(title);
@@ -89,6 +128,8 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
           content: { ...newSlides[index].content, ...content },
         };
       }
+      // Clean up any placeholder URLs in the updated slides
+      newSlides = convertPlaceholderUrls(newSlides);
     }
 
     await query(
