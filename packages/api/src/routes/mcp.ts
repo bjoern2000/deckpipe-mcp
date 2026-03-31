@@ -14,20 +14,22 @@ Keep slide copy short and scannable — use shorthand phrases, not full sentence
 
 MARKDOWN: All text content fields support markdown rendering. Use **bold**, *italic*, \`code\`, [links](url), and lists (1. ordered, - unordered) in body, subtitle, bullets, table cells, and key_takeaway fields. Body text fields support full block markdown including numbered and bulleted lists.
 
-Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text", "image_gallery", "stats", "quote", "full_image", "timeline", "comparison", "code", "callout", "icons_and_text", "team", "embed", "pros_and_cons", "agenda", "closing", "swot", "quadrant".
+Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text", "image_gallery", "stats", "quote", "full_image", "timeline", "comparison", "code", "callout", "icons_and_text", "team", "embed", "pros_and_cons", "agenda", "swot", "quadrant", "venn_diagram", "closing".
+
+RICH BULLETS: In title_and_bullets, comparison, and pros_and_cons, bullets can be strings OR objects: { text, detail?, sources?[{ label, url? }] }. detail shows as an info tooltip on hover. sources render as numbered footnotes.
 
 Content fields per layout (all layouts support optional key_takeaway):
 - title: { title, subtitle?, image_url? }
-- title_and_body: { title, body, image_url? }
-- title_and_bullets: { title, bullets[], image_url? }
+- title_and_body: { title, body, image_url?, image_prompt? }
+- title_and_bullets: { title, bullets[] (strings or { text, detail?, sources?[] }), image_url?, image_prompt? }
 - title_and_table: { title, table: { headers[], rows[][], highlight_column? } }
-- two_columns: { title, left: { heading, body }, right: { heading, body }, image_url? }
+- two_columns: { title, left: { heading, body }, right: { heading, body }, image_url?, image_prompt? }
 - section_break: { title }
-- image_and_text: { title, body, image_url (required) }
+- image_and_text: { title, body, image_url (required unless image_prompt provided), image_prompt? }
 - image_gallery: { title?, caption?, images[] (2-5 URLs) }
 - stats: { title?, metrics[]: { value, label } (2-4 items) }
 - quote: { quote, attribution?, image_url? }
-- full_image: { image_url (required), title?, subtitle? }
+- full_image: { image_url (required unless image_prompt provided), image_prompt?, title?, subtitle? }
 - timeline: { title?, events[]: { label, title, description?, position?: 0-1 } (3-6 items) }
 - comparison: { title?, left: { heading, bullets[] }, right: { heading, bullets[] }, verdict? }
 - code: { title?, code (required), language?, caption? }
@@ -37,9 +39,10 @@ Content fields per layout (all layouts support optional key_takeaway):
 - embed: { url (required), caption?, aspect_ratio?: "16:9"|"4:3"|"1:1" }
 - pros_and_cons: { title?, pros_heading?, cons_heading?, pros[], cons[] }
 - agenda: { title?, items[]: { topic, duration?, description? } (1-10 items) }
-- closing: { heading?, subheading?, contact_lines?[], image_url? }
 - swot: { title?, strengths[], weaknesses[], opportunities[], threats[] (1-5 items each) }
 - quadrant: { title?, body?, bullets?[], x_label?, y_label?, quadrant_labels?[4], items[]: { label, x: 0-1, y: 0-1 } (1-12 items) }
+- venn_diagram: { title?, circles[]: { label, items?[] } (2-3 circles), overlaps?[]: { sets: number[], label } (max 4) }
+- closing: { heading?, subheading?, contact_lines?[], image_url? }
 
 Optionally set heading_font and body_font (any Google Font name) and accent_color (hex like "#ff6600") to customize the look.
 Use upload_image first to get hosted URLs for any images.`,
@@ -49,7 +52,7 @@ Use upload_image first to get hosted URLs for any images.`,
       body_font: z.string().optional().describe('Google Font for body text (e.g. "Inter"). Default: DM Sans.'),
       accent_color: z.string().optional().describe('Hex color (e.g. "#ff6600"). Overrides default purple accent.'),
       slides: z.array(z.object({
-        layout: z.enum(['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'closing', 'swot', 'quadrant']),
+        layout: z.enum(['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'swot', 'quadrant', 'venn_diagram', 'closing']),
         content: z.record(z.unknown()).describe('Content fields (vary by layout). All layouts support optional key_takeaway.'),
       })).describe('Array of slides'),
     },
@@ -182,8 +185,8 @@ Accepts PNG, JPG, WebP up to 10MB. Upload first, then use the returned URL when 
         { name: 'agenda', fields: 'items[]: { topic, duration?, description? } (1-10 items, required), title?, key_takeaway?' },
         { name: 'swot', fields: 'strengths[], weaknesses[], opportunities[], threats[] (1-5 items each, all required), title?, key_takeaway?' },
         { name: 'quadrant', fields: 'items[]: { label, x: 0-1, y: 0-1 } (1-12 items, required), title?, body?, bullets?[], x_label?, y_label?, quadrant_labels?[4], key_takeaway?. Title/body/bullets on left, chart on right.' },
-        { name: 'closing', fields: 'heading?, subheading?, contact_lines?[], image_url?, key_takeaway?. Accent-colored background with white text. Contact lines at bottom. Use as final slide.' },
         { name: 'venn_diagram', fields: 'circles[]: { label, items?[] } (2-3 circles, required), overlaps?[]: { sets: number[], label } (max 4), title?, key_takeaway?. Renders overlapping circles with labeled intersections.' },
+        { name: 'closing', fields: 'heading?, subheading?, contact_lines?[], image_url?, key_takeaway?. Accent-colored background with white text. Contact lines at bottom. Use as final slide.' },
       ];
       const customization = {
         heading_font: 'Google Font for headings. Default: DM Sans.',
