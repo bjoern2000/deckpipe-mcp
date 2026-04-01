@@ -24,7 +24,6 @@ export class SlideTimeline extends SlideBase {
       }
       .event {
         position: absolute;
-        transform: translateX(-50%);
         text-align: center;
       }
       .dot {
@@ -41,22 +40,22 @@ export class SlideTimeline extends SlideBase {
       }
       .event-content {
         position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
+        left: 0;
+        right: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: max-content;
+        text-align: center;
       }
       .event-content.below {
-        top: calc(50% + 20px);
+        top: calc(50% + 18px);
       }
       .event-content.above {
-        bottom: calc(50% + 20px);
+        bottom: calc(50% + 18px);
       }
       .event-label {
         font-family: var(--dp-font-heading, 'DM Sans', sans-serif);
-        font-size: 0.75em;
+        font-size: 0.65em;
         font-weight: 700;
         color: var(--dp-accent, #7c3aed);
         text-transform: uppercase;
@@ -64,15 +63,17 @@ export class SlideTimeline extends SlideBase {
       }
       .event-title {
         font-family: var(--dp-font-heading, 'DM Sans', sans-serif);
-        font-size: 0.95em;
+        font-size: 0.8em;
         font-weight: 600;
         color: var(--dp-text-title, #0f172a);
-        margin-top: 4px;
+        margin-top: 3px;
+        line-height: 1.25;
       }
       .event-description {
-        font-size: 0.8em;
+        font-size: 0.65em;
         color: var(--dp-text-body, #64748b);
         margin-top: 2px;
+        line-height: 1.3;
       }
     `,
   ];
@@ -96,7 +97,8 @@ export class SlideTimeline extends SlideBase {
   render() {
     const positions = this.getPositions();
     const n = this.events.length;
-    const eventWidth = `${Math.floor(80 / n)}%`;
+    const colWidth = Math.floor(80 / n);
+    const eventWidth = `${colWidth}%`;
 
     return html`
       <div class="slide">
@@ -114,7 +116,7 @@ export class SlideTimeline extends SlideBase {
           <div class="timeline">
             <div class="timeline-line"></div>
             ${this.events.map((ev, i) => html`
-              <div class="event" style="left:${this.getLeft(positions[i])}%;width:${eventWidth};top:0;bottom:0">
+              <div class="event" style="left:${this.getLeft(positions[i]) - colWidth / 2}%;width:${eventWidth};top:0;bottom:0">
                 <div class="dot"></div>
                 <div class="event-content ${i % 2 === 0 ? 'below' : 'above'}">
                   <div class="event-label" contenteditable="true"
@@ -151,7 +153,7 @@ export class SlideTimeline extends SlideBase {
           <div class="timeline">
             <div class="timeline-line"></div>
             ${this.events.map((ev, i) => html`
-              <div class="event" style="left:${this.getLeft(positions[i])}%;width:${eventWidth};top:0;bottom:0">
+              <div class="event" style="left:${this.getLeft(positions[i]) - colWidth / 2}%;width:${eventWidth};top:0;bottom:0">
                 <div class="dot"></div>
                 <div class="event-content ${i % 2 === 0 ? 'below' : 'above'}">
                   <div class="event-label">${ev.label}</div>
