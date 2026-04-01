@@ -13,15 +13,17 @@ export class SlideTitle extends SlideBase {
         align-items: center;
         justify-content: center;
         text-align: center;
+        background: var(--dp-accent, #2563eb);
       }
-      h1 { font-size: 3em; margin-bottom: 12px; }
+      h1 { font-size: 3em; margin-bottom: 12px; color: #ffffff; }
       .subtitle {
         font-size: 1.3em;
-        color: var(--dp-text-body, #666);
+        color: rgba(255, 255, 255, 0.85);
         margin-top: 8px;
       }
-      .subtitle a { color: var(--dp-accent, #7c3aed); text-decoration: underline; }
-      .subtitle code { background: #f1f5f9; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
+      .subtitle a { color: rgba(255, 255, 255, 0.9); text-decoration: underline; }
+      .subtitle code { background: rgba(255, 255, 255, 0.15); color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
+      .key-takeaway { background: rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.9); }
       .bg-image {
         position: absolute;
         inset: 0;

@@ -11,10 +11,9 @@ export class SlideSectionBreak extends SlideBase {
         align-items: center;
         justify-content: center;
         text-align: center;
-        background: var(--dp-accent, #2563eb);
       }
       h1 {
-        color: #ffffff;
+        color: var(--dp-text-title, #0f172a);
         font-size: 2.8em;
       }
     `,
