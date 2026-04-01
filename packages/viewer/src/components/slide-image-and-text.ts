@@ -30,7 +30,7 @@ export class SlideImageAndText extends SlideBase {
         flex: 1;
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
       }
       .body-text { white-space: pre-wrap; }
       .body-md { }
