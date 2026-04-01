@@ -80,7 +80,7 @@ export class SlideProsAndCons extends SlideBase {
       const sources = b.sources || [];
       const startIdx = idx;
       idx += sources.length;
-      return html`<li><span class="bullet-icon">${icon === '&#10003;' ? '\u2713' : '\u2717'}</span><span class="bullet-content">${mdInline(b.text)}</span>${b.detail ? html`<span class="bullet-detail-trigger" tabindex="0">i<span class="bullet-tooltip">${b.detail}</span></span>` : nothing}${sources.map((_, j) => html`<span class="source-sup">${startIdx + j + 1}</span>`)}</li>`;
+      return html`<li><span class="bullet-icon">${icon === '&#10003;' ? '\u2713' : '\u2717'}</span><span class="bullet-content">${mdInline(b.text)}${b.detail ? html`<span class="bullet-detail-trigger" tabindex="0">i<span class="bullet-tooltip">${b.detail}</span></span>` : nothing}${sources.map((_, j) => html`<span class="source-sup">${startIdx + j + 1}</span>`)}</span></li>`;
     });
   }
 
