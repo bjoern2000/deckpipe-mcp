@@ -289,22 +289,16 @@ export class SlideBase extends LitElement {
 
   private _fitPending = false;
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.shadowRoot?.addEventListener('mouseover', (e: Event) => {
-      const trigger = (e.target as HTMLElement).closest?.('.bullet-detail-trigger');
-      if (!trigger) return;
-      const tooltip = trigger.querySelector('.bullet-tooltip') as HTMLElement;
-      if (!tooltip) return;
-      const rect = trigger.getBoundingClientRect();
-      const tooltipWidth = 280; // max-width
-      let left = rect.left + rect.width / 2 - tooltipWidth / 2;
-      // Clamp to viewport
-      left = Math.max(8, Math.min(left, window.innerWidth - tooltipWidth - 8));
-      tooltip.style.left = `${left}px`;
-      tooltip.style.bottom = `${window.innerHeight - rect.top + 8}px`;
-      tooltip.style.transform = 'none';
-    }, true);
+  private _positionTooltip(e: Event) {
+    const trigger = e.currentTarget as HTMLElement;
+    const tooltip = trigger.querySelector('.bullet-tooltip') as HTMLElement;
+    if (!tooltip) return;
+    const rect = trigger.getBoundingClientRect();
+    const tooltipWidth = 280;
+    let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tooltipWidth - 8));
+    tooltip.style.left = `${left}px`;
+    tooltip.style.bottom = `${window.innerHeight - rect.top + 8}px`;
   }
 
   protected updated(_changedProperties: Map<string, unknown>) {
@@ -431,7 +425,7 @@ export class SlideBase extends LitElement {
     const sources = b.sources || [];
     return {
       tmpl: html`<li>
-        <span class="bullet-content">${mdInline(b.text)}</span>${b.detail ? html`<span class="bullet-detail-trigger" tabindex="0">i<span class="bullet-tooltip">${b.detail}</span></span>` : nothing}${sources.map((_, j) => html`<span class="source-sup">${sourceStartIndex + j + 1}</span>`)}
+        <span class="bullet-content">${mdInline(b.text)}</span>${b.detail ? html`<span class="bullet-detail-trigger" tabindex="0" @mouseover=${this._positionTooltip}>i<span class="bullet-tooltip">${b.detail}</span></span>` : nothing}${sources.map((_, j) => html`<span class="source-sup">${sourceStartIndex + j + 1}</span>`)}
       </li>`,
       sourceCount: sources.length,
     };
