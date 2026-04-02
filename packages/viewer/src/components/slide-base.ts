@@ -29,7 +29,7 @@ export class SlideBase extends LitElement {
       font-weight: 400;
       color: var(--dp-text-body, #334155);
       position: relative;
-      overflow: hidden;
+      overflow: visible;
     }
 
     h1 {
@@ -336,10 +336,14 @@ export class SlideBase extends LitElement {
     const slideEl = this.shadowRoot?.querySelector('.slide') as HTMLElement;
     if (!slideEl) return;
 
-    // Reset to base size
+    // Need overflow:hidden for measurement, then revert so tooltips can escape
+    slideEl.style.overflow = 'hidden';
     slideEl.style.fontSize = '';
 
-    if (slideEl.scrollHeight <= slideEl.clientHeight) return;
+    if (slideEl.scrollHeight <= slideEl.clientHeight) {
+      slideEl.style.overflow = '';
+      return;
+    }
 
     // Binary search for the right font scale
     let lo = 0.42;
@@ -354,6 +358,7 @@ export class SlideBase extends LitElement {
       }
     }
     slideEl.style.fontSize = `${lo}em`;
+    slideEl.style.overflow = '';
   }
 
   protected renderKeyTakeaway(keyTakeaway: string | undefined, editable = false) {
