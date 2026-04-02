@@ -220,10 +220,7 @@ export class SlideBase extends LitElement {
     }
     .bullet-tooltip {
       display: none;
-      position: absolute;
-      left: 50%;
-      bottom: calc(100% + 8px);
-      transform: translateX(-50%);
+      position: fixed;
       background: #1e293b;
       color: #f1f5f9;
       padding: 8px 12px;
@@ -233,7 +230,7 @@ export class SlideBase extends LitElement {
       line-height: 1.4;
       max-width: 280px;
       width: max-content;
-      z-index: 100;
+      z-index: 10000;
       pointer-events: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       text-align: left;
@@ -291,6 +288,24 @@ export class SlideBase extends LitElement {
   `;
 
   private _fitPending = false;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.shadowRoot?.addEventListener('mouseenter', (e: Event) => {
+      const trigger = (e.target as HTMLElement).closest?.('.bullet-detail-trigger');
+      if (!trigger) return;
+      const tooltip = trigger.querySelector('.bullet-tooltip') as HTMLElement;
+      if (!tooltip) return;
+      const rect = trigger.getBoundingClientRect();
+      const tooltipWidth = 280; // max-width
+      let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+      // Clamp to viewport
+      left = Math.max(8, Math.min(left, window.innerWidth - tooltipWidth - 8));
+      tooltip.style.left = `${left}px`;
+      tooltip.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+      tooltip.style.transform = 'none';
+    }, true);
+  }
 
   protected updated(_changedProperties: Map<string, unknown>) {
     super.updated(_changedProperties);
