@@ -365,14 +365,28 @@ const SlideUpdateSchema = z.object({
   content: z.record(z.unknown()),
 });
 
+const NewSlideSchema = z.object({
+  layout: z.enum(LayoutNames),
+  content: z.record(z.unknown()),
+});
+
+export const SlideOperationSchema = z.discriminatedUnion('op', [
+  z.object({ op: z.literal('delete'), index: z.number().int().min(0) }),
+  z.object({ op: z.literal('insert'), index: z.number().int().min(0), slide: NewSlideSchema }),
+  z.object({ op: z.literal('move'), from: z.number().int().min(0), to: z.number().int().min(0) }),
+  z.object({ op: z.literal('replace'), index: z.number().int().min(0), slide: NewSlideSchema }),
+]);
+export type SlideOperation = z.infer<typeof SlideOperationSchema>;
+
 export const UpdateDeckSchema = z.object({
   title: z.string().min(1).optional(),
   heading_font: z.string().min(1).max(100).optional(),
   body_font: z.string().min(1).max(100).optional(),
   accent_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   slides: z.array(SlideUpdateSchema).optional(),
+  slide_operations: z.array(SlideOperationSchema).max(50).optional(),
 }).refine(
-  (data) => data.title !== undefined || data.heading_font !== undefined || data.body_font !== undefined || data.accent_color !== undefined || data.slides !== undefined,
+  (data) => data.title !== undefined || data.heading_font !== undefined || data.body_font !== undefined || data.accent_color !== undefined || data.slides !== undefined || data.slide_operations !== undefined,
   { message: 'At least one field must be provided for update' }
 );
 export type UpdateDeckInput = z.infer<typeof UpdateDeckSchema>;

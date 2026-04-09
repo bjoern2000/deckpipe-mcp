@@ -33,7 +33,7 @@ npm run build:shared        # Just shared (others depend on it)
 ## Key Patterns
 
 - **Slide schema**: Discriminated union on `layout` field. 11 layouts: `title`, `title_and_body`, `title_and_bullets`, `title_and_table`, `two_columns`, `section_break`, `image_and_text`, `image_gallery`, `stats`, `quote`, `full_image`. Each has layout-specific content fields plus optional `key_takeaway`.
-- **PATCH semantics**: Index-based partial slide updates with deep merge: `{ slides: [{ index: 2, content: { title: "New" } }] }`. Also supports top-level `title`/`theme` updates.
+- **PATCH semantics**: Index-based partial slide updates with deep merge: `{ slides: [{ index: 2, content: { title: "New" } }] }`. Also supports top-level `title`/`theme` updates. Structural changes via `slide_operations` array (insert, delete, move, replace) — executed sequentially before content edits.
 - **Viewer edit flow**: `contenteditable` on text elements → `blur` emits `slide-content-changed` CustomEvent → `viewer-app` debounces (1s) → PATCH to API.
 - **Print mode**: `?print` query param renders all slides stacked with page breaks, no chrome. Used by Puppeteer for PDF export.
 - **Fonts**: Deck-level `heading_font` and `body_font` (optional, any Google Font). Default: DM Sans. Applied via `--dp-font-heading` and `--dp-font-body` CSS custom properties.

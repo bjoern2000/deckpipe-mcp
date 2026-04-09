@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { CreateDeckSchema, UpdateDeckSchema, generateDeckId, generateEditKey, slugify, ApiError } from '@deckpipe/shared';
+import { CreateDeckSchema, UpdateDeckSchema, generateDeckId, generateEditKey, slugify, ApiError, type SlideOperation } from '@deckpipe/shared';
 import { validate } from '../middleware/validate.js';
 import { createDeckLimiter, getDeckLimiter, updateDeckLimiter, exportPdfLimiter } from '../middleware/rate-limiter.js';
 import { query } from '../db/client.js';
@@ -98,6 +98,44 @@ decksRouter.get('/:id', getDeckLimiter, async (req, res, next) => {
   }
 });
 
+function applySlideOperations(slides: any[], operations: SlideOperation[]): any[] {
+  const result = [...slides];
+  for (const op of operations) {
+    switch (op.op) {
+      case 'delete':
+        if (op.index >= result.length) {
+          throw new ApiError('validation_error', `Delete index ${op.index} out of range (0-${result.length - 1})`, `slide_operations`);
+        }
+        result.splice(op.index, 1);
+        break;
+      case 'insert':
+        if (op.index > result.length) {
+          throw new ApiError('validation_error', `Insert index ${op.index} out of range (0-${result.length})`, `slide_operations`);
+        }
+        result.splice(op.index, 0, op.slide);
+        break;
+      case 'move': {
+        if (op.from >= result.length) {
+          throw new ApiError('validation_error', `Move from index ${op.from} out of range (0-${result.length - 1})`, `slide_operations`);
+        }
+        const [moved] = result.splice(op.from, 1);
+        if (op.to > result.length) {
+          throw new ApiError('validation_error', `Move to index ${op.to} out of range (0-${result.length})`, `slide_operations`);
+        }
+        result.splice(op.to, 0, moved);
+        break;
+      }
+      case 'replace':
+        if (op.index >= result.length) {
+          throw new ApiError('validation_error', `Replace index ${op.index} out of range (0-${result.length - 1})`, `slide_operations`);
+        }
+        result[op.index] = op.slide;
+        break;
+    }
+  }
+  return result;
+}
+
 // PATCH /v1/decks/:id — Update deck
 decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (req, res, next) => {
   try {
@@ -107,7 +145,7 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
     }
 
     const deck = existing.rows[0];
-    const { title, heading_font, body_font, accent_color, slides } = req.body;
+    const { title, heading_font, body_font, accent_color, slides, slide_operations } = req.body;
 
     // Apply updates
     const newTitle = title ?? deck.title;
@@ -116,8 +154,13 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
     const newAccentColor = accent_color !== undefined ? accent_color : deck.accent_color;
     let newSlides = deck.slides;
 
+    // Step 1: Apply structural slide operations (sequential, order matters)
+    if (slide_operations && slide_operations.length > 0) {
+      newSlides = applySlideOperations(newSlides, slide_operations);
+    }
+
+    // Step 2: Apply content edits (indices reference post-operations state)
     if (slides) {
-      // Index-based partial slide updates with deep merge
       for (const update of slides) {
         const { index, content } = update;
         if (index < 0 || index >= newSlides.length) {
@@ -128,8 +171,17 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
           content: { ...newSlides[index].content, ...content },
         };
       }
-      // Clean up any placeholder URLs in the updated slides
+    }
+
+    // Step 3: Clean up placeholders and validate bounds
+    if (slides || slide_operations) {
       newSlides = convertPlaceholderUrls(newSlides);
+    }
+    if (newSlides.length < 1) {
+      throw new ApiError('validation_error', 'Deck must have at least 1 slide', 'slide_operations');
+    }
+    if (newSlides.length > 50) {
+      throw new ApiError('validation_error', 'Deck cannot have more than 50 slides', 'slide_operations');
     }
 
     await query(
