@@ -31,6 +31,9 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 | `delete_deck` | Delete a deck permanently |
 | `upload_image` | Upload a base64 image, get a hosted URL |
 | `list_layouts` | List available layouts, customization options, and style guide |
+| `list_comments` | List comments on a deck (filter by status or slide) |
+| `reply_to_comment` | Reply to a comment thread after addressing feedback |
+| `resolve_comment` | Mark a comment as resolved |
 
 ## Layouts
 
@@ -145,6 +148,19 @@ Both `create_deck` and `update_deck` accept optional styling fields:
 > Build a lecture deck on how neural networks learn. Use a comparison table for activation functions, bullet points for key concepts, and add a key takeaway to each slide.
 
 > Create a travel guide deck for Tokyo. Search the web for photos and include an image gallery of must-visit spots, stats on tourism, and a full-bleed image cover slide.
+
+## Comments
+
+Deckpipe supports threaded comments for collaborative feedback between users and agents. Users place comments on specific slide elements in the viewer; agents read and respond to them.
+
+**Workflow for agents:**
+1. Call `get_deck` — each slide includes a `comments[]` array with open comments
+2. Each comment has a `content_path` (e.g. `"title"`, `"bullets[2]"`, `"slide"`) telling you which field it refers to
+3. Use `update_deck` to address the feedback
+4. Call `reply_to_comment` to explain what you changed
+5. The user resolves the comment once satisfied
+
+**Agent identity:** Set `agent_name` when calling `create_deck` (e.g. `"Acme Strategy Agent"`) — this name appears on your replies.
 
 ## Configuration
 

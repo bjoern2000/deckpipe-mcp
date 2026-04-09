@@ -1,6 +1,6 @@
 import { config } from '../config.js';
 
-const LAYOUTS = ['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'swot', 'quadrant', 'venn_diagram', 'closing'] as const;
+const LAYOUTS = ['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'swot', 'quadrant', 'venn_diagram', 'closing', 'chart'] as const;
 
 export const createDeckTool = {
   name: 'create_deck',
@@ -10,7 +10,7 @@ Keep slide copy short and scannable — use shorthand phrases, not full sentence
 
 MARKDOWN: All text content fields support markdown rendering. Use **bold**, *italic*, \`code\`, [links](url), and lists (1. ordered, - unordered) in body, subtitle, bullets, table cells, and key_takeaway fields. Body text fields support full block markdown including numbered and bulleted lists.
 
-Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text", "image_gallery", "stats", "quote", "full_image", "timeline", "comparison", "code", "callout", "icons_and_text", "team", "embed", "pros_and_cons", "agenda", "swot", "quadrant", "venn_diagram", "closing".
+Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text", "image_gallery", "stats", "quote", "full_image", "timeline", "comparison", "code", "callout", "icons_and_text", "team", "embed", "pros_and_cons", "agenda", "swot", "quadrant", "venn_diagram", "closing", "chart".
 
 RICH BULLETS: In title_and_bullets, comparison, and pros_and_cons, bullets can be strings OR objects: { text, detail?, sources?[{ label, url? }] }. detail shows as an info tooltip on hover. sources render as numbered footnotes.
 
@@ -39,6 +39,7 @@ Content fields per layout (all layouts support optional key_takeaway):
 - swot: { title?, strengths[], weaknesses[], opportunities[], threats[] }
 - quadrant: { title?, x_label?, y_label?, items[]: { label, x, y, size? } }
 - venn_diagram: { title?, circles[]: { label, items[] } (2-3 circles), intersection? }
+- chart: { chart_type: "bar"|"line"|"pie"|"donut" (required), data: { labels[] (2-12), datasets[]: { label?, values: number[], color? } (1-5) } (required), title? }
 
 RETURNS: { deck_id, viewer_url, share_url, created_at, slide_count }`,
   inputSchema: {

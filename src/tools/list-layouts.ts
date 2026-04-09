@@ -58,6 +58,7 @@ export const listLayoutsTool = {
       { name: 'quadrant', fields: 'items[]: { label, x: 0-1, y: 0-1 } (1-12 items, required), title?, body?, bullets?[], x_label?, y_label?, quadrant_labels?[4], key_takeaway?' },
       { name: 'venn_diagram', fields: 'circles[]: { label, items?[] } (2-3 circles, required), overlaps?[]: { sets: number[], label } (max 4), title?, key_takeaway?' },
       { name: 'closing', fields: 'heading?, subheading?, contact_lines?[], image_url?, key_takeaway?' },
+      { name: 'chart', fields: 'chart_type: "bar"|"line"|"pie"|"donut" (required), data: { labels[] (2-12 strings), datasets[]: { label?, values: number[], color? } (1-5 datasets) } (required), title?, key_takeaway?' },
     ];
 
     const customization = {
