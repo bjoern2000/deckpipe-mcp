@@ -27,7 +27,7 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 |------|-------------|
 | `create_deck` | Create a new deck and get a shareable viewer URL |
 | `get_deck` | Retrieve a deck by ID |
-| `update_deck` | Update title, fonts, accent color, or individual slides by index |
+| `update_deck` | Update title, fonts, accent color, slide content, or slide structure (insert, delete, move, replace) |
 | `delete_deck` | Delete a deck permanently |
 | `upload_image` | Upload a base64 image, get a hosted URL |
 | `list_layouts` | List available layouts, customization options, and style guide |
@@ -98,6 +98,33 @@ Any `bullets[]`, `pros[]`, `cons[]`, `strengths[]`, `weaknesses[]`, `opportuniti
 - `sources` render as superscript numbers with a footnote row at the bottom of the slide
 
 Plain strings still work as before (backward compatible).
+
+## Slide operations
+
+`update_deck` supports structural slide changes via the `slide_operations` field — an ordered array of operations executed sequentially before any content edits.
+
+| Operation | Fields | Effect |
+|-----------|--------|--------|
+| `delete` | `index` | Remove slide at index |
+| `insert` | `index`, `slide` | Insert new slide at index (shifts others down) |
+| `move` | `from`, `to` | Move slide from one position to another |
+| `replace` | `index`, `slide` | Replace slide entirely (new layout + content) |
+
+Operations are applied in order, so each operation sees the array as modified by previous ones. Content edits in `slides` use indices relative to the post-operations array.
+
+```json
+{
+  "deck_id": "dk_abc",
+  "slide_operations": [
+    { "op": "delete", "index": 3 },
+    { "op": "insert", "index": 1, "slide": { "layout": "title_and_body", "content": { "title": "New Slide", "body": "Hello" } } },
+    { "op": "move", "from": 0, "to": 4 }
+  ],
+  "slides": [
+    { "index": 2, "content": { "title": "Updated Title" } }
+  ]
+}
+```
 
 ## Customization
 

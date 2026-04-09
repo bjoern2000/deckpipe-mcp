@@ -7,6 +7,8 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { config } from './config.js';
 
+const LAYOUTS = ['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'closing', 'swot', 'quadrant', 'venn_diagram'] as const;
+
 function registerTools(server: McpServer) {
   // --- create_deck ---
   server.tool(
@@ -57,7 +59,7 @@ Use upload_image first to get hosted URLs for any images.`,
       body_font: z.string().optional().describe('Google Font for body text (e.g. "Inter"). Default: DM Sans.'),
       accent_color: z.string().optional().describe('Hex color (e.g. "#ff6600"). Overrides default purple accent.'),
       slides: z.array(z.object({
-        layout: z.enum(['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'closing', 'swot', 'quadrant', 'venn_diagram']),
+        layout: z.enum(LAYOUTS),
         content: z.record(z.unknown()).describe('Content fields (vary by layout). All layouts support optional key_takeaway.'),
       })).describe('Array of slides'),
     },
@@ -91,19 +93,35 @@ Use upload_image first to get hosted URLs for any images.`,
   // --- update_deck ---
   server.tool(
     'update_deck',
-    `Update a deck's title, fonts, accent color, or individual slide content. All text content fields support markdown (**bold**, *italic*, \`code\`, [links](url), numbered/bulleted lists). Slides are updated by index with partial content merge.
+    `Update a deck's title, fonts, accent color, slide content, or slide structure. All text content fields support markdown (**bold**, *italic*, \`code\`, [links](url), numbered/bulleted lists).
 
-Example: { "deck_id": "dk_abc", "slides": [{ "index": 2, "content": { "title": "New Title" } }] }`,
+Use "slides" for content edits (partial merge by index). Use "slide_operations" for structural changes (insert, delete, move, replace). Operations execute sequentially before content edits — indices in "slides" reference the post-operations array.
+
+Slide operations (executed in order):
+- Delete: { "op": "delete", "index": 2 }
+- Insert: { "op": "insert", "index": 1, "slide": { "layout": "title_and_body", "content": { "title": "New", "body": "Text" } } }
+- Move: { "op": "move", "from": 0, "to": 3 }
+- Replace: { "op": "replace", "index": 4, "slide": { "layout": "stats", "content": { "metrics": [{ "value": "99%", "label": "Uptime" }] } } }`,
     {
       deck_id: z.string().describe('Deck ID to update'),
       title: z.string().optional().describe('New deck title'),
       heading_font: z.string().optional().describe('Google Font for headings (e.g. "Playfair Display")'),
       body_font: z.string().optional().describe('Google Font for body text (e.g. "Inter")'),
       accent_color: z.string().optional().describe('Hex color (e.g. "#ff6600")'),
+      slide_operations: z.array(z.object({
+        op: z.enum(['delete', 'insert', 'move', 'replace']).describe('Operation type'),
+        index: z.number().optional().describe('Slide index (for delete, insert, replace)'),
+        from: z.number().optional().describe('Source index (for move)'),
+        to: z.number().optional().describe('Destination index (for move)'),
+        slide: z.object({
+          layout: z.enum(LAYOUTS).describe('Slide layout type'),
+          content: z.record(z.unknown()).describe('Slide content'),
+        }).optional().describe('New slide data (for insert, replace)'),
+      })).optional().describe('Ordered structural operations. Executed sequentially before content edits.'),
       slides: z.array(z.object({
-        index: z.number().describe('Zero-based slide index'),
+        index: z.number().describe('Zero-based slide index (post-operations)'),
         content: z.record(z.unknown()).describe('Partial content to merge'),
-      })).optional().describe('Slide updates'),
+      })).optional().describe('Content edits by index (applied after slide_operations)'),
     },
     async ({ deck_id, ...body }) => {
       const res = await fetch(`${config.apiUrl}/v1/decks/${deck_id}`, {
