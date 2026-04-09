@@ -14,7 +14,7 @@ commentsRouter.get('/', listCommentsLimiter, async (req, res, next) => {
     if (!parsed.success) {
       throw new ApiError('validation_error', 'Invalid query parameters');
     }
-    const { status, slide_id } = parsed.data;
+    const { status, slide_id, since } = parsed.data;
 
     let sql = 'SELECT * FROM comments WHERE deck_id = $1';
     const params: any[] = [deckId];
@@ -26,6 +26,10 @@ commentsRouter.get('/', listCommentsLimiter, async (req, res, next) => {
     if (slide_id) {
       params.push(slide_id);
       sql += ` AND slide_id = $${params.length}`;
+    }
+    if (since) {
+      params.push(since);
+      sql += ` AND updated_at >= $${params.length}`;
     }
     sql += ' ORDER BY created_at ASC';
 

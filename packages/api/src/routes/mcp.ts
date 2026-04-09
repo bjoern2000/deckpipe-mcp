@@ -244,17 +244,21 @@ WORKFLOW — always follow this when iterating on a deck:
 
 Each comment has a messages[] thread. The first message is the original comment; subsequent messages are replies from users or agents.
 
-RETURNS: Array of comment objects, each with: id, slide_id, content_path, status ("open"/"resolved"), messages[], created_at.`,
+RETURNS: Array of comment objects, each with: id, slide_id, content_path, status ("open"/"resolved"), messages[], created_at, updated_at.
+
+TIP: Use the "since" parameter with an ISO timestamp to only fetch comments that are new or have new replies since your last check. Save the current timestamp before each call and pass it as "since" on the next call.`,
     {
       deck_id: z.string().describe('The deck ID'),
       status: z.enum(['open', 'resolved']).optional().describe('Filter by status. Defaults to showing all. Use "open" to see only unresolved feedback.'),
       slide_id: z.string().optional().describe('Filter to a specific slide by its stable slide_id'),
+      since: z.string().optional().describe('ISO timestamp. Only return comments created or updated since this time. Use this to poll for new feedback efficiently.'),
     },
-    async ({ deck_id, status, slide_id }) => {
+    async ({ deck_id, status, slide_id, since }) => {
       const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
       const qs = new URLSearchParams();
       if (status) qs.set('status', status);
       if (slide_id) qs.set('slide_id', slide_id);
+      if (since) qs.set('since', since);
       const url = `${apiUrl}/v1/decks/${deck_id}/comments${qs.toString() ? '?' + qs : ''}`;
       const res = await fetch(url);
       const data = await res.json();

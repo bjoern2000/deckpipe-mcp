@@ -497,4 +497,5 @@ export type UpdateCommentInput = z.infer<typeof UpdateCommentSchema>;
 export const ListCommentsQuerySchema = z.object({
   status: z.enum(['open', 'resolved']).optional(),
   slide_id: z.string().optional(),
+  since: z.string().optional(),
 });
