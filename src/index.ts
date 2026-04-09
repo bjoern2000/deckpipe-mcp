@@ -99,15 +99,19 @@ WORKFLOW: Always call get_deck first when iterating on a deck. Read the comments
   // --- update_deck ---
   server.tool(
     'update_deck',
-    `Update a deck's title, fonts, accent color, slide content, or slide structure. All text content fields support markdown (**bold**, *italic*, \`code\`, [links](url), numbered/bulleted lists).
+    `Update a deck's title, fonts, accent color, slide content, or slide structure. NEVER recreate a deck to make changes — always use this tool.
 
-Use "slides" for content edits (partial merge by index). Use "slide_operations" for structural changes (insert, delete, move, replace). Operations execute sequentially before content edits — indices in "slides" reference the post-operations array.
+CONTENT EDITS: Use "slides" array for partial content updates by index. Only the fields you include are merged; everything else is preserved.
+
+STRUCTURAL CHANGES: Use "slide_operations" to insert, delete, move, or replace slides. You CAN add new slides — use { "op": "insert", "index": N, "slide": { "layout": "...", "content": {...} } }. Operations execute sequentially before content edits.
 
 Slide operations (executed in order):
-- Delete: { "op": "delete", "index": 2 }
-- Insert: { "op": "insert", "index": 1, "slide": { "layout": "title_and_body", "content": { "title": "New", "body": "Text" } } }
-- Move: { "op": "move", "from": 0, "to": 3 }
-- Replace: { "op": "replace", "index": 4, "slide": { "layout": "stats", "content": { "metrics": [{ "value": "99%", "label": "Uptime" }] } } }`,
+- Insert new slide: { "op": "insert", "index": 1, "slide": { "layout": "title_and_body", "content": { "title": "New", "body": "Text" } } }
+- Delete slide: { "op": "delete", "index": 2 }
+- Move slide: { "op": "move", "from": 0, "to": 3 }
+- Replace slide entirely: { "op": "replace", "index": 4, "slide": { "layout": "stats", "content": { "metrics": [{ "value": "99%", "label": "Uptime" }] } } }
+
+Content edits in "slides" use indices relative to the post-operations array. All text fields support markdown.`,
     {
       deck_id: z.string().describe('Deck ID to update'),
       title: z.string().optional().describe('New deck title'),
