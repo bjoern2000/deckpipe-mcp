@@ -51,7 +51,7 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 | `comparison` | Side-by-side comparison with verdict | `left: { heading, bullets[] }`, `right: { heading, bullets[] }`, optional `title`, `verdict` |
 | `code` | Syntax-highlighted code block (18 languages) | `code`, optional `title`, `language`, `caption` |
 | `callout` | Large featured value with context | `value`, optional `title`, `label`, `body` |
-| `icons_and_text` | Icon grid with headings and descriptions | `items[]: { icon, heading, description? }` (3-6), optional `title` |
+| `icons_and_text` | Icon grid with headings and descriptions | `items[]: { icon, heading, description? }` (3-6), optional `title`. `icon` accepts any [Lucide icon name](https://lucide.dev/icons/) (e.g. `"clock"`, `"message-square"`) or emoji |
 | `team` | Team member cards with roles and bios | `members[]: { name, role, bio?, image_url? }` (1-6), optional `title` |
 | `embed` | Full-slide iframe embed (90% area) | `url`, optional `caption`, `aspect_ratio` |
 | `pros_and_cons` | Two-column pros vs cons list | `pros[]`, `cons[]`, optional `title`, `pros_heading`, `cons_heading` |
