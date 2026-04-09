@@ -422,6 +422,11 @@ export class ViewerApp extends LitElement {
         document.head.appendChild(link);
       }
 
+      // Load comments
+      if (!this.printMode) {
+        this.loadComments();
+      }
+
       // Signal print readiness
       if (this.printMode) {
         requestAnimationFrame(() => {

@@ -74,6 +74,17 @@ export class CommentLayer extends LitElement {
   @state() private highlightRect: { top: number; left: number; width: number; height: number } | null = null;
 
   private hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+  private pinRefreshTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  protected updated(changed: Map<string, unknown>) {
+    super.updated(changed);
+    // When comments change, the slide component may not have rendered yet.
+    // Schedule a re-render after a frame so pins can find all DOM elements.
+    if (changed.has('comments') || changed.has('commentMode')) {
+      if (this.pinRefreshTimeout) clearTimeout(this.pinRefreshTimeout);
+      this.pinRefreshTimeout = setTimeout(() => this.requestUpdate(), 100);
+    }
+  }
 
   private findContentPathElements(): Map<string, Element> {
     const map = new Map<string, Element>();
@@ -241,9 +252,9 @@ export class CommentLayer extends LitElement {
       const rect = this.getElementRect(el);
       if (!rect) continue;
 
-      const count = this.comments.filter(
-        c => c.content_path === comment.content_path && (this.showResolved || c.status === 'open'),
-      ).length;
+      const count = this.comments
+        .filter(c => c.content_path === comment.content_path && (this.showResolved || c.status === 'open'))
+        .reduce((sum, c) => sum + c.messages.length, 0);
 
       // For "slide" level comments, inset the pin so it's fully visible
       const isSlide = comment.content_path === 'slide';
