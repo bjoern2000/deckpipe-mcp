@@ -15,7 +15,7 @@ Keep slide copy short and scannable — use shorthand phrases, not full sentence
 
 MARKDOWN: All text content fields support markdown rendering. Use **bold**, *italic*, \`code\`, [links](url), and lists (1. ordered, - unordered) in body, subtitle, bullets, table cells, and key_takeaway fields. Body text fields support full block markdown including numbered and bulleted lists.
 
-Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text", "image_gallery", "stats", "quote", "full_image", "timeline", "comparison", "code", "callout", "icons_and_text", "team", "embed", "pros_and_cons", "agenda", "swot", "quadrant", "venn_diagram", "closing".
+Layouts: "title", "title_and_body", "title_and_bullets", "title_and_table", "two_columns", "section_break", "image_and_text", "image_gallery", "stats", "quote", "full_image", "timeline", "comparison", "code", "callout", "icons_and_text", "team", "embed", "pros_and_cons", "agenda", "swot", "quadrant", "venn_diagram", "closing", "chart".
 
 RICH BULLETS: In title_and_bullets, comparison, and pros_and_cons, bullets can be strings OR objects: { text, detail?, sources?[{ label, url? }] }. detail shows as an info tooltip on hover. sources render as numbered footnotes.
 
@@ -44,6 +44,7 @@ Content fields per layout (all layouts support optional key_takeaway):
 - quadrant: { title?, body?, bullets?[], x_label?, y_label?, quadrant_labels?[4], items[]: { label, x: 0-1, y: 0-1 } (1-12 items) }
 - venn_diagram: { title?, circles[]: { label, items?[] } (2-3 circles), overlaps?[]: { sets: number[], label } (max 4) }
 - closing: { heading?, subheading?, contact_lines?[], image_url? }
+- chart: { chart_type: "bar"|"line"|"pie"|"donut" (required), data: { labels[] (2-12), datasets[]: { label?, values[], color? } (1-5) } (required), title? }
 
 Optionally set heading_font and body_font (any Google Font name) and accent_color (hex like "#ff6600") to customize the look.
 Use upload_image first to get hosted URLs for any images.`,
@@ -52,8 +53,9 @@ Use upload_image first to get hosted URLs for any images.`,
       heading_font: z.string().optional().describe('Google Font for headings (e.g. "Playfair Display"). Default: DM Sans.'),
       body_font: z.string().optional().describe('Google Font for body text (e.g. "Inter"). Default: DM Sans.'),
       accent_color: z.string().optional().describe('Hex color (e.g. "#ff6600"). Overrides default purple accent.'),
+      agent_name: z.string().optional().describe('Your agent name (e.g. "Acme Strategy Agent"). Shown as author on comments you post.'),
       slides: z.array(z.object({
-        layout: z.enum(['title', 'title_and_body', 'title_and_bullets', 'title_and_table', 'two_columns', 'section_break', 'image_and_text', 'image_gallery', 'stats', 'quote', 'full_image', 'timeline', 'comparison', 'code', 'callout', 'icons_and_text', 'team', 'embed', 'pros_and_cons', 'agenda', 'swot', 'quadrant', 'venn_diagram', 'closing']),
+        layout: z.enum(LayoutNames),
         content: z.record(z.unknown()).describe('Content fields (vary by layout). All layouts support optional key_takeaway.'),
       })).describe('Array of slides'),
     },
@@ -82,7 +84,11 @@ Use upload_image first to get hosted URLs for any images.`,
 
   server.tool(
     'get_deck',
-    'Retrieve a deck by ID, including any user edits made in the viewer.',
+    `Retrieve a deck by ID, including any user edits made in the viewer.
+
+Each slide includes a comments[] array with all open comments. Each comment has: id, content_path (the JSON field it refers to, e.g. "title", "bullets[2]", "slide" for general), status, messages[] thread, and created_at.
+
+WORKFLOW: Always call get_deck first when iterating on a deck. Read the comments on each slide to understand user feedback, then use update_deck to address it and reply_to_comment to explain what you changed.`,
     { deck_id: z.string().describe('The deck ID (e.g. "dk_a1b2c3d4")') },
     async ({ deck_id }) => {
       const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
@@ -204,6 +210,7 @@ Accepts PNG, JPG, WebP up to 10MB. Upload first, then use the returned URL when 
         { name: 'quadrant', fields: 'items[]: { label, x: 0-1, y: 0-1 } (1-12 items, required), title?, body?, bullets?[], x_label?, y_label?, quadrant_labels?[4], key_takeaway?. Title/body/bullets on left, chart on right.' },
         { name: 'venn_diagram', fields: 'circles[]: { label, items?[] } (2-3 circles, required), overlaps?[]: { sets: number[], label } (max 4), title?, key_takeaway?. Renders overlapping circles with labeled intersections.' },
         { name: 'closing', fields: 'heading?, subheading?, contact_lines?[], image_url?, key_takeaway?. Accent-colored background with white text. Contact lines at bottom. Use as final slide.' },
+        { name: 'chart', fields: 'chart_type: "bar"|"line"|"pie"|"donut" (required), data: { labels[] (2-12), datasets[]: { label?, values[], color? } (1-5) } (required), title?, key_takeaway?' },
       ];
       const customization = {
         heading_font: 'Google Font for headings. Default: DM Sans.',
@@ -211,6 +218,99 @@ Accepts PNG, JPG, WebP up to 10MB. Upload first, then use the returned URL when 
         accent_color: 'Hex color. Default: #7c3aed.',
       };
       return { content: [{ type: 'text' as const, text: JSON.stringify({ layouts, customization }, null, 2) }] };
+    }
+  );
+
+  // --- list_comments ---
+  server.tool(
+    'list_comments',
+    `List comments on a deck. Use this to check for user feedback before making updates.
+
+WORKFLOW — always follow this when iterating on a deck:
+1. Call list_comments to see open feedback
+2. Read each comment's content_path to know which field it refers to (e.g. "title", "bullets[2]", "left.heading", or "slide" for general feedback)
+3. Use the slide_id to find the right slide in the deck
+4. Call update_deck to address the feedback
+5. Call reply_to_comment explaining what you changed
+6. The user will resolve the comment once satisfied — do NOT resolve comments yourself unless explicitly asked
+
+Each comment has a messages[] thread. The first message is the original comment; subsequent messages are replies from users or agents.
+
+RETURNS: Array of comment objects, each with: id, slide_id, content_path, status ("open"/"resolved"), messages[], created_at.`,
+    {
+      deck_id: z.string().describe('The deck ID'),
+      status: z.enum(['open', 'resolved']).optional().describe('Filter by status. Defaults to showing all. Use "open" to see only unresolved feedback.'),
+      slide_id: z.string().optional().describe('Filter to a specific slide by its stable slide_id'),
+    },
+    async ({ deck_id, status, slide_id }) => {
+      const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
+      const qs = new URLSearchParams();
+      if (status) qs.set('status', status);
+      if (slide_id) qs.set('slide_id', slide_id);
+      const url = `${apiUrl}/v1/decks/${deck_id}/comments${qs.toString() ? '?' + qs : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) return { content: [{ type: 'text' as const, text: `Error: ${JSON.stringify(data)}` }] };
+      return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
+    }
+  );
+
+  // --- reply_to_comment ---
+  server.tool(
+    'reply_to_comment',
+    `Reply to a comment thread on a deck. Use this after addressing user feedback to explain what you changed.
+
+The user will see your reply in the comment thread and can resolve the comment or continue the conversation. Keep replies concise — summarize the change you made, don't repeat the feedback.`,
+    {
+      deck_id: z.string().describe('The deck ID'),
+      comment_id: z.string().describe('The comment ID to reply to'),
+      body: z.string().describe('Your reply message'),
+      author_name: z.string().optional().describe('Your agent name. Defaults to the agent_name set at deck creation, or "Agent".'),
+    },
+    async ({ deck_id, comment_id, body, author_name }) => {
+      const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
+      let name = author_name;
+      if (!name) {
+        try {
+          const deckRes = await fetch(`${apiUrl}/v1/decks/${deck_id}`);
+          if (deckRes.ok) {
+            const deck = await deckRes.json() as Record<string, unknown>;
+            name = (deck.agent_name as string) || 'Agent';
+          }
+        } catch { /* fall through */ }
+        name = name || 'Agent';
+      }
+      const res = await fetch(`${apiUrl}/v1/decks/${deck_id}/comments/${comment_id}/replies`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author_name: name, author_type: 'agent', body }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { content: [{ type: 'text' as const, text: `Error: ${JSON.stringify(data)}` }] };
+      return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
+    }
+  );
+
+  // --- resolve_comment ---
+  server.tool(
+    'resolve_comment',
+    `Resolve a comment, marking it as addressed. Typically the user resolves comments after reviewing your changes, but you may resolve if explicitly asked to.
+
+Do NOT resolve comments proactively — always let the user confirm the feedback has been addressed.`,
+    {
+      deck_id: z.string().describe('The deck ID'),
+      comment_id: z.string().describe('The comment ID to resolve'),
+    },
+    async ({ deck_id, comment_id }) => {
+      const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
+      const res = await fetch(`${apiUrl}/v1/decks/${deck_id}/comments/${comment_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'resolved' }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { content: [{ type: 'text' as const, text: `Error: ${JSON.stringify(data)}` }] };
+      return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
     }
   );
 }
@@ -249,7 +349,7 @@ mcpRouter.post('/', async (req, res) => {
       if (transport.sessionId) transports.delete(transport.sessionId);
     };
 
-    const mcpServer = new McpServer({ name: 'deckpipe', version: '0.2.1' });
+    const mcpServer = new McpServer({ name: 'deckpipe', version: '0.2.5' });
     registerTools(mcpServer);
     await mcpServer.connect(transport);
     await transport.handleRequest(req, res);
