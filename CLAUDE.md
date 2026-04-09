@@ -41,7 +41,13 @@ npm run build:shared        # Just shared (others depend on it)
 
 ## Related Repository
 
-**`deckpipe-mcp`** (`/Users/bjornschefzyk/Projects/deckpipe-mcp`) — The MCP server package (`deckpipe-mcp` on npm). Six tools (`create_deck`, `get_deck`, `update_deck`, `delete_deck`, `upload_image`, `list_layouts`) that wrap the REST API. Separate repo with its own build and release cycle.
+**`deckpipe-mcp`** (`/Users/bjornschefzyk/Projects/deckpipe-mcp`) — The MCP server package (`deckpipe-mcp` on npm). Nine tools (`create_deck`, `get_deck`, `update_deck`, `delete_deck`, `upload_image`, `list_layouts`, `list_comments`, `reply_to_comment`, `resolve_comment`) that wrap the REST API. Separate repo with its own build and release cycle.
+
+**Important:** MCP tool definitions exist in **two places** that must be kept in sync:
+1. `packages/api/src/routes/mcp.ts` — the remote MCP server (served at `/mcp`, used by Claude.ai and other remote clients)
+2. `/Users/bjornschefzyk/Projects/deckpipe-mcp/src/index.ts` — the standalone npm package (used via `npx deckpipe-mcp`)
+
+When updating MCP tools (descriptions, parameters, new tools), always update both files.
 
 ## Environment
 
