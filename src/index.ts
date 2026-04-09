@@ -119,15 +119,15 @@ Content edits in "slides" use indices relative to the post-operations array. All
       body_font: z.string().optional().describe('Google Font for body text (e.g. "Inter")'),
       accent_color: z.string().optional().describe('Hex color (e.g. "#ff6600")'),
       slide_operations: z.array(z.object({
-        op: z.enum(['delete', 'insert', 'move', 'replace']).describe('Operation type'),
-        index: z.number().optional().describe('Slide index (for delete, insert, replace)'),
-        from: z.number().optional().describe('Source index (for move)'),
-        to: z.number().optional().describe('Destination index (for move)'),
+        op: z.enum(['delete', 'insert', 'move', 'replace']).describe('Operation type: "insert" adds a new slide, "delete" removes one, "move" reorders, "replace" swaps layout+content'),
+        index: z.number().optional().describe('Target slide index. Required for insert (position to insert at), delete, and replace.'),
+        from: z.number().optional().describe('Source index. Only for move.'),
+        to: z.number().optional().describe('Destination index. Only for move.'),
         slide: z.object({
           layout: z.enum(LAYOUTS).describe('Slide layout type'),
-          content: z.record(z.unknown()).describe('Slide content'),
-        }).optional().describe('New slide data (for insert, replace)'),
-      })).optional().describe('Ordered structural operations. Executed sequentially before content edits.'),
+          content: z.record(z.unknown()).describe('Full slide content object with all required fields for the layout'),
+        }).optional().describe('The new slide to add. Required for insert and replace. Must include layout and content.'),
+      })).optional().describe('Structural changes: add, remove, reorder, or replace slides. Use this to INSERT NEW SLIDES — do not recreate the deck.'),
       slides: z.array(z.object({
         index: z.number().describe('Zero-based slide index (post-operations)'),
         content: z.record(z.unknown()).describe('Partial content to merge'),
