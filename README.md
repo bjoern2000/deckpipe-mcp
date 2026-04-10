@@ -149,6 +149,25 @@ Both `create_deck` and `update_deck` accept optional styling fields:
 
 > Create a travel guide deck for Tokyo. Search the web for photos and include an image gallery of must-visit spots, stats on tourism, and a full-bleed image cover slide.
 
+## Warnings
+
+Both `create_deck` and `update_deck` responses may include a `warnings` array with actionable feedback for the agent:
+
+```json
+{
+  "deck_id": "dk_abc",
+  "viewer_url": "...",
+  "warnings": [
+    "Slide 0 (title): unrecognized content field \"body\" — this field was ignored. Valid fields: image_focus, image_prompt, image_url, key_takeaway, subtitle, title",
+    "Slide 2: image_url returned HTTP 404 — image may not render (https://example.com/missing.jpg)"
+  ]
+}
+```
+
+**Unrecognized content fields** — If you pass a field name that doesn't exist for that layout (e.g. `body` on a `title` slide), the field is silently dropped but a warning tells you exactly what happened and lists valid fields for that layout.
+
+**Unreachable image URLs** — All `image_url` values are checked with a HEAD request during creation/update. If a URL returns an error or is unreachable, a warning is returned so you can fix it with a follow-up `update_deck` call.
+
 ## Comments
 
 Deckpipe supports threaded comments for collaborative feedback between users and agents. Users place comments on specific slide elements in the viewer; agents read and respond to them.
