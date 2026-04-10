@@ -29,11 +29,11 @@ Content fields per layout (all layouts support optional key_takeaway):
 - two_columns: { title, left: { heading, body }, right: { heading, body }, image_url?, image_prompt? }
 - section_break: { title }
 - image_and_text: { title, body, image_url (required unless image_prompt provided), image_prompt? }
-- image_gallery: { title?, caption?, images[] (2-5 URLs) }
+- image_gallery: { title?, caption?, images[] (2-5 URLs, required unless image_prompt provided), image_prompt? }
 - stats: { title?, metrics[]: { value, label } (2-4 items) }
 - quote: { quote, attribution?, image_url? }
 - full_image: { image_url (required unless image_prompt provided), image_prompt?, title?, subtitle? }
-- timeline: { title?, events[]: { label, title, description? } (3-6 items) }
+- timeline: { title?, events[]: { label, title, description?, position?: 0-1 } (3-6 items) }
 - comparison: { title?, left: { heading, bullets[] }, right: { heading, bullets[] }, verdict? }
 - code: { title?, code (required), language?, caption? }
 - callout: { title?, value (required), label?, body? }
@@ -44,7 +44,7 @@ Content fields per layout (all layouts support optional key_takeaway):
 - agenda: { title?, items[]: { topic, duration?, description? } (1-10 items) }
 - closing: { heading?, subheading?, contact_lines?[], image_url? }
 - swot: { title?, strengths[], weaknesses[], opportunities[], threats[] (1-5 items each) }
-- quadrant: { title?, x_label?, y_label?, quadrant_labels?[4], items[]: { label, x: 0-1, y: 0-1 } (1-12 items) }
+- quadrant: { title?, body?, bullets?[], x_label?, y_label?, quadrant_labels?[4], items[]: { label, x: 0-1, y: 0-1 } (1-12 items) }
 - venn_diagram: { title?, body?, circles[]: { label, items?[] } (2-3 circles, required), overlaps?[]: { sets: [circle indices], label } (max 4) }
 - chart: { chart_type: "bar"|"line"|"pie"|"donut" (required), data: { labels[] (2-12 strings), datasets[]: { label?, values: number[], color? } (1-5 datasets) } (required), title? }
 
@@ -405,7 +405,7 @@ async function main() {
 
       const mcpServer = new McpServer({
         name: 'deckpipe',
-        version: '0.2.6',
+        version: '0.2.7',
       });
       registerTools(mcpServer);
       await mcpServer.connect(transport);
@@ -424,7 +424,7 @@ async function main() {
     // Stdio mode — for CLI (npx deckpipe-mcp)
     const server = new McpServer({
       name: 'deckpipe',
-      version: '0.2.6',
+      version: '0.2.7',
     });
     registerTools(server);
     const transport = new StdioServerTransport();
