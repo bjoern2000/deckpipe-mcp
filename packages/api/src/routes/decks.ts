@@ -1,10 +1,17 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { CreateDeckSchema, UpdateDeckSchema, generateDeckId, generateSlideId, generateEditKey, slugify, ApiError, type SlideOperation } from '@deckpipe/shared';
 import { validate } from '../middleware/validate.js';
 import { createDeckLimiter, getDeckLimiter, updateDeckLimiter, exportPdfLimiter } from '../middleware/rate-limiter.js';
 import { query } from '../db/client.js';
 import { config } from '../config.js';
+import { detectUnknownFields, extractImageUrls, validateImageUrls } from '../utils/slide-warnings.js';
 export const decksRouter = Router();
+
+/** Snapshot raw body before Zod strips unrecognized fields */
+function saveRawBody(req: Request, _res: Response, next: NextFunction) {
+  (req as any)._rawBody = structuredClone(req.body);
+  next();
+}
 
 function isPlaceholderUrl(url: string): boolean {
   try {
@@ -49,13 +56,29 @@ function ensureSlideIds(slides: any[]): any[] {
 }
 
 // POST /v1/decks — Create a new deck
-decksRouter.post('/', createDeckLimiter, validate(CreateDeckSchema), async (req, res, next) => {
+decksRouter.post('/', createDeckLimiter, saveRawBody, validate(CreateDeckSchema), async (req, res, next) => {
   try {
     const { title, heading_font, body_font, accent_color, agent_name, slides: rawSlides } = req.body;
     const slides = ensureSlideIds(convertPlaceholderUrls(rawSlides));
     const deckId = generateDeckId();
     const editKey = generateEditKey();
     const slug = slugify(title);
+
+    // Collect warnings: unknown content fields
+    const warnings: string[] = [];
+    const rawBody = (req as any)._rawBody;
+    if (rawBody?.slides && Array.isArray(rawBody.slides)) {
+      for (let i = 0; i < rawBody.slides.length; i++) {
+        const raw = rawBody.slides[i];
+        if (raw?.layout && raw?.content && typeof raw.content === 'object') {
+          warnings.push(...detectUnknownFields(raw.layout, Object.keys(raw.content), i));
+        }
+      }
+    }
+
+    // Collect warnings: unreachable image URLs (non-blocking, 5s timeout per URL)
+    const imageWarnings = await validateImageUrls(extractImageUrls(slides));
+    warnings.push(...imageWarnings);
 
     await query(
       'INSERT INTO decks (deck_id, title, heading_font, body_font, accent_color, agent_name, slides, edit_key) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
@@ -71,6 +94,7 @@ decksRouter.post('/', createDeckLimiter, validate(CreateDeckSchema), async (req,
       share_url: shareUrl,
       created_at: result.rows[0].created_at,
       slide_count: slides.length,
+      ...(warnings.length > 0 && { warnings }),
     });
   } catch (err) {
     next(err);
@@ -176,6 +200,8 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
     const deck = existing.rows[0];
     const { title, heading_font, body_font, accent_color, slides, slide_operations } = req.body;
 
+    const warnings: string[] = [];
+
     // Apply updates
     const newTitle = title ?? deck.title;
     const newHeadingFont = heading_font !== undefined ? heading_font : deck.heading_font;
@@ -195,6 +221,11 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
         if (index < 0 || index >= newSlides.length) {
           throw new ApiError('validation_error', `Slide index ${index} out of range (0-${newSlides.length - 1})`, `slides[${index}].index`);
         }
+        // Warn about unrecognized content fields for this slide's layout
+        const layout = newSlides[index].layout;
+        if (layout && content && typeof content === 'object') {
+          warnings.push(...detectUnknownFields(layout, Object.keys(content), index));
+        }
         newSlides[index] = {
           ...newSlides[index],
           content: { ...newSlides[index].content, ...content },
@@ -211,6 +242,28 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
     }
     if (newSlides.length > 50) {
       throw new ApiError('validation_error', 'Deck cannot have more than 50 slides', 'slide_operations');
+    }
+
+    // Validate image URLs in changed slides only
+    if (slides || slide_operations) {
+      const indicesToCheck = new Set<number>();
+      if (slide_operations) {
+        // Structural ops can shift everything — check all new/moved slides
+        for (let i = 0; i < newSlides.length; i++) indicesToCheck.add(i);
+      }
+      if (slides) {
+        for (const u of slides) indicesToCheck.add(u.index);
+      }
+      const slidesWithIndex = [...indicesToCheck].map(i => ({
+        ...newSlides[i],
+        _realIndex: i,
+      }));
+      const refs = extractImageUrls(slidesWithIndex).map(ref => ({
+        ...ref,
+        slideIndex: slidesWithIndex[ref.slideIndex]._realIndex,
+      }));
+      const imageWarnings = await validateImageUrls(refs);
+      warnings.push(...imageWarnings);
     }
 
     await query(
@@ -231,6 +284,7 @@ decksRouter.patch('/:id', updateDeckLimiter, validate(UpdateDeckSchema), async (
       slides: updated.slides,
       created_at: updated.created_at,
       updated_at: updated.updated_at,
+      ...(warnings.length > 0 && { warnings }),
     });
   } catch (err) {
     next(err);

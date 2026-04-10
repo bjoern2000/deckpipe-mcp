@@ -105,9 +105,19 @@ Response `201 Created`:
   "deck_id": "dk_a1b2c3d4",
   "viewer_url": "https://app.deckpipe.dev/d/dk_a1b2c3d4",
   "created_at": "2026-03-27T14:30:00Z",
-  "slide_count": 7
+  "slide_count": 7,
+  "warnings": [
+    "Slide 0 (title): unrecognized content field \"body\" — this field was ignored. Valid fields: ...",
+    "Slide 2: image_url returned HTTP 404 — image may not render (https://example.com/missing.jpg)"
+  ]
 }
 ```
+
+The `warnings` array is only present when there are issues to report. It surfaces two types of feedback:
+- **Unrecognized content fields** — fields that don't exist for the given layout, silently dropped during validation
+- **Unreachable image URLs** — image URLs that returned an error or timed out during a HEAD check
+
+The same `warnings` field is also returned in `PATCH /v1/decks/{deck_id}` responses.
 
 **`GET /v1/decks/{deck_id}`** — Retrieve deck JSON
 

@@ -47,7 +47,12 @@ Content fields per layout (all layouts support optional key_takeaway):
 - chart: { chart_type: "bar"|"line"|"pie"|"donut" (required), data: { labels[] (2-12), datasets[]: { label?, values[], color? } (1-5) } (required), title? }
 
 Optionally set heading_font and body_font (any Google Font name) and accent_color (hex like "#ff6600") to customize the look.
-Use upload_image first to get hosted URLs for any images.`,
+Use upload_image first to get hosted URLs for any images.
+
+WARNINGS: The response may include a "warnings" array with actionable feedback:
+- Unrecognized content fields (typos, wrong fields for a layout) — the field was silently ignored
+- Unreachable image URLs — the image will not render in the viewer
+Check warnings after every create/update call and fix any issues with a follow-up update_deck call.`,
     {
       title: z.string().describe('Deck title'),
       heading_font: z.string().optional().describe('Google Font for headings (e.g. "Playfair Display"). Default: DM Sans.'),
@@ -117,7 +122,9 @@ slide_operations examples (executed in order):
 slides (content edit) examples — only for updating EXISTING slides:
 - Update title of slide 0: { "index": 0, "content": { "title": "New Title" } }
 
-slide_operations run first, then slides content edits apply to the post-operations array. All text fields support markdown.`,
+slide_operations run first, then slides content edits apply to the post-operations array. All text fields support markdown.
+
+WARNINGS: The response may include a "warnings" array flagging unrecognized content fields (typos/wrong layout fields) and unreachable image URLs. Always check warnings and fix issues.`,
     {
       deck_id: z.string().describe('Deck ID to update'),
       title: z.string().optional().describe('New deck title'),
@@ -361,7 +368,7 @@ mcpRouter.post('/', async (req, res) => {
       if (transport.sessionId) transports.delete(transport.sessionId);
     };
 
-    const mcpServer = new McpServer({ name: 'deckpipe', version: '0.2.6' });
+    const mcpServer = new McpServer({ name: 'deckpipe', version: '0.2.7' });
     registerTools(mcpServer);
     await mcpServer.connect(transport);
     await transport.handleRequest(req, res);
