@@ -407,7 +407,7 @@ async function main() {
 
       const mcpServer = new McpServer({
         name: 'deckpipe',
-        version: '0.2.7',
+        version: '0.2.8',
       });
       registerTools(mcpServer);
       await mcpServer.connect(transport);
@@ -426,7 +426,7 @@ async function main() {
     // Stdio mode — for CLI (npx deckpipe-mcp)
     const server = new McpServer({
       name: 'deckpipe',
-      version: '0.2.7',
+      version: '0.2.8',
     });
     registerTools(server);
     const transport = new StdioServerTransport();
