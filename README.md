@@ -63,6 +63,7 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 | `quadrant` | 2D scatter plot with labeled axes and items | `items[]: { label, x: 0-1, y: 0-1 }` (1-12), optional `title`, `body`, `bullets[]`, `x_label`, `y_label`, `quadrant_labels[4]` |
 | `venn_diagram` | 2 or 3 overlapping circles with labels and items | `circles[]: { label, items[]? }` (2-3), optional `title`, `body`, `overlaps[]: { sets[], label }` |
 | `closing` | Accent-colored ending slide with contact info | optional `heading`, `subheading`, `contact_lines[]`, `image_url` |
+| `chart` | Bar, line, pie, or donut chart from structured data | `chart_type` (`"bar"`/`"line"`/`"pie"`/`"donut"`), `data: { labels[], datasets[]: { label?, values[], color? } }`, optional `title` |
 
 All layouts support an optional `key_takeaway` field — a highlighted sentence rendered below the title.
 
