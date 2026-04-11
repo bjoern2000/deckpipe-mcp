@@ -399,7 +399,7 @@ mcpRouter.post('/', async (req, res) => {
       if (transport.sessionId) transports.delete(transport.sessionId);
     };
 
-    const mcpServer = new McpServer({ name: 'deckpipe', version: '0.2.11' }, { instructions: INSTRUCTIONS });
+    const mcpServer = new McpServer({ name: 'deckpipe', version: '0.2.13' }, { instructions: INSTRUCTIONS });
     registerTools(mcpServer);
     await mcpServer.connect(transport);
     await transport.handleRequest(req, res);
