@@ -417,7 +417,7 @@ async function main() {
 
       const mcpServer = new McpServer({
         name: 'deckpipe',
-        version: '0.2.9',
+        version: '0.2.10',
       }, {
         instructions: INSTRUCTIONS,
       });
@@ -438,7 +438,7 @@ async function main() {
     // Stdio mode — for CLI (npx deckpipe-mcp)
     const server = new McpServer({
       name: 'deckpipe',
-      version: '0.2.9',
+      version: '0.2.10',
     }, {
       instructions: INSTRUCTIONS,
     });
