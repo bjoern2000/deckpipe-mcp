@@ -66,7 +66,13 @@ function registerTools(server: McpServer) {
 - quadrant: { title?, body?, bullets?[], x_label?, y_label?, quadrant_labels?[4], items[]: { label, x: 0-1, y: 0-1 } (1-12 items) }
 - venn_diagram: { title?, body?, circles[]: { label, items?[] } (2-3 circles, required), overlaps?[]: { sets: [circle indices], label } (max 4) }
 - chart: { chart_type: "bar"|"line"|"pie"|"donut" (required), data: { labels[] (2-12 strings), datasets[]: { label?, values: number[], color? } (1-5 datasets) } (required), title? }
-- closing: { heading?, subheading?, contact_lines?[], image_url? }`,
+- closing: { heading?, subheading?, contact_lines?[], image_url? }
+
+IMPORTANT:
+- To modify this deck later, use update_deck. NEVER create a new deck to make changes — it loses the URL and comment history.
+- To iterate: get_deck (read current state + comments) → update_deck (make changes) → reply_to_comment (explain what you changed). The user resolves comments once satisfied.
+- Check the "warnings" array in the response and fix any issues with a follow-up update_deck call.
+- Use search_images to find stock photos — you must include the returned image_attribution data with any image you use.`,
     {
       title: z.string().describe('Deck title'),
       heading_font: z.string().optional().describe('Google Font for headings (e.g. "Playfair Display"). Default: DM Sans.'),
