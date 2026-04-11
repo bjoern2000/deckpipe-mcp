@@ -17,8 +17,15 @@ export class SlideTitleAndBody extends SlideBase {
       .image-area {
         flex: 0 0 40%;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        min-height: 0;
+      }
+      .image-area img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
       }
       .body-text { white-space: pre-wrap; }
       .body-md { }
@@ -60,13 +67,20 @@ export class SlideTitleAndBody extends SlideBase {
         ${this.imageUrl
           ? this.editable
             ? this.wrapDeletable('image_url', html`
-                <div class="image-area"><img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} /></div>
+                <div class="image-area">
+                  <img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />
+                  ${this.renderAttribution(this.imageAttribution)}
+                </div>
               `, null)
-            : html`<div class="image-area"><img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} /></div>`
+            : html`
+                <div class="image-area">
+                  <img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />
+                  ${this.renderAttribution(this.imageAttribution)}
+                </div>
+              `
           : this.imagePrompt
             ? html`<div class="image-area">${this.renderImagePrompt(this.imagePrompt)}</div>`
             : ''}
-        ${this.imageUrl ? this.renderAttribution(this.imageAttribution) : ''}
       </div>
     `;
   }

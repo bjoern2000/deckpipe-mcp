@@ -192,15 +192,21 @@ export class SlideBase extends LitElement {
       display: none;
     }
 
-    /* --- Image attribution caption --- */
+    /* --- Image attribution caption ---
+       Always renders centered directly beneath the photo.
+       Layouts with a framed image place this inside the image container;
+       full-background layouts override with absolute positioning. */
     .image-attribution {
       font-size: 0.42em;
       color: #94a3b8;
       line-height: 1.3;
+      text-align: center;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      padding: 2px 0;
+      padding: 6px 0 0 0;
+      width: 100%;
+      flex-shrink: 0;
     }
     .image-attribution a {
       color: #94a3b8;

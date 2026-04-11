@@ -63,7 +63,7 @@ export class SlideClosing extends SlideBase {
         color: #ffffff;
         text-decoration: underline;
       }
-      .image-attribution { position: absolute; bottom: 8px; right: 16px; z-index: 1; color: rgba(255,255,255,0.4); }
+      .image-attribution { position: absolute; bottom: 10px; left: 0; right: 0; z-index: 1; color: rgba(255,255,255,0.4); }
       .image-attribution a { color: rgba(255,255,255,0.4); text-decoration-color: rgba(255,255,255,0.2); }
       .image-attribution a:hover { color: rgba(255,255,255,0.6); }
     `,

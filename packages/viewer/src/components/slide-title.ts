@@ -34,7 +34,7 @@ export class SlideTitle extends SlideBase {
         z-index: 0;
       }
       .content { position: relative; z-index: 1; }
-      .image-attribution { color: rgba(255,255,255,0.5); position: absolute; bottom: 8px; right: 16px; z-index: 1; }
+      .image-attribution { color: rgba(255,255,255,0.5); position: absolute; bottom: 10px; left: 0; right: 0; z-index: 1; }
       .image-attribution a { color: rgba(255,255,255,0.5); text-decoration-color: rgba(255,255,255,0.2); }
       .image-attribution a:hover { color: rgba(255,255,255,0.7); }
     `,

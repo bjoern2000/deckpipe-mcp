@@ -94,13 +94,20 @@ export class SlideTwoColumns extends SlideBase {
         ${this.imageUrl
           ? this.editable
             ? this.wrapDeletable('image_url', html`
-                <div class="bottom-image"><img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} /></div>
+                <div class="bottom-image">
+                  <img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />
+                  ${this.renderAttribution(this.imageAttribution)}
+                </div>
               `, null)
-            : html`<div class="bottom-image"><img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} /></div>`
+            : html`
+                <div class="bottom-image">
+                  <img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />
+                  ${this.renderAttribution(this.imageAttribution)}
+                </div>
+              `
           : this.imagePrompt
             ? html`<div class="bottom-image">${this.renderImagePrompt(this.imagePrompt)}</div>`
             : ''}
-        ${this.imageUrl ? this.renderAttribution(this.imageAttribution) : ''}
       </div>
     `;
   }

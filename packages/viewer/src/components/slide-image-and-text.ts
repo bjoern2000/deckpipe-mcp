@@ -17,8 +17,16 @@ export class SlideImageAndText extends SlideBase {
         flex: 0 0 58%;
         display: flex;
         flex-direction: column;
+        align-items: center;
         justify-content: center;
+        min-height: 0;
+      }
+      .image-wrap {
+        flex: 1;
+        width: 100%;
+        min-height: 0;
         overflow: hidden;
+        border-radius: 6px;
       }
       .image-area img {
         width: 100%;
@@ -57,9 +65,11 @@ export class SlideImageAndText extends SlideBase {
       <div class="slide" data-content-path="slide">
         ${this.imageUrl ? html`
           <div class="image-area">
-            ${this.editable
-              ? this.wrapDeletable('image_url', html`<img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />`, null)
-              : html`<img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />`}
+            <div class="image-wrap">
+              ${this.editable
+                ? this.wrapDeletable('image_url', html`<img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />`, null)
+                : html`<img src="${this.imageUrl}" alt="" style="object-position:${focalPointToObjectPosition(this.imageFocus)}" @error=${this.onImgError} />`}
+            </div>
             ${this.renderAttribution(this.imageAttribution)}
           </div>
         ` : nothing}
