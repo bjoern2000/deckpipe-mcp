@@ -30,6 +30,7 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 | `update_deck` | Update title, fonts, accent color, slide content, or slide structure (insert, delete, move, replace) |
 | `delete_deck` | Delete a deck permanently |
 | `upload_image` | Upload a base64 image, get a hosted URL |
+| `search_images` | Search Unsplash for stock photos with automatic attribution |
 | `list_layouts` | List available layouts, customization options, and style guide |
 | `list_comments` | List comments on a deck (filter by status or slide) |
 | `reply_to_comment` | Reply to a comment thread after addressing feedback |
@@ -67,7 +68,7 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 
 All layouts support an optional `key_takeaway` field — a highlighted sentence rendered below the title.
 
-**[See all 24 layouts in action →](https://deckpipe.com/d/dk_CsHBYjLY/building-a-saas-startup-from-idea-to-ipo)**
+**[See all 25 layouts in action →](https://deckpipe.com/d/dk_CsHBYjLY/building-a-saas-startup-from-idea-to-ipo)**
 
 ## Image placeholders
 
@@ -83,6 +84,32 @@ Any layout that accepts `image_url` also accepts `image_prompt` as an alternativ
   }
 }
 ```
+
+## Stock photo search
+
+Use the `search_images` tool to find stock photos from Unsplash. Results include URLs, photographer info, and attribution data that you must include when using an image.
+
+```json
+{
+  "layout": "full_image",
+  "content": {
+    "image_url": "https://images.unsplash.com/photo-...",
+    "title": "Mountain Adventure",
+    "image_attribution": {
+      "name": "Kalen Emsley",
+      "url": "https://unsplash.com/@kalenemsley?utm_source=deckpipe&utm_medium=referral",
+      "source": "Unsplash",
+      "source_url": "https://unsplash.com/?utm_source=deckpipe&utm_medium=referral",
+      "download_location": "https://api.unsplash.com/photos/abc123/download?ixid=..."
+    }
+  }
+}
+```
+
+- Attribution renders as a small caption below the image (or bottom-right on full-bleed layouts)
+- The `download_location` field triggers required Unsplash download tracking automatically when the deck is saved — it is not stored
+- For `image_gallery`, put attribution inside each `image_details[]` entry
+- Use `orientation: "landscape"` for `full_image`/`image_and_text`, `"portrait"` for `image_gallery`
 
 ## Rich bullets
 
