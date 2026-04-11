@@ -1,6 +1,6 @@
 # deckpipe-mcp
 
-MCP server for [deckpipe](https://deckpipe.com) — create and edit slide decks from any AI agent.
+MCP server for [deckpipe](https://deckpipe.dev) — create and edit slide decks from any AI agent.
 
 ## Install
 
@@ -68,7 +68,7 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 
 All layouts support an optional `key_takeaway` field — a highlighted sentence rendered below the title.
 
-**[See all 25 layouts in action →](https://deckpipe.com/d/dk_CsHBYjLY/building-a-saas-startup-from-idea-to-ipo)**
+**[See all 25 layouts in action →](https://deckpipe.dev/d/dk_CsHBYjLY/building-a-saas-startup-from-idea-to-ipo)**
 
 ## Image placeholders
 
@@ -211,7 +211,7 @@ Deckpipe supports threaded comments for collaborative feedback between users and
 
 ## Configuration
 
-By default the MCP server connects to `https://deckpipe.com`. To use a different API endpoint:
+By default the MCP server connects to `https://deckpipe.dev`. To use a different API endpoint:
 
 ```json
 {
