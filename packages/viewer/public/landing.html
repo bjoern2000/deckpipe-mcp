@@ -7,12 +7,12 @@
   <meta name="description" content="deckpipe is the agent-first slide deck engine. your agent describes slides as json; deckpipe renders, themes, and exports them. MCP server for claude, cursor, and claude code." />
   <meta name="keywords" content="AI slide deck, MCP server, AI presentations, Claude slides, agent-first, slide deck API, AI presentation tool, deckpipe" />
   <link rel="canonical" href="https://deckpipe.dev" />
-  <meta property="og:title" content="deckpipe — slide decks at prompt speed" />
+  <meta property="og:title" content="deckpipe — slide renderer for agents" />
   <meta property="og:description" content="agent-first slide deck engine. connect the MCP, prompt your agent, get a deck." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://deckpipe.dev" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="deckpipe — slide decks at prompt speed" />
+  <meta name="twitter:title" content="deckpipe — slide renderer for agents" />
   <meta name="twitter:description" content="agent-first slide deck engine. connect the MCP, prompt your agent, get a deck." />
   <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
@@ -149,7 +149,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      font-weight: 500;
+      font-weight: 600;
       font-size: 0.92rem;
       letter-spacing: -0.01em;
     }
@@ -230,7 +230,7 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--fg-dim);
-      padding: 7px 14px;
+      padding: 10px 14px 6px;
       border: 1px solid var(--line-hi);
       border-radius: 100px;
       background: rgba(20, 24, 28, 0.05);
@@ -243,6 +243,7 @@
       background: var(--accent);
       border-radius: 50%;
       box-shadow: 0 0 10px var(--accent);
+      transform: translateY(-2px);
     }
 
     .hero h1 {
@@ -330,89 +331,35 @@
 
     .video-frame {
       position: relative;
-      aspect-ratio: 16 / 9;
       width: 100%;
-      background: var(--bg-code);
-      border: 1px solid var(--bg-code);
       overflow: hidden;
       box-shadow:
-        0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
         0 40px 80px -30px rgba(20, 24, 28, 0.35),
         0 0 100px -20px rgba(244, 255, 36, 0.28);
     }
 
     .video-frame video,
     .video-frame img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .video-frame iframe {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      border: none;
       display: block;
     }
 
-    /* Placeholder pattern used until a real video is dropped in */
-    .video-placeholder {
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(135deg, transparent 49.5%, rgba(255,255,255,0.025) 49.5%, rgba(255,255,255,0.025) 50.5%, transparent 50.5%),
-        linear-gradient(45deg,  transparent 49.5%, rgba(255,255,255,0.025) 49.5%, rgba(255,255,255,0.025) 50.5%, transparent 50.5%),
-        radial-gradient(ellipse at center, #1c2228 0%, #0e1216 70%);
-      background-size: 28px 28px, 28px 28px, 100% 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 24px;
+    .video-frame:has(iframe) {
+      aspect-ratio: 16 / 9;
     }
 
-    .video-placeholder .play {
-      width: 76px;
-      height: 76px;
-      border: 1.5px solid var(--accent);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent);
-      position: relative;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .video-placeholder .play::before {
-      content: "";
-      position: absolute;
-      inset: -8px;
-      border: 1px solid var(--accent);
-      border-radius: 50%;
-      opacity: 0.35;
-      animation: ringPulse 2.4s ease-out infinite;
-    }
-
-    @keyframes ringPulse {
-      0%   { transform: scale(0.9); opacity: 0.45; }
-      100% { transform: scale(1.3); opacity: 0; }
-    }
-
-    .video-placeholder .play:hover {
-      background: var(--accent);
-      color: var(--fg);
-      box-shadow: 0 0 40px rgba(244, 255, 36, 0.55);
-    }
-
-    .video-placeholder .play svg {
-      width: 26px;
-      height: 26px;
-      margin-left: 3px;
-    }
-
-    .video-placeholder .label {
-      font-size: 0.72rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--fg-mute);
+    .demo-embed {
+      margin-top: clamp(32px, 4vw, 48px);
     }
 
     /* Corner brackets */
@@ -928,46 +875,6 @@
       border-color: var(--fg);
     }
 
-    /* ─── Try prompts ─── */
-    .try-list {
-      list-style: none;
-      counter-reset: try;
-      display: grid;
-      gap: 14px;
-    }
-
-    .try-list li {
-      counter-increment: try;
-      position: relative;
-      padding: 22px 60px 22px 64px;
-      background: var(--bg-soft);
-      border: 1px solid var(--line);
-      font-size: 0.9rem;
-      line-height: 1.65;
-      color: var(--fg-dim);
-      transition: border-color 0.15s ease;
-    }
-
-    .try-list li:hover {
-      border-color: var(--line-hi);
-    }
-
-    .try-list li::before {
-      content: counter(try, decimal-leading-zero);
-      position: absolute;
-      left: 22px;
-      top: 22px;
-      font-size: 0.72rem;
-      color: var(--fg);
-      letter-spacing: 0.08em;
-      font-weight: 600;
-    }
-
-    .try-list .copy-btn {
-      top: 18px;
-      right: 18px;
-    }
-
     /* ─── Footer ─── */
     .footer {
       margin-top: clamp(80px, 12vw, 160px);
@@ -1040,14 +947,13 @@
       <div class="nav-links">
         <a href="#connect">connect</a>
         <a href="#layouts" class="hide-sm">layouts</a>
-        <a href="#try">try</a>
-        <a href="https://github.com/bjoern2000/deckpipe-mcp" target="_blank" rel="noopener">github</a>
+<a href="https://github.com/bjoern2000/deckpipe-mcp" target="_blank" rel="noopener">github</a>
       </div>
     </nav>
 
     <!-- ═══ HERO ═══ -->
     <header class="hero">
-      <div class="eyebrow reveal reveal-1">agent slide engine</div>
+      <div class="eyebrow reveal reveal-1">agent-first slide renderer</div>
 
       <h1 class="reveal reveal-2">
         let your agent<br />
@@ -1071,32 +977,22 @@
           <span class="bl" aria-hidden="true"></span>
           <span class="br" aria-hidden="true"></span>
 
-          <!--
-            DROP-IN VIDEO:
-            When the demo video is ready, replace the .video-placeholder block below with:
-
-              <video autoplay muted loop playsinline poster="/demo-poster.jpg">
-                <source src="/demo.mp4" type="video/mp4" />
-              </video>
-          -->
-          <div class="video-placeholder" id="videoPlaceholder">
-            <button class="play" type="button" aria-label="Play demo">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-            </button>
-            <div class="label">demo video · coming soon</div>
-          </div>
+          <video controls muted loop playsinline>
+            <source src="/videos/deckpipe_demo_hi.mp4" type="video/mp4" />
+          </video>
         </div>
         <div class="video-caption">
           <span>demo</span>
-          <span>/ prompt → deck</span>
+          <span>/ <a href="https://deckpipe.dev/d/dk_h6o1DYXp/japan-travel-inspiration" target="_blank" rel="noopener">japan travel inspiration →</a></span>
         </div>
       </div>
+
     </header>
 
     <!-- ═══ FEATURES ═══ -->
     <section id="features">
       <div class="section-label"><span class="num">01</span> what it does</div>
-      <h2 class="section-title"><span class="hl">a rendering engine for agents.</span></h2>
+      <h2 class="section-title"><span class="hl">rendering engine for agents.</span></h2>
       <p class="section-lede">
         your agent describes a deck as json. deckpipe handles layout, typography, and hosting.
       </p>
@@ -1138,7 +1034,7 @@
     <!-- ═══ FLOW ═══ -->
     <section id="flow">
       <div class="section-label"><span class="num">02</span> flow</div>
-      <h2 class="section-title"><span class="hl">how you use it.</span></h2>
+      <h2 class="section-title"><span class="hl">how-to.</span></h2>
       <p class="section-lede">
         a typical workflow.
       </p>
@@ -1166,50 +1062,27 @@
         </div>
         <div class="flow-step">
           <div class="step-num">05</div>
-          <div class="step-name">share</div>
+          <div class="step-name">share & present</div>
           <div class="step-desc">share the link or present.</div>
         </div>
       </div>
     </section>
 
-    <!-- ═══ DEMO ═══ -->
+    <!-- ═══ DEMO DECK ═══ -->
     <section id="demo">
       <div class="section-label"><span class="num">03</span> demo</div>
-      <h2 class="section-title"><span class="hl">example.</span></h2>
+      <h2 class="section-title"><span class="hl">example deck.</span></h2>
       <p class="section-lede">
-        you write a prompt. your agent calls deckpipe and produces a deck.
+        this deck was made by an agent using deckpipe.
       </p>
 
-      <div class="demo-grid">
-        <div class="demo-card">
-          <div class="demo-card-head">
-            <span>&gt;&nbsp;prompt.txt</span>
-            <span class="tag">input</span>
-          </div>
-          <div class="demo-card-body">
-            <span class="prompt-prefix">$</span>create a deck about the apollo 11 moon landing. search the web for historic NASA photos and use them as full-bleed images. include a timeline of the mission, stats on the saturn V rocket, and a famous quote from neil armstrong. use heading font "libre baskerville" and accent color "#1e3a5f".
-            <button class="copy-btn" onclick="copyCode(this, 'create a deck about the apollo 11 moon landing. search the web for historic NASA photos and use them as full-bleed images. include a timeline of the mission, stats on the saturn V rocket, and a famous quote from neil armstrong. use heading font &quot;libre baskerville&quot; and accent color &quot;#1e3a5f&quot;.')" title="Copy prompt">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-            </button>
-          </div>
+      <div class="demo-embed">
+        <div class="video-frame">
+          <iframe src="https://deckpipe.dev/d/dk_5PlNgWxS/the-agent-stack" loading="lazy" allowfullscreen></iframe>
         </div>
-
-        <div class="demo-card demo-result">
-          <div class="demo-card-head" style="border: none; padding: 0;">
-            <span>→&nbsp;result.deck</span>
-            <span class="tag">output</span>
-          </div>
-          <div>
-            <a href="https://deckpipe.dev/d/dk_YjAXnN8v/apollo-11-humanity-s-giant-leap" target="_blank" rel="noopener" class="demo-result-link">
-              apollo 11: humanity's giant leap
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
-            </a>
-          </div>
-          <div class="demo-result-meta">
-            <span>12 slides</span>
-            <span>nasa imagery</span>
-            <span>custom theme</span>
-          </div>
+        <div class="video-caption">
+          <span>demo</span>
+          <span>/ the agent stack</span>
         </div>
       </div>
     </section>
@@ -1219,13 +1092,13 @@
       <div class="section-label"><span class="num">04</span> connect</div>
       <h2 class="section-title"><span class="hl">connect deckpipe to your agent.</span></h2>
       <p class="section-lede">
-        3 ways in. same tools either way.
+        supports local and remote mcp.
       </p>
 
       <div class="install-steps">
         <div class="install-card">
           <div class="install-head">
-            <div class="title"><span class="dim">01 //</span>remote mcp &nbsp;<span style="color:var(--fg-mute);font-size:0.72rem">— url only, no install</span></div>
+            <div class="title"><span class="dim">01 //</span>remote mcp</div>
           </div>
           <div class="install-body">
             <pre><code><span class="prompt-sym">&gt; </span>https://deckpipe.dev/mcp</code></pre>
@@ -1357,36 +1230,6 @@
       </p>
     </section>
 
-    <!-- ═══ TRY IT ═══ -->
-    <section id="try">
-      <div class="section-label"><span class="num">08</span> try</div>
-      <h2 class="section-title"><span class="hl">example prompts.</span></h2>
-      <p class="section-lede">
-        paste any of these into your agent to try deckpipe.
-      </p>
-
-      <ol class="try-list">
-        <li>
-          create a deck about the rise of electric vehicles. search the web for relevant photos and use them. use heading font "space grotesk", body font "inter", and accent color "#0ea5e9".
-          <button class="copy-btn" onclick="copyPrompt(this)" title="Copy">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-          </button>
-        </li>
-        <li>
-          build a lecture deck on how neural networks learn. use a comparison table for activation functions, bullet points for key concepts, and add a key takeaway to each slide.
-          <button class="copy-btn" onclick="copyPrompt(this)" title="Copy">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-          </button>
-        </li>
-        <li>
-          create a travel guide deck for tokyo. search the web for photos and include an image gallery of must-visit spots, stats on tourism, and a full-bleed image cover slide.
-          <button class="copy-btn" onclick="copyPrompt(this)" title="Copy">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-          </button>
-        </li>
-      </ol>
-    </section>
-
     <!-- ═══ FOOTER ═══ -->
     <footer class="footer">
       <div>&copy; 2026 <a href="https://bjoernschefzyk.co" target="_blank" rel="noopener">björn schefzyk</a> &nbsp;·&nbsp; all rights reserved</div>
@@ -1410,28 +1253,10 @@
       setTimeout(() => { btn.innerHTML = clipboardSvg; btn.classList.remove('copied'); }, 1500);
     }
 
-    function copyPrompt(btn) {
-      const li = btn.closest('li');
-      // Clone to strip the button content from the extracted text.
-      const clone = li.cloneNode(true);
-      clone.querySelectorAll('button').forEach(b => b.remove());
-      const text = clone.textContent.trim();
-      navigator.clipboard.writeText(text).then(() => flashCopied(btn));
-    }
-
     function copyCode(btn, text) {
       navigator.clipboard.writeText(text).then(() => flashCopied(btn));
     }
 
-    // Hero video placeholder — scroll into view on click so the user can see
-    // what will become the actual demo video once it's dropped in.
-    const placeholder = document.getElementById('videoPlaceholder');
-    if (placeholder) {
-      placeholder.querySelector('.play')?.addEventListener('click', () => {
-        placeholder.style.opacity = '0.6';
-        setTimeout(() => { placeholder.style.opacity = '1'; }, 400);
-      });
-    }
   </script>
 </body>
 </html>
