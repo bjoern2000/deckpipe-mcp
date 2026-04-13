@@ -301,7 +301,7 @@ const QuadrantContentSchema = z.object({
   bullets: z.array(BulletItemSchema).max(6).optional(),
   x_label: z.string().optional(),
   y_label: z.string().optional(),
-  quadrant_labels: z.array(z.string()).length(4).optional(),
+  quadrant_labels: z.array(z.string()).length(4).optional().describe('Order: [top-left, top-right, bottom-left, bottom-right]'),
   items: z.array(QuadrantItemSchema).min(1).max(12),
 });
 

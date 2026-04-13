@@ -65,7 +65,7 @@ Create a new slide deck. Returns viewer_url (owner link with edit key) and share
 - pros_and_cons: { title?, pros_heading?, cons_heading?, pros[], cons[] }
 - agenda: { title?, items[]: { topic, duration?, description? } (1-10 items) }
 - swot: { title?, strengths[], weaknesses[], opportunities[], threats[] (1-5 items each) }
-- quadrant: { title?, body?, bullets?[], x_label?, y_label?, quadrant_labels?[4], items[]: { label, x: 0-1, y: 0-1 } (1-12 items) }
+- quadrant: { title?, body?, bullets?[], x_label?, y_label?, quadrant_labels?[4] (order: [top-left, top-right, bottom-left, bottom-right]), items[]: { label, x: 0-1, y: 0-1 } (1-12 items) }
 - venn_diagram: { title?, body?, circles[]: { label, items?[] } (2-3 circles, required), overlaps?[]: { sets: [circle indices], label } (max 4) }
 - chart: { chart_type: "bar"|"line"|"pie"|"donut" (required), data: { labels[] (2-12 strings), datasets[]: { label?, values: number[], color? } (1-5 datasets) } (required), title? }
 - closing: { heading?, subheading?, contact_lines?[], image_url? }
