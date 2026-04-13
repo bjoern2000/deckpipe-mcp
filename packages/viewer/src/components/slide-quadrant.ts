@@ -124,7 +124,7 @@ export class SlideQuadrant extends SlideBase {
       }
       .y-label {
         position: absolute;
-        right: 100%;
+        left: -22px;
         top: 50%;
         transform: translateY(-50%) rotate(-90deg);
         font-size: 0.7em;
