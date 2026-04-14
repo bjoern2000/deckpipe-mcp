@@ -1,6 +1,6 @@
 {
   "name": "deckpipe-mcp",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "description": "MCP server for Deckpipe — create, edit, and export slide decks from any AI agent",
   "type": "module",
   "main": "dist/index.js",
@@ -32,7 +32,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "repository": {
     "type": "git",

@@ -1,8 +1,21 @@
 # deckpipe-mcp
 
-MCP server for [deckpipe](https://deckpipe.dev) — create and edit slide decks from any AI agent.
+MCP server for [deckpipe](https://deckpipe.dev) — create, edit, and share slide decks from any AI agent. You describe slides as JSON (layout + content); Deckpipe renders, themes, and exports them. Every deck gets a shareable viewer URL.
+
+Ten tools for the full deck lifecycle: create, read, update, delete, search stock photos, upload images, list layouts, and collaborate via threaded comments. No account or API key required — decks are addressed by unique unguessable IDs.
+
+- **Website & viewer:** [deckpipe.dev](https://deckpipe.dev)
+- **Remote MCP endpoint:** `https://deckpipe.dev/mcp` (Streamable HTTP)
+- **npm package:** [`deckpipe-mcp`](https://www.npmjs.com/package/deckpipe-mcp) (stdio for local agents)
+- **Source:** [github.com/bjoern2000/deckpipe-mcp](https://github.com/bjoern2000/deckpipe-mcp)
 
 ## Install
+
+### Remote (Claude.ai, Claude Desktop, any Streamable HTTP MCP client)
+
+Add `https://deckpipe.dev/mcp` as a custom remote MCP server. No authentication required.
+
+### Local (stdio)
 
 **Claude Code**
 ```bash
@@ -229,6 +242,18 @@ By default the MCP server connects to `https://deckpipe.dev`. To use a different
 }
 ```
 
+## Support
+
+- **Questions, bug reports, feature requests:** [open an issue on GitHub](https://github.com/bjoern2000/deckpipe-mcp/issues)
+- **Email:** [bjoern.schefzyk@gmail.com](mailto:bjoern.schefzyk@gmail.com)
+
+## Legal
+
+- [Privacy policy](https://deckpipe.dev/privacy.html) — what data is stored, retention, GDPR rights
+- [Terms of use](https://deckpipe.dev/terms.html) — acceptable use, liability
+
+**Note:** Decks are stored without authentication and are accessible by anyone who has the deck ID. Do not store confidential or personal information in decks.
+
 ## License
 
-MIT
+[MIT](./LICENSE) © Björn Schefzyk
