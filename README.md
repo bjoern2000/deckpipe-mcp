@@ -9,6 +9,34 @@ Ten tools for the full deck lifecycle: create, read, update, delete, search stoc
 - **npm package:** [`deckpipe-mcp`](https://www.npmjs.com/package/deckpipe-mcp) (stdio for local agents)
 - **Source:** [github.com/bjoern2000/deckpipe-mcp](https://github.com/bjoern2000/deckpipe-mcp)
 
+## Use cases
+
+You can use Deckpipe to:
+
+Create Decks from a Prompt:
+"Build a 6-slide pitch deck for our AI launch with a bold, editorial tone"
+
+Turn Documents into Slides:
+"Summarize my Q2 strategy doc as a 10-slide exec deck with key takeaways"
+
+Illustrate with Stock Photos:
+"Create a travel guide for Tokyo with full-bleed Unsplash photos and a gallery of must-visit spots"
+
+Visualize Data:
+"Add a bar chart showing monthly signups for Q1 and a stats slide for conversion metrics"
+
+Compare & Analyze:
+"Make a SWOT deck for entering the European market, with a quadrant of competitors by price and features"
+
+Iterate Based on Feedback:
+"Check the deck for open comments, apply the requested edits, and reply to each thread"
+
+Restructure Existing Decks:
+"Move the pricing slide before the testimonials and replace the closing with a contact slide"
+
+Brand & Theme:
+"Rebuild this deck using Playfair Display for headings, Inter for body, and accent color #0ea5e9"
+
 ## Install
 
 ### Remote (Claude.ai, Claude Desktop, any Streamable HTTP MCP client)
