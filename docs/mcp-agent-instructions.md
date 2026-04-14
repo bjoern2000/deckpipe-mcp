@@ -255,3 +255,171 @@ Resolve a comment, marking it as addressed. Only resolve when explicitly asked �
 |-----------|------|----------|-------------|
 | `deck_id` | string | yes | The deck ID |
 | `comment_id` | string | yes | The comment ID to resolve |
+
+---
+
+## Examples
+
+### Example 1: Create a multi-slide deck
+
+**User prompt:** "Create a 4-slide deck about our Q2 product launch"
+
+**Tool calls:**
+
+1. `search_images` — find a relevant hero image:
+```json
+{
+  "queries": ["product launch celebration", "rocket launch"],
+  "orientation": "landscape",
+  "per_page": 3
+}
+```
+
+2. `create_deck` — build the deck with multiple layouts:
+```json
+{
+  "title": "Q2 Product Launch",
+  "accent_color": "#2563eb",
+  "heading_font": "Inter",
+  "slides": [
+    {
+      "layout": "title",
+      "content": {
+        "title": "Q2 Product Launch",
+        "subtitle": "Shipping faster, together",
+        "image_ref": "<id from search_images>"
+      }
+    },
+    {
+      "layout": "title_and_bullets",
+      "content": {
+        "title": "What's New",
+        "bullets": [
+          "Real-time collaboration for teams",
+          "Redesigned dashboard with analytics",
+          "API v2 with webhook support",
+          "Mobile app for iOS and Android"
+        ]
+      }
+    },
+    {
+      "layout": "stats",
+      "content": {
+        "title": "Early Access Results",
+        "metrics": [
+          { "value": "3.2x", "label": "Faster onboarding" },
+          { "value": "94%", "label": "User satisfaction" },
+          { "value": "12K", "label": "Beta sign-ups" }
+        ]
+      }
+    },
+    {
+      "layout": "closing",
+      "content": {
+        "heading": "Ready to launch?",
+        "subheading": "Available June 15",
+        "contact_lines": ["product@example.com", "example.com/launch"]
+      }
+    }
+  ]
+}
+```
+
+**Response includes:**
+- `viewer_url` — owner link with edit key (e.g. `https://deckpipe.dev/d/dk_abc123?key=ek_xyz`)
+- `share_url` — read-only link (e.g. `https://deckpipe.dev/d/dk_abc123`)
+- `warnings` — array of any issues to fix
+
+---
+
+### Example 2: Search for images and use them in slides
+
+**User prompt:** "Add photos to my presentation about remote work"
+
+**Tool calls:**
+
+1. `search_images` — batch-search multiple topics at once:
+```json
+{
+  "queries": ["remote work home office", "video call team meeting", "digital nomad laptop"],
+  "orientation": "landscape",
+  "per_page": 3
+}
+```
+
+2. `update_deck` — add images to existing slides using image_ref:
+```json
+{
+  "deck_id": "dk_abc123",
+  "slides": [
+    {
+      "index": 0,
+      "content": {
+        "image_ref": "<id from 'remote work home office' results>"
+      }
+    },
+    {
+      "index": 2,
+      "content": {
+        "image_ref": "<id from 'video call team meeting' results>"
+      }
+    }
+  ]
+}
+```
+
+The `image_ref` field automatically resolves the Unsplash image ID to a hosted URL and handles attribution and download tracking.
+
+---
+
+### Example 3: Iterate on a deck based on comments
+
+**User prompt:** "Check my deck for feedback and make the requested changes"
+
+**Tool calls:**
+
+1. `get_deck` — read current state with comments:
+```json
+{
+  "deck_id": "dk_abc123"
+}
+```
+
+Response includes slides with `comments[]` arrays. Example comment:
+```json
+{
+  "id": "cmt_x1y2z3",
+  "slide_id": "sld_m4n5o6",
+  "content_path": "bullets[1]",
+  "status": "open",
+  "messages": [
+    { "author_name": "Sarah", "body": "This bullet is too vague — add specific numbers" }
+  ]
+}
+```
+
+2. `update_deck` — apply the requested change:
+```json
+{
+  "deck_id": "dk_abc123",
+  "slides": [
+    {
+      "index": 2,
+      "content": {
+        "bullets": ["Revenue grew 34% YoY to $4.2M", "Expanded to 3 new markets", "NPS increased from 42 to 67"]
+      }
+    }
+  ]
+}
+```
+
+3. `reply_to_comment` — acknowledge the feedback:
+```json
+{
+  "deck_id": "dk_abc123",
+  "comment_id": "cmt_x1y2z3",
+  "body": "Updated bullet with specific revenue and growth numbers."
+}
+```
+
+The user can then review the changes in the viewer and resolve the comment when satisfied.

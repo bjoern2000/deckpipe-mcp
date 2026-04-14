@@ -81,6 +81,7 @@ IMPORTANT:
         content: z.record(z.unknown()).describe('Content fields (vary by layout). All layouts support optional key_takeaway.'),
       })).describe('Array of slides'),
     },
+    { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     async (args) => {
       console.log(`[mcp] tool: create_deck "${(args as Record<string, unknown>).title}"`);
       try {
@@ -110,6 +111,7 @@ IMPORTANT:
 
 Each slide includes a comments[] array with open comments. Each comment has: id, content_path (e.g. "title", "bullets[2]", "slide" for general), status, messages[] thread, and created_at.`,
     { deck_id: z.string().describe('The deck ID (e.g. "dk_a1b2c3d4")') },
+    { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     async ({ deck_id }) => {
       const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
       const res = await fetch(`${apiUrl}/v1/decks/${deck_id}`);
@@ -157,6 +159,7 @@ slides (content edit) examples:
         content: z.record(z.unknown()).describe('Partial content to merge'),
       })).optional().describe('Content edits by index (applied after slide_operations)'),
     },
+    { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     async ({ deck_id, ...body }) => {
       const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
       const res = await fetch(`${apiUrl}/v1/decks/${deck_id}`, {
@@ -174,6 +177,7 @@ slides (content edit) examples:
     'delete_deck',
     'Delete a deck permanently.',
     { deck_id: z.string().describe('Deck ID to delete') },
+    { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
     async ({ deck_id }) => {
       const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
       const res = await fetch(`${apiUrl}/v1/decks/${deck_id}`, { method: 'DELETE' });
@@ -191,6 +195,7 @@ slides (content edit) examples:
       filename: z.string().describe('Filename with extension (e.g. "photo.jpg")'),
       content_type: z.enum(['image/png', 'image/jpeg', 'image/webp']).describe('MIME type'),
     },
+    { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     async ({ image_data, filename, content_type }) => {
       const buffer = Buffer.from(image_data, 'base64');
       const blob = new Blob([buffer], { type: content_type });
@@ -217,6 +222,7 @@ For image_gallery: pass an array of IDs as image_refs instead of images.`,
       per_page: z.number().min(1).max(30).optional().describe('Results per query (default 5, max 30)'),
       orientation: z.enum(['landscape', 'portrait', 'squarish']).optional().describe('Filter by orientation. Use "landscape" for full_image/image_and_text, "portrait" for image_gallery.'),
     },
+    { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     async ({ query, queries, per_page, orientation }) => {
       console.log(`[mcp] tool: search_images query=${query || ''} queries=${queries?.length || 0}`);
       try {
@@ -243,6 +249,7 @@ For image_gallery: pass an array of IDs as image_refs instead of images.`,
     'list_layouts',
     'List all available slide layouts, their content fields, and themes. Use this to discover what is supported before creating a deck.',
     {},
+    { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     async () => {
       const layouts = [
         { name: 'title', description: 'Large centered title slide.', fields: 'title (required), subtitle?, image_url?, key_takeaway?' },
@@ -295,6 +302,7 @@ Use the "since" parameter with an ISO timestamp to only fetch comments added or 
       slide_id: z.string().optional().describe('Filter to a specific slide by its stable slide_id (e.g. "sld_a1b2c3d4")'),
       since: z.string().optional().describe('ISO timestamp. Only return comments created or updated since this time. Use this to poll for new feedback efficiently.'),
     },
+    { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     async ({ deck_id, status, slide_id, since }) => {
       const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
       const qs = new URLSearchParams();
@@ -319,6 +327,7 @@ Use the "since" parameter with an ISO timestamp to only fetch comments added or 
       body: z.string().describe('Your reply message'),
       author_name: z.string().optional().describe('Your agent name. Defaults to the agent_name set at deck creation, or "Agent" if none was set.'),
     },
+    { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     async ({ deck_id, comment_id, body, author_name }) => {
       const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
       let name = author_name;
@@ -351,6 +360,7 @@ Use the "since" parameter with an ISO timestamp to only fetch comments added or 
       deck_id: z.string().describe('The deck ID'),
       comment_id: z.string().describe('The comment ID to resolve'),
     },
+    { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     async ({ deck_id, comment_id }) => {
       const apiUrl = config.apiUrl || `http://localhost:${config.port}`;
       const res = await fetch(`${apiUrl}/v1/decks/${deck_id}/comments/${comment_id}`, {
@@ -399,7 +409,7 @@ mcpRouter.post('/', async (req, res) => {
       if (transport.sessionId) transports.delete(transport.sessionId);
     };
 
-    const mcpServer = new McpServer({ name: 'deckpipe', version: '0.2.13' }, { instructions: INSTRUCTIONS });
+    const mcpServer = new McpServer({ name: 'deckpipe', version: '0.2.15' }, { instructions: INSTRUCTIONS });
     registerTools(mcpServer);
     await mcpServer.connect(transport);
     await transport.handleRequest(req, res);
