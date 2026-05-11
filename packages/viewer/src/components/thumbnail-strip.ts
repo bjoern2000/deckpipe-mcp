@@ -102,7 +102,7 @@ export class ThumbnailStrip extends LitElement {
         >
           <span class="thumb-number">${i + 1}</span>
           <div class="thumbnail-inner">
-            <slide-renderer .slide=${slide} .editable=${false} .deckStylesheet=${this.deckStylesheet} .disableJs=${true}></slide-renderer>
+            <slide-renderer .slide=${slide} .editable=${false} .deckStylesheet=${this.deckStylesheet} .staticPreview=${true}></slide-renderer>
           </div>
         </div>
       `)}

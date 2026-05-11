@@ -3,6 +3,16 @@ import { customElement, property } from 'lit/decorators.js';
 
 const stringSheetCache = new Map<string, CSSStyleSheet>();
 
+const NO_MOTION_CSS = '*,*::before,*::after{transition:none!important;animation-duration:0s!important;animation-delay:0s!important;}';
+let noMotionSheet: CSSStyleSheet | null = null;
+function getNoMotionSheet(): CSSStyleSheet {
+  if (!noMotionSheet) {
+    noMotionSheet = new CSSStyleSheet();
+    noMotionSheet.replaceSync(NO_MOTION_CSS);
+  }
+  return noMotionSheet;
+}
+
 function sheetFor(cssText: string | undefined): CSSStyleSheet | null {
   if (!cssText) return null;
   let sheet = stringSheetCache.get(cssText);
@@ -52,7 +62,7 @@ export class SlideCanvas extends LitElement {
   @property() css = '';
   @property() js = '';
   @property({ type: Boolean, attribute: 'static-render-only' }) staticRenderOnly = false;
-  @property({ type: Boolean, attribute: 'disable-js' }) disableJs = false;
+  @property({ type: Boolean, attribute: 'static-preview' }) staticPreview = false;
   @property({ type: Boolean }) editable = false;
   @property({ attribute: 'deck-stylesheet' }) deckStylesheet = '';
 
@@ -119,6 +129,9 @@ export class SlideCanvas extends LitElement {
     if (deckSheet) extras.push(deckSheet);
     const slideSheet = sheetFor(this.css);
     if (slideSheet) extras.push(slideSheet);
+    // Static preview (thumbnails): disable all transitions/animations so the
+    // post-JS state shows up instantly without a fade-in.
+    if (this.staticPreview) extras.push(getNoMotionSheet());
     root.adoptedStyleSheets = [...baseSheets, ...extras];
   }
 
@@ -221,19 +234,39 @@ export class SlideCanvas extends LitElement {
 
   private runUserJs(root: ShadowRoot) {
     if (!this.js) return;
-    if (this.disableJs) return;
     if (this.staticRenderOnly && this.isPrintMode()) return;
 
     const container = root.querySelector('.canvas-root') as HTMLElement | null;
     if (!container) return;
 
+    // In static-preview (thumbnails) we run the agent's JS but flush all
+    // deferred callbacks immediately so reveal-style animations end up in
+    // their final state. The no-motion stylesheet on the shadow root also
+    // suppresses CSS transitions/animations.
+    const isStatic = this.staticPreview;
+    const setTimeoutFn = isStatic
+      ? ((cb: () => void) => { try { cb(); } catch (e) { console.warn('[deckpipe] canvas: setTimeout shim threw', e); } return 0; })
+      : window.setTimeout.bind(window);
+    const rafFn = isStatic
+      ? ((cb: (t: number) => void) => { try { cb(0); } catch (e) { console.warn('[deckpipe] canvas: rAF shim threw', e); } return 0; })
+      : window.requestAnimationFrame.bind(window);
+    const intervalFn = isStatic
+      ? (() => 0)
+      : window.setInterval.bind(window);
+
     try {
       const fn = new Function(
-        'root', 'slide',
+        'root', 'slide', 'setTimeout', 'requestAnimationFrame', 'setInterval',
         `"use strict";\nconst __r = (function(){ ${this.js}\n })();\nreturn __r;`
-      ) as (root: ShadowRoot, slide: HTMLElement) => unknown;
-      const result = fn(root, container);
-      if (typeof result === 'function') {
+      ) as (
+        root: ShadowRoot,
+        slide: HTMLElement,
+        setTimeout: typeof window.setTimeout,
+        requestAnimationFrame: typeof window.requestAnimationFrame,
+        setInterval: typeof window.setInterval,
+      ) => unknown;
+      const result = fn(root, container, setTimeoutFn as never, rafFn as never, intervalFn as never);
+      if (!isStatic && typeof result === 'function') {
         this.jsCleanup = result as () => void;
       }
     } catch (err) {
