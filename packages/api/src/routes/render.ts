@@ -84,7 +84,10 @@ renderRouter.get('/decks/:id/slides/:slideIndex/screenshot', renderLimiter, asyn
     res.setHeader('X-Render-Report', encodeURIComponent(JSON.stringify(report)));
     if (durationMs) res.setHeader('X-Render-Duration-Ms', String(durationMs));
     res.setHeader('Content-Type', format === 'jpeg' ? 'image/jpeg' : 'image/png');
-    res.setHeader('Cache-Control', 'private, max-age=60');
+    // Public cache so social-card crawlers (LinkedIn, Slack, Discord, etc.)
+    // can hold the og:image. SSR cache-busts via ?v=<updated_at> so stale
+    // copies are bypassed once a deck is edited.
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
     res.send(png);
   } catch (err) {
     next(err);
