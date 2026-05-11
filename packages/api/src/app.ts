@@ -89,12 +89,16 @@ export function createApp() {
           const deck = result.rows[0];
           const deckUrl = `${config.viewerUrl}/d/${req.params.deckId}`;
           const slideCount = deck.slides?.length ?? 0;
-          const description = `${slideCount}-slide deck — view and edit on deckpipe`;
+          // LinkedIn flags og:description shorter than ~100 chars. This template
+          // describes the canvas model in one sentence; deck-aware via slideCount.
+          const description = `A ${slideCount}-slide deck on the deckpipe canvas — every slide authored as freeform HTML, CSS, and JavaScript inside a sandboxed shadow root. View, edit, and leave comments from your browser.`;
 
-          // og:image: render slide 0 server-side. Cache-busted by updated_at so
-          // social platforms re-fetch when the deck changes.
+          // og:image: render slide 0 as JPEG (LinkedIn / Slack / Discord all
+          // re-encode og:images to JPEG anyway; starting from JPEG avoids the
+          // PNG→JPEG quality hit). Cache-busted by updated_at so platforms
+          // re-fetch when the deck changes.
           const stamp = new Date(deck.updated_at).getTime();
-          const ogImage = `${config.viewerUrl}/v1/decks/${req.params.deckId}/slides/0/screenshot?v=${stamp}`;
+          const ogImage = `${config.viewerUrl}/v1/decks/${req.params.deckId}/slides/0/screenshot?v=${stamp}&format=jpeg`;
 
           const ogTags = [
             `<meta name="robots" content="noindex, nofollow" />`,
@@ -103,6 +107,7 @@ export function createApp() {
             `<meta property="og:url" content="${escapeHtml(deckUrl)}" />`,
             `<meta property="og:type" content="website" />`,
             `<meta property="og:image" content="${escapeHtml(ogImage)}" />`,
+            `<meta property="og:image:type" content="image/jpeg" />`,
             `<meta property="og:image:width" content="1920" />`,
             `<meta property="og:image:height" content="1080" />`,
             `<meta property="og:image:alt" content="${escapeHtml(deck.title)} — slide 1" />`,
