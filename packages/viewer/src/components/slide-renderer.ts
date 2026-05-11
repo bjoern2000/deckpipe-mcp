@@ -59,7 +59,6 @@ export class SlideRenderer extends LitElement {
           image-url=${c.image_url || ''}
           .imageFocus=${c.image_focus || null}
           .imageAttribution=${c.image_attribution || null}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-title>`;
 
@@ -71,7 +70,6 @@ export class SlideRenderer extends LitElement {
           .imageFocus=${c.image_focus || null}
           .imageAttribution=${c.image_attribution || null}
           image-prompt=${c.image_prompt || ''}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-title-and-body>`;
 
@@ -83,7 +81,6 @@ export class SlideRenderer extends LitElement {
           .imageFocus=${c.image_focus || null}
           .imageAttribution=${c.image_attribution || null}
           image-prompt=${c.image_prompt || ''}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-title-and-bullets>`;
 
@@ -91,7 +88,6 @@ export class SlideRenderer extends LitElement {
         return html`<slide-title-and-table
           .title=${c.title || ''}
           .table=${c.table || { headers: [], rows: [] }}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-title-and-table>`;
 
@@ -104,14 +100,12 @@ export class SlideRenderer extends LitElement {
           .imageFocus=${c.image_focus || null}
           .imageAttribution=${c.image_attribution || null}
           image-prompt=${c.image_prompt || ''}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-two-columns>`;
 
       case 'section_break':
         return html`<slide-section-break
           .title=${c.title || ''}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-section-break>`;
 
@@ -123,7 +117,6 @@ export class SlideRenderer extends LitElement {
           .imageFocus=${c.image_focus || null}
           .imageAttribution=${c.image_attribution || null}
           image-prompt=${c.image_prompt || ''}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-image-and-text>`;
 
@@ -135,7 +128,6 @@ export class SlideRenderer extends LitElement {
           .imageDetails=${(c.image_details as Array<{title?: string, caption?: string, attribution?: {name?: string, url?: string, source?: string, source_url?: string}}>) || []}
           .imageFocuses=${(c.image_focuses as Array<{x: number, y: number}>) || []}
           image-prompt=${c.image_prompt || ''}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-image-gallery>`;
 
@@ -143,7 +135,6 @@ export class SlideRenderer extends LitElement {
         return html`<slide-stats
           .title=${c.title || ''}
           .metrics=${(c.metrics as Array<{value: string, label: string}>) || []}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-stats>`;
 
@@ -154,7 +145,6 @@ export class SlideRenderer extends LitElement {
           image-url=${c.image_url || ''}
           .imageFocus=${c.image_focus || null}
           .imageAttribution=${c.image_attribution || null}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-quote>`;
 
@@ -166,7 +156,6 @@ export class SlideRenderer extends LitElement {
           image-prompt=${c.image_prompt || ''}
           .title=${c.title || ''}
           .subtitle=${c.subtitle || ''}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-full-image>`;
 
@@ -174,7 +163,6 @@ export class SlideRenderer extends LitElement {
         return html`<slide-timeline
           .title=${c.title || ''}
           .events=${(c.events as Array<{label: string, title: string, description?: string, position?: number}>) || []}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-timeline>`;
 
@@ -184,7 +172,6 @@ export class SlideRenderer extends LitElement {
           .left=${(c.left as {heading: string, bullets: string[], image_url?: string, image_focus?: {x: number, y: number}}) || {heading: '', bullets: []}}
           .right=${(c.right as {heading: string, bullets: string[], image_url?: string, image_focus?: {x: number, y: number}}) || {heading: '', bullets: []}}
           .verdict=${c.verdict || ''}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-comparison>`;
 
@@ -194,7 +181,6 @@ export class SlideRenderer extends LitElement {
           .code=${c.code || ''}
           .language=${c.language || ''}
           .caption=${c.caption || ''}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-code>`;
 
@@ -204,7 +190,6 @@ export class SlideRenderer extends LitElement {
           .value=${c.value || ''}
           .label=${c.label || ''}
           .body=${c.body || ''}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-callout>`;
 
@@ -212,7 +197,6 @@ export class SlideRenderer extends LitElement {
         return html`<slide-icons-and-text
           .title=${c.title || ''}
           .items=${(c.items as Array<{icon: string, heading: string, description?: string}>) || []}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-icons-and-text>`;
 
@@ -220,7 +204,6 @@ export class SlideRenderer extends LitElement {
         return html`<slide-team
           .title=${c.title || ''}
           .members=${(c.members as Array<{name: string, role: string, bio?: string, image_url?: string, image_focus?: {x: number, y: number}}>) || []}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-team>`;
 
@@ -230,7 +213,6 @@ export class SlideRenderer extends LitElement {
           .url=${c.url || ''}
           .caption=${c.caption || ''}
           aspect-ratio=${c.aspect_ratio || '16:9'}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-embed>`;
 
@@ -241,7 +223,6 @@ export class SlideRenderer extends LitElement {
           cons-heading=${c.cons_heading || ''}
           .pros=${(c.pros as string[]) || []}
           .cons=${(c.cons as string[]) || []}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-pros-and-cons>`;
 
@@ -249,7 +230,6 @@ export class SlideRenderer extends LitElement {
         return html`<slide-agenda
           .title=${c.title || ''}
           .items=${(c.items as Array<{topic: string, duration?: string, description?: string}>) || []}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-agenda>`;
 
@@ -261,7 +241,6 @@ export class SlideRenderer extends LitElement {
           image-url=${c.image_url || ''}
           .imageFocus=${c.image_focus || null}
           .imageAttribution=${c.image_attribution || null}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-closing>`;
 
@@ -272,7 +251,6 @@ export class SlideRenderer extends LitElement {
           .weaknesses=${(c.weaknesses as string[]) || []}
           .opportunities=${(c.opportunities as string[]) || []}
           .threats=${(c.threats as string[]) || []}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-swot>`;
 
@@ -285,7 +263,6 @@ export class SlideRenderer extends LitElement {
           y-label=${c.y_label || ''}
           .quadrantLabels=${(c.quadrant_labels as string[]) || []}
           .items=${(c.items as Array<{label: string, x: number, y: number}>) || []}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-quadrant>`;
 
@@ -295,7 +272,6 @@ export class SlideRenderer extends LitElement {
           .body=${c.body || ''}
           .circles=${(c.circles as Array<{label: string, items?: string[]}>) || []}
           .overlaps=${(c.overlaps as Array<{sets: number[], label: string}>) || []}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-venn-diagram>`;
 
@@ -304,7 +280,6 @@ export class SlideRenderer extends LitElement {
           .title=${c.title || ''}
           .chartType=${c.chart_type || 'bar'}
           .data=${c.data || { labels: [], datasets: [] }}
-          key-takeaway=${c.key_takeaway || ''}
           .editable=${this.editable}
         ></slide-chart>`;
 

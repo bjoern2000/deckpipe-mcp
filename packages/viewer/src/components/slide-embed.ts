@@ -66,7 +66,6 @@ export class SlideEmbed extends SlideBase {
   @property() url = '';
   @property() caption = '';
   @property({ attribute: 'aspect-ratio' }) aspectRatio = '16:9';
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   private _isPrint(): boolean {

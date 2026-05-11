@@ -15,8 +15,8 @@ An agent calls `create_deck` with HTML, CSS, and (optionally) JS for each slide:
 ```json
 {
   "title": "Q2 Launch",
-  "accent_color": "#7c3aed",
-  "stylesheet": ".hero { font-size: 96px; color: var(--dp-text-title); }",
+  "heading_font": "Fraunces",
+  "stylesheet": ".hero { font-family: var(--dp-font-heading); font-size: 96px; color: #0f172a; }",
   "slides": [
     {
       "layout": "canvas",
@@ -29,7 +29,7 @@ An agent calls `create_deck` with HTML, CSS, and (optionally) JS for each slide:
 }
 ```
 
-Each slide mounts in an **open shadow root**, so CSS is auto-scoped — no BEM, no class prefixes. Deck-level `stylesheet` is adopted by every slide, so a design system written once shows up everywhere. CSS custom properties (`--dp-accent`, `--dp-text-title`, `--dp-font-heading`, etc.) are forwarded into every slide so theme changes stay consistent.
+Each slide mounts in an **open shadow root**, so CSS is auto-scoped — no BEM, no class prefixes. Deck-level `stylesheet` is adopted by every slide, so a design system written once shows up everywhere. CSS custom properties (`--dp-font-heading`, `--dp-font-body`) are forwarded into every slide so font choices stay consistent.
 
 Reviewers open the viewer URL and can comment on **any DOM element** (auto-anchored via `data-dp-anchor` for stability across edits). The agent reads those comments via MCP, edits the deck, and replies — full collaborative loop without humans touching JSON.
 
@@ -100,6 +100,8 @@ Tools (MCP):
 | `delete_deck` | Permanently delete a deck. |
 | `upload_image` | Upload base64 PNG/JPG/WebP, get a hosted URL. |
 | `search_images` | Unsplash search with automatic attribution + download tracking. |
+| `preview_slide` | Render a transient slide (no persistence) and return a screenshot + render report. |
+| `get_slide_screenshot` | Render a specific slide of an existing deck. Cached on `updated_at`. |
 | `list_layouts` | Describe the canvas layout and deck-level theming options. |
 | `list_comments` | List comments on a deck (filter by status, slide, since-timestamp). |
 | `reply_to_comment` | Reply to a comment thread. |

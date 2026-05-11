@@ -18,7 +18,7 @@ import { INSTRUCTIONS, registerTools } from '@deckpipe/mcp-core';
 import { config } from './config.js';
 
 const NAME = 'deckpipe';
-const VERSION = '0.3.2';
+const VERSION = '0.3.3';
 
 async function main() {
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : null;

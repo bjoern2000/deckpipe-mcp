@@ -22,7 +22,6 @@ interface Deck {
   title: string;
   heading_font?: string | null;
   body_font?: string | null;
-  accent_color?: string | null;
   agent_name?: string | null;
   stylesheet?: string | null;
   head?: HeadEntry[] | null;
@@ -103,6 +102,22 @@ export class ViewerApp extends LitElement {
       font-size: 32px;
     }
 
+
+    .screenshot-layout {
+      width: 1920px;
+      height: 1080px;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+    }
+
+    .screenshot-layout .slide-container {
+      width: 1920px;
+      height: 1080px;
+      box-shadow: none;
+      border-radius: 0;
+      transform: none;
+    }
 
     .slide-wrapper.print-mode {
       box-shadow: none;
@@ -256,6 +271,8 @@ export class ViewerApp extends LitElement {
   @state() private error = '';
   @state() private editMode = false;
   @state() private printMode = false;
+  @state() private screenshotMode = false;
+  @state() private screenshotSlideIndex = 0;
   @state() private saveStatus: 'idle' | 'saving' | 'saved' = 'idle';
   @state() private slideWidth = SLIDE_WIDTH;
   @state() private slideHeight = SLIDE_HEIGHT;
@@ -276,15 +293,27 @@ export class ViewerApp extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.printMode = new URLSearchParams(window.location.search).has('print');
+    const params = new URLSearchParams(window.location.search);
+    this.printMode = params.has('print');
+    this.screenshotMode = params.has('screenshot');
+    if (this.screenshotMode) {
+      const slideParam = parseInt(params.get('slide') ?? '1', 10);
+      this.screenshotSlideIndex = Number.isFinite(slideParam) ? Math.max(0, slideParam - 1) : 0;
+      this.currentIndex = this.screenshotSlideIndex;
+      document.documentElement.style.background = '#fff';
+      document.body.style.background = '#fff';
+      document.body.style.margin = '0';
+    }
     this.mobileQuery = window.matchMedia('(max-width: 768px)');
     this.isMobile = this.mobileQuery.matches;
-    this.classList.toggle('mobile', this.isMobile);
-    this.setBodyScroll(this.isMobile);
+    if (!this.screenshotMode) {
+      this.classList.toggle('mobile', this.isMobile);
+      this.setBodyScroll(this.isMobile);
+    }
     this.mobileQuery.addEventListener('change', this.onMobileChange);
     document.addEventListener('fullscreenchange', this.onFullscreenChange);
     this.loadDeck();
-    if (!this.printMode && !this.isMobile) {
+    if (!this.printMode && !this.screenshotMode && !this.isMobile) {
       window.addEventListener('keydown', this.onKeyDown);
       window.addEventListener('hashchange', this.onHashChange);
       this.readHash();
@@ -294,7 +323,7 @@ export class ViewerApp extends LitElement {
   protected updated(changedProperties: Map<string, unknown>) {
     super.updated(changedProperties);
 
-    if (this.printMode || this.isMobile || this.resizeObserver) return;
+    if (this.printMode || this.screenshotMode || this.isMobile || this.resizeObserver) return;
     const mainArea = this.shadowRoot?.querySelector('.main-area');
     if (mainArea) {
       this.resizeObserver = new ResizeObserver((entries) => {
@@ -434,8 +463,14 @@ export class ViewerApp extends LitElement {
   }
 
   private getDeckId(): string | null {
+    const previewMatch = window.location.pathname.match(/\/preview\/([^/]+)/);
+    if (previewMatch) return previewMatch[1];
     const match = window.location.pathname.match(/\/d\/([^/]+)/);
     return match?.[1] ?? null;
+  }
+
+  private isPreviewRoute(): boolean {
+    return window.location.pathname.startsWith('/preview/');
   }
 
   private getEditKey(): string | null {
@@ -463,7 +498,8 @@ export class ViewerApp extends LitElement {
     }
 
     try {
-      const res = await fetch(`/v1/decks/${deckId}`);
+      const apiPath = this.isPreviewRoute() ? `/v1/preview/${deckId}` : `/v1/decks/${deckId}`;
+      const res = await fetch(apiPath);
       if (!res.ok) {
         const body = await res.json();
         this.error = body.error?.message || 'Failed to load deck';
@@ -495,15 +531,21 @@ export class ViewerApp extends LitElement {
       }
 
       // Load comments
-      if (!this.printMode) {
+      if (!this.printMode && !this.screenshotMode) {
         this.loadComments();
       }
 
-      // Signal print readiness
-      if (this.printMode) {
-        requestAnimationFrame(() => {
-          document.documentElement.setAttribute('data-ready', 'true');
-        });
+      // Signal headless-render readiness (print / screenshot pipelines).
+      if (this.printMode || this.screenshotMode) {
+        // Wait two rAFs + document.fonts.ready so canvas slides have mounted,
+        // adopted stylesheets, and fonts have settled before puppeteer captures.
+        const signal = async () => {
+          try { await (document as Document & { fonts?: FontFaceSet }).fonts?.ready; } catch { /* ignore */ }
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            document.documentElement.setAttribute('data-ready', 'true');
+          }));
+        };
+        void signal();
       }
     } catch {
       this.error = 'Failed to connect to API';
@@ -780,6 +822,7 @@ export class ViewerApp extends LitElement {
     if (this.error) return html`<div class="error">${this.error}</div>`;
     if (!this.deck) return html`<div class="error">No deck data</div>`;
 
+    if (this.screenshotMode) return this.renderScreenshotMode();
     if (this.printMode) return this.renderPrintMode();
     if (this.presenterMode) return this.renderPresenterMode();
     if (this.isMobile) return this.renderMobileMode();
@@ -796,7 +839,6 @@ export class ViewerApp extends LitElement {
             .currentIndex=${this.currentIndex}
             .headingFont=${this.deck.heading_font ?? ''}
             .bodyFont=${this.deck.body_font ?? ''}
-            .accentColor=${this.deck.accent_color ?? ''}
             .deckStylesheet=${this.deck.stylesheet ?? ''}
             @thumbnail-click=${this.onThumbnailClick}
           ></thumbnail-strip>
@@ -885,18 +927,6 @@ export class ViewerApp extends LitElement {
     `;
   }
 
-  private darkenHex(hex: string, minLuminance = 0.6): string {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-    // Relative luminance (WCAG)
-    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    if (lum <= minLuminance) return hex;
-    const scale = minLuminance / lum;
-    const clamp = (v: number) => Math.round(Math.min(255, Math.max(0, v * scale * 255)));
-    return `#${clamp(r).toString(16).padStart(2, '0')}${clamp(g).toString(16).padStart(2, '0')}${clamp(b).toString(16).padStart(2, '0')}`;
-  }
-
   private getCustomCssVars(): string {
     const vars: string[] = [];
     if (this.deck?.heading_font) {
@@ -905,11 +935,28 @@ export class ViewerApp extends LitElement {
     if (this.deck?.body_font) {
       vars.push(`--dp-font-body:'${this.deck.body_font}', sans-serif`);
     }
-    if (this.deck?.accent_color) {
-      vars.push(`--dp-accent:${this.deck.accent_color}`);
-      vars.push(`--dp-text-title:${this.darkenHex(this.deck.accent_color)}`);
-    }
     return vars.join(';');
+  }
+
+  private renderScreenshotMode() {
+    if (!this.deck) return html``;
+    const idx = Math.min(this.screenshotSlideIndex, this.deck.slides.length - 1);
+    const slide = this.deck.slides[idx];
+    const customVars = this.getCustomCssVars();
+    return html`
+      <div class="screenshot-layout">
+        <div class="slide-wrapper" style="width:1920px;height:1080px">
+          <div class="slide-container" style="${customVars}">
+            <slide-renderer
+              .slide=${slide}
+              .editable=${false}
+              .staticPreview=${true}
+              .deckStylesheet=${this.deck?.stylesheet ?? ''}
+            ></slide-renderer>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   private renderPresenterMode() {

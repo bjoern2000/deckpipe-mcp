@@ -21,7 +21,6 @@ export class SlideSectionBreak extends SlideBase {
   ];
 
   @property() title = '';
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -32,7 +31,6 @@ export class SlideSectionBreak extends SlideBase {
             @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
           >${this.title}</h1>
         `) : html`<h1 data-content-path="title">${this.title}</h1>`}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
       </div>
     `;
   }

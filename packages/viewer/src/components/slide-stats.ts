@@ -35,7 +35,6 @@ export class SlideStats extends SlideBase {
 
   @property() title = '';
   @property({ type: Array }) metrics: Array<{ value: string; label: string }> = [];
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -50,7 +49,6 @@ export class SlideStats extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         ${this.editable ? this.wrapDeletable('metrics', html`
           <div class="metrics" style="--metric-count:${this.metrics.length}">
             ${this.metrics.map((m, i) => html`

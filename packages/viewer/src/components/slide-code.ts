@@ -130,7 +130,6 @@ export class SlideCode extends SlideBase {
   @property() code = '';
   @property() language = '';
   @property() caption = '';
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   private highlight(code: string, language: string) {
@@ -153,7 +152,6 @@ export class SlideCode extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         <div class="code-container">
           <div class="code-header">
             <div class="window-dots"><span></span><span></span><span></span></div>

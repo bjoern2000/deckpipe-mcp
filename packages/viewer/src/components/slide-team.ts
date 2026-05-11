@@ -64,7 +64,6 @@ export class SlideTeam extends SlideBase {
 
   @property() title = '';
   @property({ type: Array }) members: Array<{ name: string; role: string; bio?: string; image_url?: string; image_focus?: { x: number; y: number } }> = [];
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   private _getInitials(name: string): string {
@@ -91,7 +90,6 @@ export class SlideTeam extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         ${this.editable ? this.wrapDeletable('members', html`
           <div class="grid" style="--col-count:${this._colCount()}">
             ${this.members.map((m, i) => html`

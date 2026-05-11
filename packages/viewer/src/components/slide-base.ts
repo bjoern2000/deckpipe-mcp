@@ -73,21 +73,6 @@ export class SlideBase extends LitElement {
       border-radius: 4px;
     }
 
-    .key-takeaway {
-      background: #f1f5f9;
-      color: #475569;
-      font-size: 0.95em;
-      font-weight: 600;
-      line-height: 1.5;
-      padding: 10px 16px;
-      border-radius: 8px;
-      margin: 0 0 32px 0;
-      font-family: var(--dp-font-body, 'DM Sans', sans-serif);
-    }
-
-    .key-takeaway a { color: var(--dp-accent, #7c3aed); text-decoration: underline; }
-    .key-takeaway code { background: rgba(0,0,0,0.06); padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
-
     [contenteditable="true"] {
       outline: none;
       cursor: text;
@@ -345,20 +330,6 @@ export class SlideBase extends LitElement {
     }
     slideEl.style.fontSize = `${lo}em`;
     slideEl.style.overflow = '';
-  }
-
-  protected renderKeyTakeaway(keyTakeaway: string | undefined, editable = false) {
-    if (!keyTakeaway && !editable) return nothing;
-    if (!keyTakeaway) return nothing;
-    if (editable) {
-      return this.wrapDeletable('key_takeaway', html`
-        <div class="key-takeaway" data-content-path="key_takeaway"
-          contenteditable="true"
-          @blur=${(e: FocusEvent) => this.emitChange('key_takeaway', (e.target as HTMLElement).textContent)}
-        >${keyTakeaway}</div>
-      `);
-    }
-    return html`<div class="key-takeaway" data-content-path="key_takeaway">${mdInline(keyTakeaway)}</div>`;
   }
 
   protected renderImagePrompt(imagePrompt: string | undefined) {

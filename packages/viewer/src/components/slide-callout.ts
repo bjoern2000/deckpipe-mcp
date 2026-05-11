@@ -48,7 +48,6 @@ export class SlideCallout extends SlideBase {
   @property() value = '';
   @property() label = '';
   @property() body = '';
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -63,7 +62,6 @@ export class SlideCallout extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         <div class="callout-content">
           ${this.label
             ? this.editable

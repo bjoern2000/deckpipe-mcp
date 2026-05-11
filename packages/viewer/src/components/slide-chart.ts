@@ -58,7 +58,6 @@ export class SlideChart extends SlideBase {
   @property() title = '';
   @property() chartType: 'bar' | 'line' | 'pie' | 'donut' = 'bar';
   @property({ type: Object }) data: ChartData = { labels: [], datasets: [] };
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   private chart: Chart | null = null;
@@ -234,7 +233,6 @@ export class SlideChart extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         <div class="chart-area">
           <canvas></canvas>
         </div>

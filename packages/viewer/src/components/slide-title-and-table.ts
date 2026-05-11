@@ -22,9 +22,6 @@ export class SlideTitleAndTable extends SlideBase {
         margin-bottom: 16px;
         font-size: 1.9em;
       }
-      .key-takeaway {
-        margin-bottom: 16px;
-      }
       table {
         width: 100%;
         border-collapse: collapse;
@@ -56,7 +53,6 @@ export class SlideTitleAndTable extends SlideBase {
 
   @property() title = '';
   @property({ type: Object }) table: TableData = { headers: [], rows: [] };
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -68,7 +64,6 @@ export class SlideTitleAndTable extends SlideBase {
             @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
           >${this.title}</h1>
         `) : html`<h1 data-content-path="title">${this.title}</h1>`}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         ${this.editable ? this.wrapDeletable('table', html`
           <table data-content-path="table">
             <thead>

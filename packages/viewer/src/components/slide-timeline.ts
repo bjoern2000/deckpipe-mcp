@@ -80,7 +80,6 @@ export class SlideTimeline extends SlideBase {
 
   @property() title = '';
   @property({ type: Array }) events: Array<{ label: string; title: string; description?: string; position?: number }> = [];
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   private getPositions(): number[] {
@@ -111,7 +110,6 @@ export class SlideTimeline extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         ${this.editable ? this.wrapDeletable('events', html`
           <div class="timeline">
             <div class="timeline-line"></div>

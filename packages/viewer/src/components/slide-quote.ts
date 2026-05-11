@@ -65,7 +65,6 @@ export class SlideQuote extends SlideBase {
   @property({ attribute: 'image-url' }) imageUrl = '';
   @property({ type: Object }) imageFocus: { x: number; y: number } | null = null;
   @property({ type: Object }) imageAttribution: { name?: string; url?: string; source?: string; source_url?: string } | null = null;
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -76,7 +75,6 @@ export class SlideQuote extends SlideBase {
             @blur=${(e: FocusEvent) => this.emitChange('quote', (e.target as HTMLElement).textContent)}
           >${this.quote}</blockquote>
         `) : html`<blockquote data-content-path="quote">${mdInline(this.quote.trimEnd())}</blockquote>`}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         ${this.attribution || this.editable
           ? this.editable
             ? this.wrapDeletable('attribution', html`

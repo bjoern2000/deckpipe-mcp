@@ -70,7 +70,6 @@ export class SlideProsAndCons extends SlideBase {
   @property({ attribute: 'cons-heading' }) consHeading = '';
   @property({ type: Array }) pros: BulletItem[] = [];
   @property({ type: Array }) cons: BulletItem[] = [];
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   private _renderProsConsList(items: BulletItem[], icon: string, sourceOffset: number, field: string) {
@@ -100,7 +99,6 @@ export class SlideProsAndCons extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         <div class="columns">
           <div class="column pros-col" data-content-path="pros">
             ${this.editable

@@ -164,7 +164,7 @@ function ensureSlideIds(slides: any[]): any[] {
 // POST /v1/decks — Create a new deck
 decksRouter.post('/', createDeckLimiter, resolveRefsMiddleware, saveRawBody, validate(CreateDeckSchema), async (req, res, next) => {
   try {
-    const { title, heading_font, body_font, accent_color, agent_name, stylesheet, head, slides: rawSlides } = req.body;
+    const { title, heading_font, body_font, agent_name, stylesheet, head, slides: rawSlides } = req.body;
     const slides = ensureSlideIds(convertPlaceholderUrls(rawSlides));
     const deckId = generateDeckId();
     const editKey = generateEditKey();
@@ -190,8 +190,8 @@ decksRouter.post('/', createDeckLimiter, resolveRefsMiddleware, saveRawBody, val
     processUnsplashDownloads(slides);
 
     await query(
-      'INSERT INTO decks (deck_id, title, heading_font, body_font, accent_color, agent_name, stylesheet, head, slides, edit_key) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-      [deckId, title, heading_font ?? null, body_font ?? null, accent_color ?? null, agent_name ?? null, stylesheet ?? null, head ? JSON.stringify(head) : null, JSON.stringify(slides), editKey]
+      'INSERT INTO decks (deck_id, title, heading_font, body_font, agent_name, stylesheet, head, slides, edit_key) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      [deckId, title, heading_font ?? null, body_font ?? null, agent_name ?? null, stylesheet ?? null, head ? JSON.stringify(head) : null, JSON.stringify(slides), editKey]
     );
 
     const result = await query('SELECT created_at FROM decks WHERE deck_id = $1', [deckId]);
@@ -248,7 +248,6 @@ decksRouter.get('/:id', getDeckLimiter, async (req, res, next) => {
       title: deck.title,
       heading_font: deck.heading_font ?? null,
       body_font: deck.body_font ?? null,
-      accent_color: deck.accent_color ?? null,
       agent_name: deck.agent_name ?? null,
       stylesheet: deck.stylesheet ?? null,
       head: deck.head ?? null,
@@ -309,7 +308,7 @@ decksRouter.patch('/:id', updateDeckLimiter, resolveRefsMiddleware, validate(Upd
     }
 
     const deck = existing.rows[0];
-    const { title, heading_font, body_font, accent_color, stylesheet, head, slides, slide_operations } = req.body;
+    const { title, heading_font, body_font, stylesheet, head, slides, slide_operations } = req.body;
 
     const warnings: string[] = [];
 
@@ -317,7 +316,6 @@ decksRouter.patch('/:id', updateDeckLimiter, resolveRefsMiddleware, validate(Upd
     const newTitle = title ?? deck.title;
     const newHeadingFont = heading_font !== undefined ? heading_font : deck.heading_font;
     const newBodyFont = body_font !== undefined ? body_font : deck.body_font;
-    const newAccentColor = accent_color !== undefined ? accent_color : deck.accent_color;
     const newStylesheet = stylesheet !== undefined ? stylesheet : deck.stylesheet;
     const newHead = head !== undefined ? head : deck.head;
     let newSlides = ensureSlideIds(deck.slides);
@@ -383,8 +381,8 @@ decksRouter.patch('/:id', updateDeckLimiter, resolveRefsMiddleware, validate(Upd
     processUnsplashDownloads(newSlides);
 
     await query(
-      'UPDATE decks SET title = $1, heading_font = $2, body_font = $3, accent_color = $4, stylesheet = $5, head = $6, slides = $7, updated_at = NOW() WHERE deck_id = $8',
-      [newTitle, newHeadingFont ?? null, newBodyFont ?? null, newAccentColor ?? null, newStylesheet ?? null, newHead ? JSON.stringify(newHead) : null, JSON.stringify(newSlides), req.params.id]
+      'UPDATE decks SET title = $1, heading_font = $2, body_font = $3, stylesheet = $4, head = $5, slides = $6, updated_at = NOW() WHERE deck_id = $7',
+      [newTitle, newHeadingFont ?? null, newBodyFont ?? null, newStylesheet ?? null, newHead ? JSON.stringify(newHead) : null, JSON.stringify(newSlides), req.params.id]
     );
 
     const result = await query('SELECT * FROM decks WHERE deck_id = $1', [req.params.id]);
@@ -395,7 +393,6 @@ decksRouter.patch('/:id', updateDeckLimiter, resolveRefsMiddleware, validate(Upd
       title: updated.title,
       heading_font: updated.heading_font ?? null,
       body_font: updated.body_font ?? null,
-      accent_color: updated.accent_color ?? null,
       agent_name: updated.agent_name ?? null,
       stylesheet: updated.stylesheet ?? null,
       head: updated.head ?? null,

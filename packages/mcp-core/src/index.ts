@@ -21,46 +21,54 @@ export const DEPRECATED_LAYOUTS = [
   'agenda', 'swot', 'quadrant', 'venn_diagram', 'chart', 'closing',
 ] as const;
 
-export const INSTRUCTIONS = `Deckpipe is a slide deck rendering engine. You author each slide as HTML/CSS/JS — Deckpipe renders it inside a sandboxed 1920×1080 shadow root, themes it via deck-level CSS variables, and gives every deck a shareable viewer URL with built-in commenting.
+export const INSTRUCTIONS = `Deckpipe is a slide deck rendering engine. You author each slide as HTML/CSS/JS — Deckpipe renders it inside a sandboxed 1920×1080 shadow root and gives every deck a shareable viewer URL with built-in commenting.
 
 WORKFLOW
 - Use create_deck for NEW decks. Use update_deck to modify EXISTING decks.
 - NEVER recreate a deck to make changes. Recreating loses the URL, edit key, and comment history. Always update in place.
-- To iterate: get_deck (read current state + comments) → update_deck (make changes) → reply_to_comment (explain what you changed).
-- Check the "warnings" array in every create/update response. Fix unrecognized fields or unreachable image URLs with a follow-up update_deck call.
+- ITERATE BEFORE COMMITTING: use preview_slide to render an HTML/CSS/JS draft and get a screenshot + render report (JS errors, text overflows, font load status). Cheap, doesn't persist anything.
+- Round trip on an existing deck: get_deck (read state + open comments) → get_slide_screenshot (see how a slide actually renders) → update_deck (make changes) → reply_to_comment (explain what you changed).
+- Check the "warnings" array in every create/update response.
 
 THE CANVAS LAYOUT
-- Every slide is { layout: "canvas", content: { html (required), css?, js?, static_render_only?, key_takeaway? } }.
-- "html" is the full slide markup. Design at 1920×1080 — the viewer scales the slide to fit. CSS in "css" is scoped to this slide only; for shared styles use deck.stylesheet.
-- Each slide mounts in an open shadow root, so your CSS is auto-scoped — no need for BEM or class prefixes.
-- CSS variables forwarded into every slide: var(--dp-accent), var(--dp-text-title), var(--dp-text-body), var(--dp-font-heading), var(--dp-font-body). Use these so accent_color and font choices stay consistent across the deck.
-- "js" runs on slide enter with (root, slide) in scope. Return a cleanup function to run on slide exit (clear timers, detach listeners). Set static_render_only: true to skip JS in print/PDF.
+- Every slide is { layout: "canvas", content: { html (required), css?, js?, static_render_only? } }.
+- "html" is the full slide markup, rendered into a 1920×1080 frame. CSS in "css" is scoped to this slide only; for shared styles use deck.stylesheet.
+- Each slide mounts in an open shadow root, so your CSS is auto-scoped — no BEM, no class prefixes.
+- "js" runs on slide enter with (root, slide) in scope. Return a cleanup function for slide exit. Set static_render_only: true to skip JS in print/PDF and screenshots.
 
-DECK-LEVEL THEMING
-- stylesheet: global CSS string adopted by every canvas slide. Define your design system once (typography, color tokens, reusable card/grid classes) and reference it from each slide's html. Up to 100KB.
-- head: array of { tag, attrs?, body? } entries injected into the page head. Use to load CDN libraries (Tailwind, Chart.js, icon fonts) that canvas slides depend on. Example: [{ tag: "script", attrs: { src: "https://cdn.tailwindcss.com" } }].
-- accent_color / heading_font / body_font are forwarded as CSS variables.
+DECK-LEVEL THEMING (define once, reference everywhere)
+- stylesheet: global CSS string (up to 100KB) adopted by every canvas slide. Define your design system here. Worked example for a real 1920×1080 design system:
+
+    .slide      { box-sizing: border-box; padding: 112px 144px; font-family: 'Inter', system-ui, sans-serif; color: #0f172a; background: #fafaf9; }
+    .h1         { font-family: 'Fraunces', serif; font-size: 128px; line-height: 0.98; letter-spacing: -0.03em; margin: 0; }
+    .h2         { font-family: 'Fraunces', serif; font-size: 64px; line-height: 1.05; margin: 0; }
+    .lead       { font-size: 32px; line-height: 1.45; color: #475569; max-width: 1500px; }
+    .label      { font-family: 'JetBrains Mono', monospace; font-size: 18px; letter-spacing: 0.18em; text-transform: uppercase; color: #94a3b8; }
+    .card       { padding: 56px; border-radius: 28px; background: #ffffff; border: 1px solid #e2e8f0; }
+    .row        { display: flex; gap: 48px; align-items: stretch; }
+
+  Notice the scale: padding in 100s of px, body in 24–32px, h1 in 100+px. Designs sized for a 16px-base browser look tiny at 1920×1080.
+- head: array of { tag, attrs?, body? } entries injected into the page head. Use for Google Fonts links, icon-font stylesheets, or trusted CDN scripts your js depends on.
+- heading_font / body_font are convenience shortcuts that load Google Fonts and expose var(--dp-font-heading) / var(--dp-font-body).
 
 COMMENTING
-- Reviewers can leave comments on ANY DOM element in a canvas slide — Deckpipe auto-assigns a content_path to every element at render time.
-- To make a comment thread STABLE across edits, mark the target element with data-dp-anchor="<stable-name>" (e.g. data-dp-anchor="hero-title"). Preserve those IDs across updates so the thread stays attached.
-- Comments on unmarked elements use auto:<index> paths that are stable within a render but may shift if you restructure the HTML. Use anchors for anything you'll iterate on.
+- Reviewers can comment on ANY DOM element in a canvas slide — Deckpipe auto-assigns a content_path to every element at render time.
+- For comment threads that survive edits, mark target elements with data-dp-anchor="<stable-name>" (e.g. data-dp-anchor="hero-title"). Preserve those IDs in updates so threads stay attached.
+- Unmarked elements get auto:<index> paths — stable within a render but may shift if you restructure. Use anchors for anything you'll iterate on.
 
 INLINE EDITS
 - The viewer's edit mode makes text-bearing leaf elements (h1, p, span, etc.) contenteditable. On blur the full html is saved back via PATCH.
-- Your "js" should be resilient to text changes — don't rely on exact text strings to find elements; use selectors or data attributes.
+- Your "js" should be resilient to text changes — find elements with selectors or data attributes, never with exact strings.
 
 IMAGES
-- Use search_images to find stock photos (Unsplash). The returned id is for use as image_ref via REST; in canvas slides, also fine to use the returned url directly in your <img src>. Attribution/download tracking still applies — include a credit caption.
-- Use upload_image to host your own images (PNG/JPG/WebP, base64-encoded). Returns a hosted URL you can put in <img src>.
+- search_images returns Unsplash IDs and thumbnails. In canvas slides, put the returned url directly in <img src>; include a credit caption near the image.
+- upload_image hosts your own PNG/JPG/WebP and returns a URL for <img src>.
 
 CONTENT STYLE
-- Keep text short, crisp, and scannable. Use shorthand phrases, not full sentences.
-- Stats: abbreviate ("2.4M" not "2,400,000"). Quotes: under 30 words. Headlines: ≤ 8 words.
-- All text fields support markdown in key_takeaway. The html field is raw HTML.
+- Short, crisp, scannable. Headlines ≤ 8 words. Stats abbreviated ("2.4M" not "2,400,000"). Quotes under 30 words.
 
 LEGACY LAYOUTS
-- 25 templated layouts (title, title_and_bullets, stats, chart, swot, …) are deprecated and not advertised here. Existing decks using them still render unchanged. New slides should always use the "canvas" layout.`;
+- 25 templated layouts (title, title_and_bullets, stats, chart, swot, …) are deprecated and not advertised. Existing decks using them still render. New slides should always use the "canvas" layout.`;
 
 export interface RegisterToolsOptions {
   /** Base URL of the Deckpipe REST API (no trailing slash). */
@@ -75,40 +83,38 @@ export function registerTools(server: McpServer, opts: RegisterToolsOptions): vo
     `Create a new slide deck. Returns viewer_url (owner link with edit key) and share_url (read-only).
 
 Each slide is a canvas slide — you write the HTML/CSS/JS directly. Slide shape:
-{ layout: "canvas", content: { html (required), css?, js?, static_render_only?, key_takeaway? } }
+{ layout: "canvas", content: { html (required), css?, js?, static_render_only? } }
 
 Design checklist:
 - Design at 1920×1080. The viewer scales to fit.
+- Pick concrete pixel values: h1 ≈ 96–128px, body ≈ 24–32px, padding ≈ 96–144px, gap ≈ 32–64px. Designs sized for a 16px browser look tiny at HD.
 - Define shared styles ONCE in deck.stylesheet (typography, color tokens, .card/.grid/.hero classes). Reference them from each slide's html.
-- Use CSS variables already provided: var(--dp-accent), var(--dp-text-title), var(--dp-text-body), var(--dp-font-heading), var(--dp-font-body). Don't hardcode the accent color — it's set by the accent_color field.
-- For Tailwind: add { tag: "script", attrs: { src: "https://cdn.tailwindcss.com" } } to deck.head. Other CDN libs (Chart.js, Lottie, icon fonts) go in head too.
 - Mark commentable elements with data-dp-anchor="<stable-id>" so feedback threads survive edits.
-- Optional "js" runs (root, slide) on slide enter — return a cleanup function. Set static_render_only: true to skip JS in PDF export.
+- Optional "js" runs (root, slide) on slide enter — return a cleanup function. Set static_render_only: true to freeze animations in print/PDF and screenshots.
+- VERIFY BEFORE COMMITTING: call preview_slide with your draft html/css/js and check the render report (JS errors, text overflows, font load) before creating the full deck. After creation, call get_slide_screenshot on slides you're unsure about.
 
 IMPORTANT:
 - To modify this deck later, use update_deck. NEVER create a new deck to make changes — it loses the URL and comment history.
-- To iterate: get_deck (read current state + comments) → update_deck (make changes) → reply_to_comment (explain what you changed). The user resolves comments once satisfied.
-- Check the "warnings" array in the response and fix any issues with a follow-up update_deck call.`,
+- To iterate: get_deck (read state + comments) → get_slide_screenshot (see actual render) → update_deck → reply_to_comment.
+- Check the "warnings" array and fix issues with a follow-up update_deck call.`,
     {
       title: z.string().describe('Deck title'),
       heading_font: z.string().optional().describe('Google Font for headings (e.g. "Playfair Display"). Default: DM Sans.'),
       body_font: z.string().optional().describe('Google Font for body text (e.g. "Inter"). Default: DM Sans.'),
-      accent_color: z.string().optional().describe('Hex color (e.g. "#ff6600"). Overrides default purple accent. Exposed to canvas slides as var(--dp-accent).'),
       agent_name: z.string().optional().describe('Your agent name (e.g. "Acme Strategy Agent"). Shown as author on comments you post. Set this once at deck creation.'),
       stylesheet: z.string().optional().describe('Global CSS adopted by every canvas slide via shadow-root adoptedStyleSheets. Define your design system once (typography, components, color tokens) and reference classes from each slide.'),
       head: z.array(z.object({
         tag: z.enum(['link', 'script', 'style']),
         attrs: z.record(z.string()).optional(),
         body: z.string().optional(),
-      })).optional().describe('Array of <link>/<script>/<style> entries injected into the page head. Use to load CDN libraries that canvas slides depend on. Example: [{ tag: "script", attrs: { src: "https://cdn.tailwindcss.com" } }] to enable Tailwind.'),
+      })).optional().describe('Array of <link>/<script>/<style> entries injected into the page head. Use for Google Fonts links, icon-font stylesheets, or trusted CDN scripts your js depends on.'),
       slides: z.array(z.object({
         layout: z.literal('canvas').describe('Always "canvas". (25 legacy templated layouts exist but are deprecated for new content — see CLAUDE.md to re-enable.)'),
         content: z.object({
           html: z.string().describe('Required. Slide markup. Designed at 1920×1080, mounted in a shadow root.'),
           css: z.string().optional().describe('Optional per-slide CSS, scoped to this slide. For shared styles use deck.stylesheet instead.'),
           js: z.string().optional().describe('Optional JS. Runs on slide enter with (root, slide). Return a cleanup function. Don\'t rely on exact text strings — reviewers can edit text inline.'),
-          static_render_only: z.boolean().optional().describe('If true, "js" is skipped in print/PDF mode. Use for animations that should freeze on export.'),
-          key_takeaway: z.string().optional().describe('Optional one-line summary surfaced in agent-facing comment context.'),
+          static_render_only: z.boolean().optional().describe('If true, "js" is skipped in print/PDF and screenshots. Use for animations that should freeze on export.'),
         }).passthrough(),
       })).describe('Array of canvas slides. Each slide is HTML/CSS/JS the agent authors.'),
     },
@@ -164,7 +170,7 @@ slide_operations examples:
 slides (content edit) examples:
 - Replace the html of slide 0: { "index": 0, "content": { "html": "<div class=\\"slide\\">new markup</div>" } }
 - Tweak the css of slide 2: { "index": 2, "content": { "css": ".card { border-radius: 24px; }" } }
-- Both are PARTIAL merges into the existing content object — other fields (js, key_takeaway, etc.) are preserved.
+- Both are PARTIAL merges into the existing content object — other fields (js, static_render_only, etc.) are preserved.
 
 Editing existing decks that use the deprecated templated layouts is supported (the REST API still accepts them); just patch their content fields directly. New slides should be canvas.`,
     {
@@ -172,7 +178,6 @@ Editing existing decks that use the deprecated templated layouts is supported (t
       title: z.string().optional().describe('New deck title'),
       heading_font: z.string().optional().describe('Google Font for headings (e.g. "Playfair Display")'),
       body_font: z.string().optional().describe('Google Font for body text (e.g. "Inter")'),
-      accent_color: z.string().optional().describe('Hex color (e.g. "#ff6600")'),
       stylesheet: z.string().nullable().optional().describe('Replace the deck-level global CSS string used by canvas slides. Pass null to clear.'),
       head: z.array(z.object({
         tag: z.enum(['link', 'script', 'style']),
@@ -191,8 +196,7 @@ Editing existing decks that use the deprecated templated layouts is supported (t
             css: z.string().optional(),
             js: z.string().optional(),
             static_render_only: z.boolean().optional(),
-            key_takeaway: z.string().optional(),
-          }).passthrough().describe('Canvas content object — { html, css?, js?, static_render_only?, key_takeaway? }.'),
+          }).passthrough().describe('Canvas content object — { html, css?, js?, static_render_only? }.'),
         }).optional().describe('The new slide to add. Required for insert and replace.'),
       })).optional().describe('Structural changes: add, remove, reorder, or replace slides. Use this to INSERT NEW SLIDES — do not recreate the deck.'),
       slides: z.array(z.object({
@@ -288,27 +292,26 @@ For image_gallery: pass an array of IDs as image_refs instead of images.`,
         {
           name: 'canvas',
           description: 'Agent-authored HTML/CSS/JS rendered in a 1920×1080 shadow-rooted sandbox. The ONLY layout for new content.',
-          fields: 'html (required), css?, js?, static_render_only?, key_takeaway?',
+          fields: 'html (required), css?, js?, static_render_only?',
         },
       ];
       const customization = {
         heading_font: 'Google Font for headings (e.g. "Playfair Display"). Default: DM Sans. Forwarded as var(--dp-font-heading) into every canvas slide.',
         body_font: 'Google Font for body text (e.g. "Inter"). Default: DM Sans. Forwarded as var(--dp-font-body).',
-        accent_color: 'Hex color (e.g. "#ff6600"). Default: #7c3aed. Forwarded as var(--dp-accent).',
         stylesheet: 'Deck-level global CSS adopted by every canvas slide via shadow-root adoptedStyleSheets. Define your design system once and reference it from each slide. Up to 100KB.',
-        head: 'Array of <link>/<script>/<style> entries injected into the page head. Use to load CDN libraries (Tailwind, Chart.js, etc.) or external fonts/icon sets that canvas slides depend on.',
+        head: 'Array of <link>/<script>/<style> entries injected into the page head. Use for Google Fonts links, icon-font stylesheets, or trusted CDN scripts your js depends on.',
       };
       const style_guide = {
         canvas: [
           'Design at 1920×1080 — the viewer scales the slide to fit.',
-          'Each canvas slide is mounted into an open shadow root, so your CSS is auto-scoped — no need for BEM/prefixes.',
-          'Prefer Tailwind for fast layout: enable it once via deck.head: [{ tag: "script", attrs: { src: "https://cdn.tailwindcss.com" } }]. Then write utility-class HTML.',
-          'Use the forwarded CSS variables: var(--dp-accent), var(--dp-text-title), var(--dp-text-body), var(--dp-font-heading), var(--dp-font-body). This keeps slides consistent with accent_color and font choices.',
-          'Define reusable styles once in deck.stylesheet (e.g. .dp-hero, .dp-stat-card) instead of duplicating CSS in every slide.css.',
+          'Pick concrete pixel values: h1 ≈ 96–128px, body ≈ 24–32px, padding ≈ 96–144px, gap ≈ 32–64px. Designs sized for a 16px-base browser look tiny at HD.',
+          'Each canvas slide is mounted into an open shadow root, so your CSS is auto-scoped — no need for BEM/prefixes. No CSS framework ships by default; use deck.stylesheet for shared utilities and per-slide css for overrides.',
+          'Define reusable styles once in deck.stylesheet (e.g. .hero, .card, .stat). Reference them from each slide\'s html instead of duplicating CSS per slide.',
           'Mark commentable elements with data-dp-anchor="<stable-id>" (e.g. <h1 data-dp-anchor="hero-title">). Preserve these IDs across edits so comment threads remain attached.',
           'Reviewers can comment on ANY DOM element — unmarked elements get auto:<index> paths that are stable within a render but may shift across structural edits. Use anchors for anything you\'ll iterate on.',
           'Reviewers can also edit text inline via the viewer\'s edit mode. Your js should not rely on exact text strings — use selectors or data attributes.',
-          'js runs when the slide enters view. Signature: (root, slide) => optional cleanup function. Use for animations, interactivity. Set static_render_only: true to skip JS in print/PDF.',
+          'js runs when the slide enters view. Signature: (root, slide) => optional cleanup function. Use for animations, interactivity. Set static_render_only: true to skip JS in print/PDF and screenshots.',
+          'Verify before committing: use preview_slide to render an HTML/CSS/JS draft and get a screenshot + render report (JS errors, overflows). Cheap, doesn\'t persist anything.',
           'Do NOT load arbitrary user-controlled scripts; the canvas runs in the parent JS context, not an iframe.',
         ],
         images: 'Use search_images for Unsplash photos or upload_image for your own; in canvas slides, place the returned URL directly in <img src>. Include a credit caption near the image.',
@@ -376,6 +379,104 @@ Use the "since" parameter with an ISO timestamp to only fetch comments added or 
       const data = await res.json();
       if (!res.ok) return { content: [{ type: 'text' as const, text: `Error: ${JSON.stringify(data)}` }] };
       return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    'preview_slide',
+    `Render a single canvas slide without persisting anything. Returns a PNG screenshot (base64) plus a render report (JS errors, console errors, text overflows, font load status, failed network requests).
+
+Use this to iterate on slide html/css/js BEFORE calling create_deck or update_deck. The render runs through the real viewer pipeline at 1920×1080 — exactly what reviewers will see. Catches:
+- JS errors thrown by your "js"
+- console.error / console.warn output
+- elements whose content overflows their box (text-too-long bugs)
+- Google Fonts that didn't load (typo in font name, missing head entry)
+- failed image / asset requests
+
+Common workflow:
+1. Draft html/css/js for one slide.
+2. preview_slide → inspect report.overflows and report.js_errors.
+3. Fix issues, preview again.
+4. Once clean, include the slide in create_deck (or update_deck).
+
+The screenshot is the slide alone — no viewer chrome.`,
+    {
+      html: z.string().describe('Slide HTML (the markup that would go in content.html).'),
+      css: z.string().optional().describe('Optional per-slide CSS, scoped to this slide.'),
+      js: z.string().optional().describe('Optional per-slide JS. Runs with (root, slide). Skipped if static_render_only=true (which screenshot mode forces).'),
+      static_render_only: z.boolean().optional().describe('Set true to skip your "js" during the preview render. Useful to isolate CSS/HTML issues.'),
+      stylesheet: z.string().optional().describe('Deck-level CSS to adopt (mirrors deck.stylesheet). Use this so the preview matches your actual design system.'),
+      head: z.array(z.object({
+        tag: z.enum(['link', 'script', 'style']),
+        attrs: z.record(z.string()).optional(),
+        body: z.string().optional(),
+      })).optional().describe('Deck-level head entries (Google Fonts links, etc.). Same shape as deck.head.'),
+      heading_font: z.string().optional().describe('Google Font for headings (mirrors deck.heading_font). Forwarded as var(--dp-font-heading).'),
+      body_font: z.string().optional().describe('Google Font for body (mirrors deck.body_font). Forwarded as var(--dp-font-body).'),
+      format: z.enum(['png', 'jpeg']).optional().describe('Image format. Defaults to png.'),
+    },
+    { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+    async (args) => {
+      try {
+        const res = await fetch(`${apiUrl}/v1/preview`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(args),
+        });
+        const data = await res.json();
+        if (!res.ok) return { content: [{ type: 'text' as const, text: `Error: ${JSON.stringify(data)}` }] };
+        const img = data.image;
+        const report = data.report;
+        return {
+          content: [
+            {
+              type: 'image' as const,
+              data: img.base64,
+              mimeType: img.mime_type,
+            },
+            {
+              type: 'text' as const,
+              text: `Render report:\n${JSON.stringify(report, null, 2)}\n\nDuration: ${data.duration_ms}ms`,
+            },
+          ],
+        };
+      } catch (err) {
+        return { content: [{ type: 'text' as const, text: `Error: ${err}` }] };
+      }
+    }
+  );
+
+  server.tool(
+    'get_slide_screenshot',
+    `Render a specific slide of an existing deck. Returns a screenshot URL plus a render report (JS errors, text overflows, font load status). Results are cached on deck.updated_at — instant for unchanged slides.
+
+Use after update_deck to verify a change actually rendered the way you intended, or to inspect a slide a reviewer commented on.`,
+    {
+      deck_id: z.string().describe('The deck ID (e.g. "dk_a1b2c3d4")'),
+      slide_index: z.number().int().min(0).describe('Zero-based slide index.'),
+      format: z.enum(['png', 'jpeg']).optional().describe('Image format. Defaults to png.'),
+    },
+    { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+    async ({ deck_id, slide_index, format }) => {
+      try {
+        const fmt = format ?? 'png';
+        const url = `${apiUrl}/v1/decks/${deck_id}/slides/${slide_index}/screenshot?format=${fmt}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          return { content: [{ type: 'text' as const, text: `Error: ${JSON.stringify(data)}` }] };
+        }
+        const reportHeader = res.headers.get('x-render-report');
+        const durationHeader = res.headers.get('x-render-duration-ms');
+        const report = reportHeader ? JSON.parse(decodeURIComponent(reportHeader)) : null;
+        return {
+          content: [
+            { type: 'text' as const, text: `Screenshot URL: ${url}\n\nRender report:\n${JSON.stringify(report, null, 2)}${durationHeader ? `\n\nDuration: ${durationHeader}ms` : ''}` },
+          ],
+        };
+      } catch (err) {
+        return { content: [{ type: 'text' as const, text: `Error: ${err}` }] };
+      }
     }
   );
 

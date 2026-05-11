@@ -38,14 +38,25 @@ npm run build:shared        # Just shared (others depend on it)
 
 ## Key Patterns
 
-- **Canvas slide**: `{ layout: "canvas", content: { html (required), css?, js?, static_render_only?, key_takeaway? } }`. `<slide-canvas>` mounts the html into an open shadow root, adopts (deck.stylesheet + slide.css) via `adoptedStyleSheets`, and runs `js` on enter with `(root, slide)` in scope. Custom properties `--dp-accent / --dp-text-* / --dp-font-*` are forwarded into every shadow root.
+- **Canvas slide**: `{ layout: "canvas", content: { html (required), css?, js?, static_render_only? } }`. `<slide-canvas>` mounts the html into an open shadow root, adopts (deck.stylesheet + slide.css) via `adoptedStyleSheets`, and runs `js` on enter with `(root, slide)` in scope. `--dp-font-heading` / `--dp-font-body` custom properties (from deck.heading_font / body_font) are forwarded into every shadow root.
 - **Slide schema**: Discriminated union on `layout` field. `canvas` is the only advertised layout; the 25 legacy layouts (`title`, `title_and_bullets`, `stats`, `chart`, etc.) are still in the union so old decks render and the REST API stays compatible. The MCP surface forces new content to `canvas`.
-- **PATCH semantics**: Index-based partial slide updates with deep merge: `{ slides: [{ index: 2, content: { html: "<div>…</div>" } }] }`. Top-level `title`/`heading_font`/`body_font`/`accent_color`/`stylesheet`/`head` updates supported. Structural changes via `slide_operations` array (insert, delete, move, replace) — executed sequentially before content edits.
+- **PATCH semantics**: Index-based partial slide updates with deep merge: `{ slides: [{ index: 2, content: { html: "<div>…</div>" } }] }`. Top-level `title`/`heading_font`/`body_font`/`stylesheet`/`head` updates supported. Structural changes via `slide_operations` array (insert, delete, move, replace) — executed sequentially before content edits.
 - **Viewer edit flow (canvas)**: `<slide-canvas>` walks the shadow root, marks text-bearing leaf elements (`h1`, `p`, `span`, …) as `contenteditable` when `editable` is true. On `focusout`, the full cleaned `innerHTML` is emitted via `slide-content-changed` with field `'html'`; `viewer-app` debounces (1s) and PATCHes. Legacy `<slide-*>` components retain their per-field contenteditable flow.
 - **Commenting (canvas)**: On mount, `<slide-canvas>` translates `data-dp-anchor="<name>"` → `data-content-path="anchor:<name>"` for stable anchors, then walks every other element depth-first and assigns `data-content-path="auto:<index>"`. The existing `comment-layer` walker descends into the open shadow root and uses smallest-area hit-testing. Anchors survive structural edits; `auto:*` paths only survive within a render.
 - **Print mode**: `?print` query param renders all slides stacked with page breaks, no chrome. Used by Puppeteer for PDF export. Canvas slides with `static_render_only: true` skip their `js` in print.
 - **Presenter mode**: Fullscreen presentation via "Present" button. Keyboard nav (arrows, spacebar, Escape). Cursor auto-hides after 3s inactivity. Black background, no chrome.
 - **Fonts**: Deck-level `heading_font` and `body_font` (optional, any Google Font). Default: DM Sans. Applied via `--dp-font-heading` and `--dp-font-body` CSS custom properties, forwarded into canvas shadow roots.
+
+## Headless rendering & screenshots
+
+Two MCP tools rely on a Puppeteer pipeline that renders slides through the real viewer:
+
+- `preview_slide` (transient): `POST /v1/preview` stashes a `{ html, css, js, stylesheet?, head? }` payload in an in-memory map keyed by `pv_<uuid>` (60s TTL). The headless browser hits `${viewerUrl}/preview/<uuid>?screenshot=1`. The viewer detects `/preview/...` paths and fetches `/v1/preview/<uuid>` instead of `/v1/decks/<id>`. After the screenshot lands the payload is deleted.
+- `get_slide_screenshot`: `GET /v1/decks/:id/slides/:slideIndex/screenshot` renders the slide via `${viewerUrl}/d/<deck_id>?screenshot=1&slide=<n>` and caches the result at `${IMAGE_STORAGE_PATH}/screenshots/<deck_id>-<slide_index>-<updated_at_ms>.png` plus a sibling `.report.json`. Cache invalidates automatically because `deck.updated_at` changes on every PATCH.
+
+The Puppeteer browser is a module-level singleton in `packages/api/src/services/render.ts` (`getBrowser()`). Each request gets a new page; the browser is reused across requests and closed gracefully on `SIGTERM`. The render report (`js_errors`, `console_errors`, `overflows`, `fonts_loaded/missing`, `failed_requests`) is collected by listening to `pageerror`/`console`/`requestfailed` plus a `page.evaluate` overflow walker that descends shadow roots.
+
+The viewer signals readiness by setting `<html data-ready="true">` after `document.fonts.ready` + two rAFs. Both `?print` and `?screenshot=1` modes do this; the renderer waits up to 12s for it.
 
 ## Resurrecting deprecated layouts
 

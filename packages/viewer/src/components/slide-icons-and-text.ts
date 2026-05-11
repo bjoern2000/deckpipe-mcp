@@ -55,7 +55,6 @@ export class SlideIconsAndText extends SlideBase {
 
   @property() title = '';
   @property({ type: Array }) items: Array<{ icon: string; heading: string; description?: string }> = [];
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   private renderIcon(icon: string) {
@@ -75,7 +74,6 @@ export class SlideIconsAndText extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         ${this.editable ? this.wrapDeletable('items', html`
           <div class="grid">
             ${this.items.map((item, i) => html`

@@ -43,6 +43,8 @@ claude mcp add deckpipe -- npx deckpipe-mcp
 | `delete_deck` | Delete a deck permanently |
 | `upload_image` | Upload a base64 image, get a hosted URL |
 | `search_images` | Search Unsplash for stock photos with automatic attribution |
+| `preview_slide` | Render a transient slide (no persistence) and return a screenshot + render report. Iterate on html/css/js before committing to a deck. |
+| `get_slide_screenshot` | Render a specific slide of an existing deck. Cached on `updated_at`. |
 | `list_layouts` | Describe the canvas layout and deck-level theming options |
 | `list_comments` | List comments on a deck (filter by status, slide, since-timestamp) |
 | `reply_to_comment` | Reply to a comment thread after addressing feedback |
@@ -66,8 +68,8 @@ Every slide is a canvas slide:
 - **Design space:** 1920×1080. The viewer scales the slide to fit.
 - **CSS is auto-scoped.** Each slide mounts in an open shadow root — no BEM or class prefixes needed.
 - **Deck-level `stylesheet`** is adopted by every canvas slide. Define a design system (typography, color tokens, reusable `.card`/`.grid`/`.hero` classes) once and reference it from every slide's html.
-- **Deck-level `head`** is an array of `<link>` / `<script>` / `<style>` entries injected into the page head. Use it to load CDN libraries (Tailwind, Chart.js, Lottie, icon fonts).
-- **Theme variables:** `var(--dp-accent)`, `var(--dp-text-title)`, `var(--dp-text-body)`, `var(--dp-font-heading)`, `var(--dp-font-body)` are forwarded into every slide. Use them instead of hardcoded colors so `accent_color` / `heading_font` / `body_font` stay consistent.
+- **Deck-level `head`** is an array of `<link>` / `<script>` / `<style>` entries injected into the page head. Use it for Google Fonts links, icon-font stylesheets, or trusted CDN scripts your js depends on.
+- **Theme variables:** `var(--dp-font-heading)` and `var(--dp-font-body)` are forwarded into every slide from `heading_font` / `body_font`. Reference them in your stylesheet instead of hardcoded font families.
 - **`js` runs on slide enter** with `(root, slide)` in scope. Return a cleanup function to run on slide exit. Set `static_render_only: true` to skip JS in print/PDF.
 
 ## Commenting and inline editing
@@ -82,7 +84,6 @@ The viewer's edit mode also makes text-bearing leaf elements (`h1`, `p`, `span`,
 |-------|-------------|---------|
 | `heading_font` | Google Font for headings | DM Sans |
 | `body_font` | Google Font for body text | DM Sans |
-| `accent_color` | Hex color, forwarded as `var(--dp-accent)` | `#7c3aed` |
 | `stylesheet` | Global CSS adopted by every canvas slide (up to 100KB) | — |
 | `head` | `<link>` / `<script>` / `<style>` entries injected into page head | — |
 

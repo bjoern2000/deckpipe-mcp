@@ -66,7 +66,6 @@ export class SlideAgenda extends SlideBase {
 
   @property() title = '';
   @property({ type: Array }) items: Array<{ topic: string; duration?: string; description?: string }> = [];
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -79,7 +78,6 @@ export class SlideAgenda extends SlideBase {
             @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
           >${heading}</h1>
         `) : html`<h1 data-content-path="title">${heading}</h1>`}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         ${this.editable ? this.wrapDeletable('items', html`
           <div class="items">
             ${this.items.map((item, i) => html`

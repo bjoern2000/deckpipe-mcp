@@ -182,7 +182,6 @@ export class SlideQuadrant extends SlideBase {
   @property({ attribute: 'y-label' }) yLabel = '';
   @property({ type: Array }) quadrantLabels: string[] = [];
   @property({ type: Array }) items: Array<{ label: string; x: number; y: number }> = [];
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -203,7 +202,6 @@ export class SlideQuadrant extends SlideBase {
                     `)
                   : html`<h1 data-content-path="title">${this.title}</h1>`
                 : nothing}
-              ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
               ${this.body
                 ? this.editable
                   ? this.wrapDeletable('body', html`

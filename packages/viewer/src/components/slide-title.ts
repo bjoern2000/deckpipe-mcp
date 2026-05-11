@@ -23,7 +23,6 @@ export class SlideTitle extends SlideBase {
       }
       .subtitle a { color: rgba(255, 255, 255, 0.9); text-decoration: underline; }
       .subtitle code { background: rgba(255, 255, 255, 0.15); color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
-      .key-takeaway { background: rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.9); }
       .bg-image {
         position: absolute;
         inset: 0;
@@ -45,7 +44,6 @@ export class SlideTitle extends SlideBase {
   @property({ attribute: 'image-url' }) imageUrl = '';
   @property({ type: Object }) imageFocus: { x: number; y: number } | null = null;
   @property({ type: Object }) imageAttribution: { name?: string; url?: string; source?: string; source_url?: string } | null = null;
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -62,7 +60,6 @@ export class SlideTitle extends SlideBase {
               @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
             >${this.title}</h1>
           `) : html`<h1 data-content-path="title">${this.title}</h1>`}
-          ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
           ${this.subtitle || this.editable ? this.editable
             ? this.wrapDeletable('subtitle', html`
                 <p class="subtitle" data-content-path="subtitle" contenteditable="true"

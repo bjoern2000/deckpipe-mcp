@@ -18,16 +18,15 @@ WORKFLOW
 - Check the "warnings" array in every create/update response. Fix unrecognized fields or unreachable image URLs with a follow-up update_deck call.
 
 THE CANVAS LAYOUT
-- Every slide is { layout: "canvas", content: { html (required), css?, js?, static_render_only?, key_takeaway? } }.
+- Every slide is { layout: "canvas", content: { html (required), css?, js?, static_render_only? } }.
 - "html" is the full slide markup. Design at 1920×1080 — the viewer scales the slide to fit. CSS in "css" is scoped to this slide only; for shared styles use deck.stylesheet.
-- Each slide mounts in an open shadow root, so your CSS is auto-scoped — no need for BEM or class prefixes.
-- CSS variables forwarded into every slide: var(--dp-accent), var(--dp-text-title), var(--dp-text-body), var(--dp-font-heading), var(--dp-font-body). Use these so accent_color and font choices stay consistent across the deck.
-- "js" runs on slide enter with (root, slide) in scope. Return a cleanup function to run on slide exit (clear timers, detach listeners). Set static_render_only: true to skip JS in print/PDF.
+- Each slide mounts in an open shadow root, so your CSS is auto-scoped — no need for BEM or class prefixes. No CSS framework ships by default; use deck.stylesheet for shared utilities.
+- "js" runs on slide enter with (root, slide) in scope. Return a cleanup function to run on slide exit (clear timers, detach listeners). Set static_render_only: true to skip JS in print/PDF and screenshots.
 
 DECK-LEVEL THEMING
-- stylesheet: global CSS string adopted by every canvas slide. Define your design system once (typography, color tokens, reusable card/grid classes) and reference classes from each slide's html. Up to 100KB.
-- head: array of { tag, attrs?, body? } entries injected into the page head. Use to load CDN libraries (Tailwind, Chart.js, icon fonts). Example: [{ tag: "script", attrs: { src: "https://cdn.tailwindcss.com" } }].
-- accent_color / heading_font / body_font are forwarded as CSS variables.
+- stylesheet: global CSS string adopted by every canvas slide. Define your design system once (typography, color tokens, reusable card/grid classes) and reference classes from each slide's html. Up to 100KB. Pick concrete pixel values for 1920×1080: h1 ≈ 96–128px, body ≈ 24–32px, padding ≈ 96–144px.
+- head: array of { tag, attrs?, body? } entries injected into the page head. Use for Google Fonts links, icon-font stylesheets, or trusted CDN scripts your js depends on.
+- heading_font / body_font are forwarded as var(--dp-font-heading) / var(--dp-font-body) into every slide.
 
 COMMENTING
 - Reviewers can leave comments on ANY DOM element in a canvas slide — Deckpipe auto-assigns a content_path to every element at render time.
@@ -57,15 +56,15 @@ LEGACY LAYOUTS
 Create a new slide deck. Returns viewer_url (owner link with edit key) and share_url (read-only).
 
 Each slide is a canvas slide — you write HTML/CSS/JS directly:
-`{ layout: "canvas", content: { html (required), css?, js?, static_render_only?, key_takeaway? } }`
+`{ layout: "canvas", content: { html (required), css?, js?, static_render_only? } }`
 
 Design checklist:
 - Design at 1920×1080. The viewer scales to fit.
+- Pick concrete pixel values: h1 ≈ 96–128px, body ≈ 24–32px, padding ≈ 96–144px. Designs sized for a 16px-base browser look tiny at HD.
 - Define shared styles ONCE in deck.stylesheet (typography, color tokens, reusable classes).
-- Use forwarded CSS variables: var(--dp-accent), var(--dp-text-title), var(--dp-text-body), var(--dp-font-heading), var(--dp-font-body).
-- For Tailwind: add `{ tag: "script", attrs: { src: "https://cdn.tailwindcss.com" } }` to deck.head.
 - Mark commentable elements with `data-dp-anchor="<stable-id>"`.
 - Optional "js" runs `(root, slide)` on slide enter — return a cleanup function.
+- Verify before committing: call `preview_slide` with the draft html/css/js and inspect the render report.
 
 ### Parameters
 
@@ -74,17 +73,15 @@ Design checklist:
 | `title` | string | yes | Deck title |
 | `heading_font` | string | no | Google Font for headings (e.g. "Playfair Display"). Default: DM Sans. |
 | `body_font` | string | no | Google Font for body text (e.g. "Inter"). Default: DM Sans. |
-| `accent_color` | string | no | Hex color (e.g. "#ff6600"). Overrides default purple accent. |
 | `agent_name` | string | no | Your agent name (e.g. "Acme Strategy Agent"). Shown as author on comments you post. Set this once at deck creation. |
 | `stylesheet` | string | no | Global CSS adopted by every canvas slide. Define a design system once and reference it from each slide. Up to 100KB. |
-| `head` | array | no | `<link>`/`<script>`/`<style>` entries injected into the page head. Use to load CDN libraries (Tailwind, Chart.js, etc.). |
+| `head` | array | no | `<link>`/`<script>`/`<style>` entries injected into the page head. Use for Google Fonts links, icon-font stylesheets, or trusted CDN scripts. |
 | `slides` | array | yes | Array of canvas slides |
 | `slides[].layout` | literal | yes | Always `"canvas"`. (Templated layouts deprecated — see CLAUDE.md to re-enable.) |
 | `slides[].content.html` | string | yes | Slide markup, designed at 1920×1080 |
 | `slides[].content.css` | string | no | Per-slide CSS (scoped to this slide). For shared styles use deck.stylesheet. |
 | `slides[].content.js` | string | no | Runs on slide enter; receives `(root, slide)`. Return a cleanup function. |
-| `slides[].content.static_render_only` | boolean | no | Skip JS in print/PDF mode. |
-| `slides[].content.key_takeaway` | string | no | One-line summary surfaced in agent-facing comment context. |
+| `slides[].content.static_render_only` | boolean | no | Skip JS in print/PDF mode and screenshots. |
 
 ---
 
@@ -134,7 +131,6 @@ slides (content edit) examples:
 | `title` | string | no | New deck title |
 | `heading_font` | string | no | Google Font for headings (e.g. "Playfair Display") |
 | `body_font` | string | no | Google Font for body text (e.g. "Inter") |
-| `accent_color` | string | no | Hex color (e.g. "#ff6600") |
 | `stylesheet` | string \| null | no | Replace deck-level global CSS for canvas slides. Pass null to clear. |
 | `head` | array \| null | no | Replace deck-level head entries. Pass null to clear. |
 | `slide_operations` | array | no | Structural changes: add, remove, reorder, or replace slides. |
@@ -199,6 +195,46 @@ The download_location triggers required Unsplash download tracking automatically
 | `query` | string | yes | Search terms (e.g. "modern office workspace", "sunset over mountains") |
 | `per_page` | number | no | Number of results (default 9, max 30) |
 | `orientation` | enum | no | "landscape", "portrait", or "squarish". Use "landscape" for full_image/image_and_text, "portrait" for image_gallery. |
+
+---
+
+## preview_slide
+
+### Description
+
+Render a single canvas slide without persisting anything. Returns a PNG screenshot (base64) plus a render report (`js_errors`, `console_errors`, `overflows`, `fonts_loaded`, `fonts_missing`, `failed_requests`).
+
+Use to iterate on slide html/css/js before calling `create_deck` or `update_deck`. The render runs through the real viewer pipeline at 1920×1080 — exactly what reviewers will see.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `html` | string | yes | Slide HTML (the markup that would go in `content.html`). |
+| `css` | string | no | Optional per-slide CSS, scoped to this slide. |
+| `js` | string | no | Optional per-slide JS. Runs with `(root, slide)`. |
+| `static_render_only` | boolean | no | If true, your `js` is skipped during the preview. |
+| `stylesheet` | string | no | Deck-level CSS to adopt (mirrors `deck.stylesheet`). Use so the preview matches your design system. |
+| `head` | array | no | Deck-level head entries (Google Fonts links etc.). Same shape as `deck.head`. |
+| `heading_font` | string | no | Google Font for headings. Mirrors `deck.heading_font`. |
+| `body_font` | string | no | Google Font for body. Mirrors `deck.body_font`. |
+| `format` | enum | no | "png" (default) or "jpeg". |
+
+---
+
+## get_slide_screenshot
+
+### Description
+
+Render a specific slide of an existing deck. Returns a URL to the cached PNG plus a render report. Cache invalidates on every PATCH (keyed on `deck.updated_at`), so unchanged slides return instantly.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `deck_id` | string | yes | The deck ID (e.g. `dk_a1b2c3d4`). |
+| `slide_index` | number | yes | Zero-based slide index. |
+| `format` | enum | no | "png" (default) or "jpeg". |
 
 ---
 
@@ -286,7 +322,6 @@ Resolve a comment, marking it as addressed. Only resolve when explicitly asked �
 ```json
 {
   "title": "Q2 Product Launch",
-  "accent_color": "#2563eb",
   "heading_font": "Inter",
   "slides": [
     {

@@ -57,7 +57,6 @@ export class SlideImageAndText extends SlideBase {
   @property({ type: Object }) imageFocus: { x: number; y: number } | null = null;
   @property({ type: Object }) imageAttribution: { name?: string; url?: string; source?: string; source_url?: string } | null = null;
   @property({ attribute: 'image-prompt' }) imagePrompt = '';
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -79,7 +78,6 @@ export class SlideImageAndText extends SlideBase {
               @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
             >${this.title}</h1>
           `) : html`<h1 data-content-path="title">${this.title}</h1>`}
-          ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
           ${this.editable ? this.wrapDeletable('body', html`
             <p class="body-text" data-content-path="body" contenteditable="true"
               @blur=${(e: FocusEvent) => this.emitChange('body', (e.target as HTMLElement).textContent)}

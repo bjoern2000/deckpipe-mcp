@@ -44,10 +44,6 @@ export class SlideFullImage extends SlideBase {
         font-size: 1.2em;
         margin: 0;
       }
-      .key-takeaway {
-        background: rgba(255,255,255,0.15);
-        color: #ffffff;
-      }
       .image-attribution { position: absolute; bottom: 10px; left: 0; right: 0; z-index: 2; color: rgba(255,255,255,0.5); }
       .image-attribution a { color: rgba(255,255,255,0.5); text-decoration-color: rgba(255,255,255,0.2); }
       .image-attribution a:hover { color: rgba(255,255,255,0.7); }
@@ -60,7 +56,6 @@ export class SlideFullImage extends SlideBase {
   @property() title = '';
   @property() subtitle = '';
   @property({ attribute: 'image-prompt' }) imagePrompt = '';
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -82,7 +77,6 @@ export class SlideFullImage extends SlideBase {
                 `)
               : html`<h1 data-content-path="title">${this.title}</h1>`
             : nothing}
-          ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
           ${this.subtitle || this.editable
             ? this.editable
               ? this.wrapDeletable('subtitle', html`

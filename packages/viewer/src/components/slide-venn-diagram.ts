@@ -102,7 +102,6 @@ export class SlideVennDiagram extends SlideBase {
   @property() body = '';
   @property({ type: Array }) circles: VennCircle[] = [];
   @property({ type: Array }) overlaps: VennOverlap[] = [];
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   @state() private accentColor = '#7c3aed';
@@ -234,7 +233,6 @@ export class SlideVennDiagram extends SlideBase {
     return html`
       <div class="slide" data-content-path="slide">
         ${!hasLeft && this.title ? html`<h1 data-content-path="title">${this.title}</h1>` : nothing}
-        ${!hasLeft ? this.renderKeyTakeaway(this.keyTakeaway, this.editable) : nothing}
         <div class="layout">
           ${hasLeft ? html`
             <div class="left-panel">
@@ -247,7 +245,6 @@ export class SlideVennDiagram extends SlideBase {
                     `)
                   : html`<h1 data-content-path="title">${this.title}</h1>`
                 : nothing}
-              ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
               ${this.body
                 ? this.editable
                   ? this.wrapDeletable('body', html`

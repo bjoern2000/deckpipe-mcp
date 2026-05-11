@@ -90,7 +90,6 @@ export class SlideComparison extends SlideBase {
   @property({ type: Object }) left: { heading: string; bullets: BulletItem[]; image_url?: string; image_focus?: { x: number; y: number } } = { heading: '', bullets: [] };
   @property({ type: Object }) right: { heading: string; bullets: BulletItem[]; image_url?: string; image_focus?: { x: number; y: number } } = { heading: '', bullets: [] };
   @property() verdict = '';
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   private _renderSide(side: 'left' | 'right') {
@@ -140,7 +139,6 @@ export class SlideComparison extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         <div class="columns">
           ${this._renderSide('left')}
           <div class="divider"><span class="vs-badge">VS</span></div>

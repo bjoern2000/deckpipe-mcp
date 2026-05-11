@@ -29,7 +29,7 @@ export class ThumbnailStrip extends LitElement {
     }
 
     .thumbnail.active {
-      border-color: var(--dp-accent, #2563eb);
+      border-color: #2563eb;
     }
 
     .thumbnail-inner {
@@ -54,7 +54,6 @@ export class ThumbnailStrip extends LitElement {
   @property({ type: Number }) currentIndex = 0;
   @property() headingFont = '';
   @property() bodyFont = '';
-  @property() accentColor = '';
   @property() deckStylesheet = '';
 
   private getScale(el: HTMLElement): number {
@@ -84,9 +83,6 @@ export class ThumbnailStrip extends LitElement {
     }
     if (this.bodyFont) {
       vars.push(`--dp-font-body:'${this.bodyFont}', sans-serif`);
-    }
-    if (this.accentColor) {
-      vars.push(`--dp-accent:${this.accentColor}`);
     }
     return vars.join(';');
   }

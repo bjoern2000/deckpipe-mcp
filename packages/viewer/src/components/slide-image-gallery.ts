@@ -52,7 +52,6 @@ export class SlideImageGallery extends SlideBase {
   @property({ type: Array }) imageDetails: Array<{ title?: string; caption?: string; attribution?: { name?: string; url?: string; source?: string; source_url?: string } }> = [];
   @property({ type: Array }) imageFocuses: Array<{ x: number; y: number }> = [];
   @property({ attribute: 'image-prompt' }) imagePrompt = '';
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   /** Fallback: split legacy caption string into per-image captions */
@@ -96,7 +95,6 @@ export class SlideImageGallery extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         ${this.images.length > 0
           ? this.editable ? this.wrapDeletable('images', html`
               <div class="gallery">

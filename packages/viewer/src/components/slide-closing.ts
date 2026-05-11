@@ -75,7 +75,6 @@ export class SlideClosing extends SlideBase {
   @property({ attribute: 'image-url' }) imageUrl = '';
   @property({ type: Object }) imageFocus: { x: number; y: number } | null = null;
   @property({ type: Object }) imageAttribution: { name?: string; url?: string; source?: string; source_url?: string } | null = null;
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -97,7 +96,6 @@ export class SlideClosing extends SlideBase {
                 `)
               : html`<h1 class="heading" data-content-path="heading">${this.heading}</h1>`
             : nothing}
-          ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
           ${this.subheading || this.editable
             ? this.editable
               ? this.wrapDeletable('subheading', html`

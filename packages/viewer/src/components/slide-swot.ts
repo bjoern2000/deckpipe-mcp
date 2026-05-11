@@ -61,7 +61,6 @@ export class SlideSwot extends SlideBase {
   @property({ type: Array }) weaknesses: BulletItem[] = [];
   @property({ type: Array }) opportunities: BulletItem[] = [];
   @property({ type: Array }) threats: BulletItem[] = [];
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   private _renderQuadrant(name: string, field: 'strengths' | 'weaknesses' | 'opportunities' | 'threats', items: BulletItem[]) {
@@ -117,7 +116,6 @@ export class SlideSwot extends SlideBase {
               `)
             : html`<h1 data-content-path="title">${this.title}</h1>`
           : nothing}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         <div class="grid">
           ${this._renderQuadrant('\u{1F4AA} Strengths', 'strengths', this.strengths)}
           ${this._renderQuadrant('\u{26A0}\uFE0F Weaknesses', 'weaknesses', this.weaknesses)}

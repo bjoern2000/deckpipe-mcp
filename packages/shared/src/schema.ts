@@ -19,7 +19,6 @@ export type ImageAttribution = z.infer<typeof ImageAttributionSchema>;
 
 // --- Base content fields (shared across all layouts) ---
 const BaseContentFields = {
-  key_takeaway: z.string().optional(),
   image_prompt: z.string().optional(),
   image_attribution: ImageAttributionSchema.optional(),
   image_ref: z.string().optional(),
@@ -411,7 +410,6 @@ export const CreateDeckSchema = z.object({
   title: z.string().min(1),
   heading_font: z.string().min(1).max(100).optional(),
   body_font: z.string().min(1).max(100).optional(),
-  accent_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   agent_name: z.string().min(1).max(100).optional(),
   stylesheet: z.string().max(100_000).optional(),
   head: z.array(HeadEntrySchema).max(20).optional(),
@@ -442,13 +440,12 @@ export const UpdateDeckSchema = z.object({
   title: z.string().min(1).optional(),
   heading_font: z.string().min(1).max(100).optional(),
   body_font: z.string().min(1).max(100).optional(),
-  accent_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   stylesheet: z.string().max(100_000).nullable().optional(),
   head: z.array(HeadEntrySchema).max(20).nullable().optional(),
   slides: z.array(SlideUpdateSchema).optional(),
   slide_operations: z.array(SlideOperationSchema).max(50).optional(),
 }).refine(
-  (data) => data.title !== undefined || data.heading_font !== undefined || data.body_font !== undefined || data.accent_color !== undefined || data.stylesheet !== undefined || data.head !== undefined || data.slides !== undefined || data.slide_operations !== undefined,
+  (data) => data.title !== undefined || data.heading_font !== undefined || data.body_font !== undefined || data.stylesheet !== undefined || data.head !== undefined || data.slides !== undefined || data.slide_operations !== undefined,
   { message: 'At least one field must be provided for update' }
 );
 export type UpdateDeckInput = z.infer<typeof UpdateDeckSchema>;
@@ -459,7 +456,6 @@ export const DeckResponseSchema = z.object({
   title: z.string(),
   heading_font: z.string().nullable().optional(),
   body_font: z.string().nullable().optional(),
-  accent_color: z.string().nullable().optional(),
   agent_name: z.string().nullable().optional(),
   stylesheet: z.string().nullable().optional(),
   head: z.array(HeadEntrySchema).nullable().optional(),

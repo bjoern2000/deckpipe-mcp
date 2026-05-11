@@ -51,7 +51,6 @@ export class SlideTitleAndBullets extends SlideBase {
   @property({ type: Object }) imageFocus: { x: number; y: number } | null = null;
   @property({ type: Object }) imageAttribution: { name?: string; url?: string; source?: string; source_url?: string } | null = null;
   @property({ attribute: 'image-prompt' }) imagePrompt = '';
-  @property({ attribute: 'key-takeaway' }) keyTakeaway = '';
   @property({ type: Boolean }) editable = false;
 
   render() {
@@ -64,7 +63,6 @@ export class SlideTitleAndBullets extends SlideBase {
             @blur=${(e: FocusEvent) => this.emitChange('title', (e.target as HTMLElement).textContent)}
           >${this.title}</h1>
         `) : html`<h1 data-content-path="title">${this.title}</h1>`}
-        ${this.renderKeyTakeaway(this.keyTakeaway, this.editable)}
         <div class="body-area">
           ${this.editable ? this.wrapDeletable('bullets', html`
             <ul>
