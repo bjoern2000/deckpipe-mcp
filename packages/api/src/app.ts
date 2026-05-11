@@ -26,6 +26,18 @@ export function createApp() {
 
   app.use(cors());
 
+  // Clickjacking defense: only the deck viewer (/d/*) is meant to be embedded
+  // cross-origin. Everything else (marketing, admin, API) restricts framing to
+  // same-origin so the homepage can still iframe the demo deck.
+  app.use((req, res, next) => {
+    const allowEmbed = req.path.startsWith('/d/');
+    res.setHeader(
+      'Content-Security-Policy',
+      `frame-ancestors ${allowEmbed ? '*' : "'self'"}`,
+    );
+    next();
+  });
+
   // Request logging
   app.use((req, _res, next) => {
     if (req.path !== '/health') {
