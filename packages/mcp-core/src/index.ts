@@ -26,9 +26,16 @@ export const INSTRUCTIONS = `Deckpipe is a slide deck rendering engine. You auth
 WORKFLOW
 - Use create_deck for NEW decks. Use update_deck to modify EXISTING decks.
 - NEVER recreate a deck to make changes. Recreating loses the URL, edit key, and comment history. Always update in place.
-- ITERATE BEFORE COMMITTING: use preview_slide to render an HTML/CSS/JS draft and get a screenshot + render report (JS errors, text overflows, font load status). Cheap, doesn't persist anything.
+- CALIBRATE DENSITY FIRST: before authoring a whole deck, build ONE representative content-heavy slide via preview_slide and look at the actual screenshot. The cover/title is the wrong slide to calibrate on — pick one that carries real text. If the user hasn't specified slide count or a reference style (Apple keynote / Pentagram case study / NYT Magazine / investor pitch / status update), ASK before committing — those signals are what tell you how much whitespace to use.
+- ITERATE BEFORE COMMITTING: use preview_slide to render an HTML/CSS/JS draft and get a screenshot + render report. Both preview_slide and get_slide_screenshot return the actual rendered PNG inline — read it. The image is ground truth.
 - Round trip on an existing deck: get_deck (read state + open comments) → get_slide_screenshot (see how a slide actually renders) → update_deck (make changes) → reply_to_comment (explain what you changed).
 - Check the "warnings" array in every create/update response.
+
+CONTENT DENSITY
+- One idea per slide. If a slide is carrying a headline + lede + tag row + callout + pull-quote + attribution, you have three slides compressed into one — split it.
+- Whitespace is a design element, not wasted space. Editorial decks read better at 20 sparse slides than 12 dense ones. Prefer breathing room unless the user explicitly asked for an information-dense format.
+- Headlines ≤ 8 words. One concept per paragraph. Strip ornamentation before the final pass.
+- The render report's "overflows" list is a SYNTACTIC check (off-canvas elements, content clipped by overflow:hidden). It says nothing about whether the slide looks good. A wall of text with no overflows is still a wall of text — the screenshot is the only signal that catches "too dense to read". Look at the image.
 
 THE CANVAS LAYOUT
 - Every slide is { layout: "canvas", content: { html (required), css?, js?, static_render_only? } }.
@@ -48,8 +55,7 @@ DECK-LEVEL THEMING (define once, reference everywhere)
     .row        { display: flex; gap: 48px; align-items: stretch; }
 
   Notice the scale: padding in 100s of px, body in 24–32px, h1 in 100+px. Designs sized for a 16px-base browser look tiny at 1920×1080.
-- head: array of { tag, attrs?, body? } entries injected into the page head. Use for Google Fonts links, icon-font stylesheets, or trusted CDN scripts your js depends on.
-- heading_font / body_font are convenience shortcuts that load Google Fonts and expose var(--dp-font-heading) / var(--dp-font-body).
+- head: array of { tag, attrs?, body? } entries injected into the page head. Load Google Fonts here as <link> entries, then set font-family in deck.stylesheet on .h1/.h2/.body classes (or whatever your design system calls them).
 
 COMMENTING
 - Reviewers can comment on ANY DOM element in a canvas slide — Deckpipe auto-assigns a content_path to every element at render time.
@@ -88,10 +94,13 @@ Each slide is a canvas slide — you write the HTML/CSS/JS directly. Slide shape
 Design checklist:
 - Design at 1920×1080. The viewer scales to fit.
 - Pick concrete pixel values: h1 ≈ 96–128px, body ≈ 24–32px, padding ≈ 96–144px, gap ≈ 32–64px. Designs sized for a 16px browser look tiny at HD.
+- ONE IDEA PER SLIDE. If a slide has a headline + lede + tags + callout + quote + attribution, split it into two or three. Whitespace is a design element. For editorial decks, prefer 20 sparse slides over 12 dense ones unless the user asked for dense.
+- BUILD ONE REPRESENTATIVE SLIDE FIRST. Pick a content-heavy slide (not the cover), preview_slide it, look at the actual screenshot, calibrate density, THEN author the rest at that bar. Don't preview the cover and assume the body slides will be fine.
+- If the brief is vague ("hi-fi", "make it visual"), ASK for a reference (Apple keynote / Pentagram case study / NYT Magazine / investor pitch / status update) and a slide count before committing.
 - Define shared styles ONCE in deck.stylesheet (typography, color tokens, .card/.grid/.hero classes). Reference them from each slide's html.
 - Mark commentable elements with data-dp-anchor="<stable-id>" so feedback threads survive edits.
 - Optional "js" runs (root, slide) on slide enter — return a cleanup function. Set static_render_only: true to freeze animations in print/PDF and screenshots.
-- VERIFY BEFORE COMMITTING: call preview_slide with your draft html/css/js and check the render report (JS errors, text overflows, font load) before creating the full deck. After creation, call get_slide_screenshot on slides you're unsure about.
+- VERIFY BEFORE COMMITTING: call preview_slide with your draft html/css/js and read both the screenshot and the render report. After creation, call get_slide_screenshot on any slide you didn't preview — it returns the image inline so you can SEE what reviewers see.
 
 IMPORTANT:
 - To modify this deck later, use update_deck. NEVER create a new deck to make changes — it loses the URL and comment history.
@@ -99,8 +108,6 @@ IMPORTANT:
 - Check the "warnings" array and fix issues with a follow-up update_deck call.`,
     {
       title: z.string().describe('Deck title'),
-      heading_font: z.string().optional().describe('Google Font for headings (e.g. "Playfair Display"). Default: DM Sans.'),
-      body_font: z.string().optional().describe('Google Font for body text (e.g. "Inter"). Default: DM Sans.'),
       agent_name: z.string().optional().describe('Your agent name (e.g. "Acme Strategy Agent"). Shown as author on comments you post. Set this once at deck creation.'),
       stylesheet: z.string().optional().describe('Global CSS adopted by every canvas slide via shadow-root adoptedStyleSheets. Define your design system once (typography, components, color tokens) and reference classes from each slide.'),
       head: z.array(z.object({
@@ -176,8 +183,6 @@ Editing existing decks that use the deprecated templated layouts is supported (t
     {
       deck_id: z.string().describe('Deck ID to update'),
       title: z.string().optional().describe('New deck title'),
-      heading_font: z.string().optional().describe('Google Font for headings (e.g. "Playfair Display")'),
-      body_font: z.string().optional().describe('Google Font for body text (e.g. "Inter")'),
       stylesheet: z.string().nullable().optional().describe('Replace the deck-level global CSS string used by canvas slides. Pass null to clear.'),
       head: z.array(z.object({
         tag: z.enum(['link', 'script', 'style']),
@@ -296,10 +301,8 @@ For image_gallery: pass an array of IDs as image_refs instead of images.`,
         },
       ];
       const customization = {
-        heading_font: 'Google Font for headings (e.g. "Playfair Display"). Default: DM Sans. Forwarded as var(--dp-font-heading) into every canvas slide.',
-        body_font: 'Google Font for body text (e.g. "Inter"). Default: DM Sans. Forwarded as var(--dp-font-body).',
         stylesheet: 'Deck-level global CSS adopted by every canvas slide via shadow-root adoptedStyleSheets. Define your design system once and reference it from each slide. Up to 100KB.',
-        head: 'Array of <link>/<script>/<style> entries injected into the page head. Use for Google Fonts links, icon-font stylesheets, or trusted CDN scripts your js depends on.',
+        head: 'Array of <link>/<script>/<style> entries injected into the page head. Load Google Fonts (or icon-font stylesheets, or trusted CDN scripts) here. Then set font-family in deck.stylesheet on your typography classes.',
       };
       const style_guide = {
         canvas: [
@@ -389,13 +392,15 @@ Use the "since" parameter with an ISO timestamp to only fetch comments added or 
 Use this to iterate on slide html/css/js BEFORE calling create_deck or update_deck. The render runs through the real viewer pipeline at 1920×1080 — exactly what reviewers will see. Catches:
 - JS errors thrown by your "js"
 - console.error / console.warn output
-- elements whose content overflows their box (text-too-long bugs)
+- elements that are off-canvas (bounding rect extends past 1920×1080) or clipped (overflow: hidden/scroll/auto with overflowing content). Each entry in report.overflows includes a "reason" field: "off_canvas" or "clipped".
 - Google Fonts that didn't load (typo in font name, missing head entry)
 - failed image / asset requests
 
+The overflows list does NOT report benign rendering bleed (italic descenders, negative letter-spacing on serif headings, etc.) when nothing is actually clipped. If the report comes back clean but the screenshot looks wrong, trust the screenshot — overflows is a syntactic check, the image is the visual truth.
+
 Common workflow:
 1. Draft html/css/js for one slide.
-2. preview_slide → inspect report.overflows and report.js_errors.
+2. preview_slide → READ THE SCREENSHOT, then inspect report.overflows and report.js_errors.
 3. Fix issues, preview again.
 4. Once clean, include the slide in create_deck (or update_deck).
 
@@ -411,8 +416,6 @@ The screenshot is the slide alone — no viewer chrome.`,
         attrs: z.record(z.string()).optional(),
         body: z.string().optional(),
       })).optional().describe('Deck-level head entries (Google Fonts links, etc.). Same shape as deck.head.'),
-      heading_font: z.string().optional().describe('Google Font for headings (mirrors deck.heading_font). Forwarded as var(--dp-font-heading).'),
-      body_font: z.string().optional().describe('Google Font for body (mirrors deck.body_font). Forwarded as var(--dp-font-body).'),
       format: z.enum(['png', 'jpeg']).optional().describe('Image format. Defaults to png.'),
     },
     { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
@@ -448,9 +451,11 @@ The screenshot is the slide alone — no viewer chrome.`,
 
   server.tool(
     'get_slide_screenshot',
-    `Render a specific slide of an existing deck. Returns a screenshot URL plus a render report (JS errors, text overflows, font load status). Results are cached on deck.updated_at — instant for unchanged slides.
+    `Render a specific slide of an existing deck and return the PNG inline (base64) so you can see exactly what reviewers see. Also returns a render report (JS errors, text overflows, font load status). Results are cached on deck.updated_at — instant for unchanged slides.
 
-Use after update_deck to verify a change actually rendered the way you intended, or to inspect a slide a reviewer commented on.`,
+Use after update_deck to verify a change actually rendered the way you intended, or to inspect a slide a reviewer commented on. The screenshot is the slide alone, at 1920×1080, no viewer chrome.
+
+The render report's overflow list is a syntactic check, not a visual one. Each overflow entry now includes a "reason" field ("off_canvas" or "clipped") so you know whether something is actually getting cut off. The image is ground truth — read it before iterating.`,
     {
       deck_id: z.string().describe('The deck ID (e.g. "dk_a1b2c3d4")'),
       slide_index: z.number().int().min(0).describe('Zero-based slide index.'),
@@ -469,9 +474,19 @@ Use after update_deck to verify a change actually rendered the way you intended,
         const reportHeader = res.headers.get('x-render-report');
         const durationHeader = res.headers.get('x-render-duration-ms');
         const report = reportHeader ? JSON.parse(decodeURIComponent(reportHeader)) : null;
+        const mimeType = fmt === 'jpeg' ? 'image/jpeg' : 'image/png';
+        const buffer = Buffer.from(await res.arrayBuffer());
         return {
           content: [
-            { type: 'text' as const, text: `Screenshot URL: ${url}\n\nRender report:\n${JSON.stringify(report, null, 2)}${durationHeader ? `\n\nDuration: ${durationHeader}ms` : ''}` },
+            {
+              type: 'image' as const,
+              data: buffer.toString('base64'),
+              mimeType,
+            },
+            {
+              type: 'text' as const,
+              text: `Render report:\n${JSON.stringify(report, null, 2)}${durationHeader ? `\n\nDuration: ${durationHeader}ms` : ''}`,
+            },
           ],
         };
       } catch (err) {

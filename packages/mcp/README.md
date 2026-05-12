@@ -68,8 +68,7 @@ Every slide is a canvas slide:
 - **Design space:** 1920×1080. The viewer scales the slide to fit.
 - **CSS is auto-scoped.** Each slide mounts in an open shadow root — no BEM or class prefixes needed.
 - **Deck-level `stylesheet`** is adopted by every canvas slide. Define a design system (typography, color tokens, reusable `.card`/`.grid`/`.hero` classes) once and reference it from every slide's html.
-- **Deck-level `head`** is an array of `<link>` / `<script>` / `<style>` entries injected into the page head. Use it for Google Fonts links, icon-font stylesheets, or trusted CDN scripts your js depends on.
-- **Theme variables:** `var(--dp-font-heading)` and `var(--dp-font-body)` are forwarded into every slide from `heading_font` / `body_font`. Reference them in your stylesheet instead of hardcoded font families.
+- **Deck-level `head`** is an array of `<link>` / `<script>` / `<style>` entries injected into the page head. Load Google Fonts here as `<link>` entries, then set `font-family` in your stylesheet.
 - **`js` runs on slide enter** with `(root, slide)` in scope. Return a cleanup function to run on slide exit. Set `static_render_only: true` to skip JS in print/PDF.
 
 ## Commenting and inline editing
@@ -80,12 +79,10 @@ The viewer's edit mode also makes text-bearing leaf elements (`h1`, `p`, `span`,
 
 ## Theming
 
-| Field | Description | Default |
-|-------|-------------|---------|
-| `heading_font` | Google Font for headings | DM Sans |
-| `body_font` | Google Font for body text | DM Sans |
-| `stylesheet` | Global CSS adopted by every canvas slide (up to 100KB) | — |
-| `head` | `<link>` / `<script>` / `<style>` entries injected into page head | — |
+| Field | Description |
+|-------|-------------|
+| `stylesheet` | Global CSS adopted by every canvas slide (up to 100KB). Define typography, color tokens, and reusable classes here. |
+| `head` | `<link>` / `<script>` / `<style>` entries injected into the page head. Load Google Fonts via `<link>` here, then reference them as `font-family` in your stylesheet. |
 
 ## Comments workflow
 

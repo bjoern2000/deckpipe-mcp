@@ -11,8 +11,16 @@ Deckpipe is a slide deck rendering engine. You author each slide as HTML/CSS/JS 
 WORKFLOW
 - Use create_deck for NEW decks. Use update_deck to modify EXISTING decks.
 - NEVER recreate a deck to make changes. Recreating loses the URL, edit key, and comment history. Always update in place.
-- To iterate: get_deck (read current state + comments) → update_deck (make changes) → reply_to_comment (explain what you changed).
+- CALIBRATE DENSITY FIRST: before authoring a whole deck, build ONE representative content-heavy slide via preview_slide and look at the actual screenshot. The cover/title is the wrong slide to calibrate on — pick one that carries real text. If the user hasn't specified slide count or a reference style (Apple keynote / Pentagram case study / NYT Magazine / investor pitch / status update), ASK before committing — those signals are what tell you how much whitespace to use.
+- ITERATE BEFORE COMMITTING: use preview_slide to render an HTML/CSS/JS draft and get a screenshot + render report. Both preview_slide and get_slide_screenshot return the actual rendered PNG inline — read it. The image is ground truth.
+- Round trip on an existing deck: get_deck (read state + open comments) → get_slide_screenshot (see how a slide actually renders) → update_deck (make changes) → reply_to_comment (explain what you changed).
 - Check the "warnings" array in every create/update response. Fix unrecognized fields or unreachable image URLs with a follow-up update_deck call.
+
+CONTENT DENSITY
+- One idea per slide. If a slide is carrying a headline + lede + tag row + callout + pull-quote + attribution, you have three slides compressed into one — split it.
+- Whitespace is a design element, not wasted space. Editorial decks read better at 20 sparse slides than 12 dense ones. Prefer breathing room unless the user explicitly asked for an information-dense format.
+- Headlines ≤ 8 words. One concept per paragraph. Strip ornamentation before the final pass.
+- The render report's "overflows" list is a SYNTACTIC check (off-canvas elements, content clipped by overflow:hidden). It says nothing about whether the slide looks good. A wall of text with no overflows is still a wall of text — the screenshot is the only signal that catches "too dense to read". Look at the image.
 
 THE CANVAS LAYOUT
 - Every slide is { layout: "canvas", content: { html (required), css?, js?, static_render_only? } }.
@@ -22,8 +30,7 @@ THE CANVAS LAYOUT
 
 DECK-LEVEL THEMING
 - stylesheet: global CSS string adopted by every canvas slide. Define your design system once (typography, color tokens, reusable card/grid classes) and reference classes from each slide's html. Up to 100KB. Pick concrete pixel values for 1920×1080: h1 ≈ 96–128px, body ≈ 24–32px, padding ≈ 96–144px.
-- head: array of { tag, attrs?, body? } entries injected into the page head. Use for Google Fonts links, icon-font stylesheets, or trusted CDN scripts your js depends on.
-- heading_font / body_font are forwarded as var(--dp-font-heading) / var(--dp-font-body) into every slide.
+- head: array of { tag, attrs?, body? } entries injected into the page head. Load Google Fonts here as <link> entries, then set font-family in deck.stylesheet on your typography classes.
 
 COMMENTING
 - Reviewers can leave comments on ANY DOM element in a canvas slide — Deckpipe auto-assigns a content_path to every element at render time.
@@ -58,18 +65,19 @@ Each slide is a canvas slide — you write HTML/CSS/JS directly:
 Design checklist:
 - Design at 1920×1080. The viewer scales to fit.
 - Pick concrete pixel values: h1 ≈ 96–128px, body ≈ 24–32px, padding ≈ 96–144px. Designs sized for a 16px-base browser look tiny at HD.
+- ONE IDEA PER SLIDE. If a slide has a headline + lede + tags + callout + quote + attribution, split it into two or three. Whitespace is a design element. For editorial decks, prefer 20 sparse slides over 12 dense ones unless the user asked for dense.
+- BUILD ONE REPRESENTATIVE SLIDE FIRST. Pick a content-heavy slide (not the cover), preview_slide it, look at the actual screenshot, calibrate density, THEN author the rest at that bar.
+- If the brief is vague ("hi-fi", "make it visual"), ASK for a reference (Apple keynote / Pentagram case study / NYT Magazine / investor pitch / status update) and a slide count before committing.
 - Define shared styles ONCE in deck.stylesheet (typography, color tokens, reusable classes).
 - Mark commentable elements with `data-dp-anchor="<stable-id>"`.
 - Optional "js" runs `(root, slide)` on slide enter — return a cleanup function.
-- Verify before committing: call `preview_slide` with the draft html/css/js and inspect the render report.
+- Verify before committing: call `preview_slide` and READ THE SCREENSHOT and the render report. After creation, `get_slide_screenshot` returns the image inline so you can SEE what reviewers see.
 
 ### Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `title` | string | yes | Deck title |
-| `heading_font` | string | no | Google Font for headings (e.g. "Playfair Display"). Default: DM Sans. |
-| `body_font` | string | no | Google Font for body text (e.g. "Inter"). Default: DM Sans. |
 | `agent_name` | string | no | Your agent name (e.g. "Acme Strategy Agent"). Shown as author on comments you post. Set this once at deck creation. |
 | `stylesheet` | string | no | Global CSS adopted by every canvas slide. Define a design system once and reference it from each slide. Up to 100KB. |
 | `head` | array | no | `<link>`/`<script>`/`<style>` entries injected into the page head. Use for Google Fonts links, icon-font stylesheets, or trusted CDN scripts. |
@@ -126,8 +134,6 @@ slides (content edit) examples:
 |-----------|------|----------|-------------|
 | `deck_id` | string | yes | Deck ID to update |
 | `title` | string | no | New deck title |
-| `heading_font` | string | no | Google Font for headings (e.g. "Playfair Display") |
-| `body_font` | string | no | Google Font for body text (e.g. "Inter") |
 | `stylesheet` | string \| null | no | Replace deck-level global CSS for canvas slides. Pass null to clear. |
 | `head` | array \| null | no | Replace deck-level head entries. Pass null to clear. |
 | `slide_operations` | array | no | Structural changes: add, remove, reorder, or replace slides. |
@@ -203,6 +209,8 @@ Render a single canvas slide without persisting anything. Returns a PNG screensh
 
 Use to iterate on slide html/css/js before calling `create_deck` or `update_deck`. The render runs through the real viewer pipeline at 1920×1080 — exactly what reviewers will see.
 
+Each entry in `overflows` includes a `reason` field — `"off_canvas"` (element extends past the 1920×1080 slide frame) or `"clipped"` (element has `overflow: hidden|scroll|auto` and its content exceeds its box). The detector does NOT flag benign rendering bleed (italic descenders, negative letter-spacing on serif headings) on elements with `overflow: visible`. If the report comes back clean but the screenshot looks wrong, trust the screenshot — overflows is a syntactic check, the image is visual truth.
+
 ### Parameters
 
 | Parameter | Type | Required | Description |
@@ -213,8 +221,6 @@ Use to iterate on slide html/css/js before calling `create_deck` or `update_deck
 | `static_render_only` | boolean | no | If true, your `js` is skipped during the preview. |
 | `stylesheet` | string | no | Deck-level CSS to adopt (mirrors `deck.stylesheet`). Use so the preview matches your design system. |
 | `head` | array | no | Deck-level head entries (Google Fonts links etc.). Same shape as `deck.head`. |
-| `heading_font` | string | no | Google Font for headings. Mirrors `deck.heading_font`. |
-| `body_font` | string | no | Google Font for body. Mirrors `deck.body_font`. |
 | `format` | enum | no | "png" (default) or "jpeg". |
 
 ---
@@ -223,7 +229,9 @@ Use to iterate on slide html/css/js before calling `create_deck` or `update_deck
 
 ### Description
 
-Render a specific slide of an existing deck. Returns a URL to the cached PNG plus a render report. Cache invalidates on every PATCH (keyed on `deck.updated_at`), so unchanged slides return instantly.
+Render a specific slide of an existing deck. Returns the PNG inline (base64) so the agent can see exactly what reviewers see, plus a render report (JS errors, text overflows, font load status). Cache invalidates on every PATCH (keyed on `deck.updated_at`), so unchanged slides return instantly.
+
+The render report's `overflows` list uses the same `reason` field as `preview_slide` (`"off_canvas"` or `"clipped"`). Absence of overflows is a syntactic check, not a visual one — the screenshot is ground truth.
 
 ### Parameters
 
@@ -319,7 +327,6 @@ Resolve a comment, marking it as addressed. Only resolve when explicitly asked �
 ```json
 {
   "title": "Q2 Product Launch",
-  "heading_font": "Inter",
   "slides": [
     {
       "layout": "title",

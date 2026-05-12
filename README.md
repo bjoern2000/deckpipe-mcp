@@ -15,8 +15,10 @@ An agent calls `create_deck` with HTML, CSS, and (optionally) JS for each slide:
 ```json
 {
   "title": "Q2 Launch",
-  "heading_font": "Fraunces",
-  "stylesheet": ".hero { font-family: var(--dp-font-heading); font-size: 96px; color: #0f172a; }",
+  "head": [
+    { "tag": "link", "attrs": { "rel": "stylesheet", "href": "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&display=swap" } }
+  ],
+  "stylesheet": ".hero { font-family: 'Fraunces', serif; font-size: 128px; color: #0f172a; }",
   "slides": [
     {
       "layout": "canvas",
@@ -29,7 +31,7 @@ An agent calls `create_deck` with HTML, CSS, and (optionally) JS for each slide:
 }
 ```
 
-Each slide mounts in an **open shadow root**, so CSS is auto-scoped — no BEM, no class prefixes. Deck-level `stylesheet` is adopted by every slide, so a design system written once shows up everywhere. CSS custom properties (`--dp-font-heading`, `--dp-font-body`) are forwarded into every slide so font choices stay consistent.
+Each slide mounts in an **open shadow root**, so CSS is auto-scoped — no BEM, no class prefixes. Deck-level `stylesheet` is adopted by every slide, so a design system written once shows up everywhere. Load fonts via `head` entries and reference them in your stylesheet.
 
 Reviewers open the viewer URL and can comment on **any DOM element** (auto-anchored via `data-dp-anchor` for stability across edits). The agent reads those comments via MCP, edits the deck, and replies — full collaborative loop without humans touching JSON.
 
@@ -46,6 +48,8 @@ Add `https://deckpipe.dev/mcp` as a custom remote MCP server. No auth.
 ```bash
 claude mcp add deckpipe -- npx deckpipe-mcp
 ```
+
+Optional: this repo ships a Claude Code skill at `.claude/skills/deckpipe-design/SKILL.md` that adds richer design guidance (brief-clarification questions, density rules, reference-style cheatsheet, iteration loop). It auto-loads when you work on a deck inside this repo. To use it in a consumer project, copy the `deckpipe-design` folder into that project's `.claude/skills/` directory.
 
 ### Manual MCP config
 

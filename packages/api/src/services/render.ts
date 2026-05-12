@@ -16,8 +16,14 @@ export interface RenderReport {
   js_errors: Array<{ message: string; stack?: string }>;
   /** console.error / console.warn output. */
   console_errors: Array<{ level: 'error' | 'warn'; text: string }>;
-  /** Elements where scrollWidth/scrollHeight exceed clientWidth/clientHeight. */
-  overflows: Array<{ selector: string; overflow_x_px: number; overflow_y_px: number; text_preview: string }>;
+  /**
+   * Elements that are visually broken. Two reasons:
+   * - "off_canvas": the element's bounding rect extends past the 1920×1080 slide frame (cut off by the slide edge).
+   * - "clipped": the element has overflow: hidden|scroll|auto and its scrollWidth/Height exceeds clientWidth/Height.
+   * Benign overflow (italic descender bleed, negative letter-spacing on serif headings, etc.)
+   * on elements with overflow: visible is NOT reported — those don't actually clip anything.
+   */
+  overflows: Array<{ selector: string; reason: 'off_canvas' | 'clipped'; overflow_x_px: number; overflow_y_px: number; text_preview: string }>;
   /** Fonts the page declared and successfully loaded. */
   fonts_loaded: string[];
   /** Fonts the page declared but didn't load. */
@@ -151,17 +157,55 @@ export async function renderSlide(opts: RenderOptions): Promise<RenderResult> {
     report.fonts_missing = fontInfo.missing;
 
     // Collect overflow info, walking shadow roots since the slide lives inside Lit.
+    //
+    // Two real failure modes, both visually obvious in the screenshot:
+    //   "off_canvas" — element's painted box extends past the 1920×1080 slide frame.
+    //   "clipped"    — element clips its own content (overflow: hidden|scroll|auto)
+    //                  and scrollWidth/Height exceeds clientWidth/Height.
+    //
+    // We deliberately do NOT report scrollWidth/Height overflow on elements with
+    // overflow: visible. Italic glyph bleed, descenders, and negative letter-spacing
+    // on serif headings all produce a few pixels of "overflow" the browser doesn't
+    // clip — flagging those wastes agent iterations chasing phantoms.
+    const NOISE_PX = 2;
     const overflows = await page.evaluate(`(() => {
+      const NOISE_PX = ${NOISE_PX};
+      const SLIDE_W = 1920;
+      const SLIDE_H = 1080;
       const out = [];
       function visit(root) {
         const all = root.querySelectorAll('*');
         for (let i = 0; i < all.length; i++) {
           const el = all[i];
           if (!(el instanceof HTMLElement)) continue;
+          if (el.tagName === 'HTML' || el.tagName === 'BODY') {
+            if (el.shadowRoot) visit(el.shadowRoot);
+            continue;
+          }
+          if (el.clientWidth === 0 && el.clientHeight === 0) {
+            if (el.shadowRoot) visit(el.shadowRoot);
+            continue;
+          }
+          const cs = getComputedStyle(el);
+          const ovX = cs.overflowX;
+          const ovY = cs.overflowY;
+          const clipsX = ovX === 'hidden' || ovX === 'scroll' || ovX === 'auto';
+          const clipsY = ovY === 'hidden' || ovY === 'scroll' || ovY === 'auto';
+
           const overflowX = el.scrollWidth - el.clientWidth;
           const overflowY = el.scrollHeight - el.clientHeight;
-          if ((overflowX > 1 || overflowY > 1) && (el.clientWidth > 0 || el.clientHeight > 0)) {
-            if (el.tagName === 'HTML' || el.tagName === 'BODY') continue;
+          const clipped =
+            (clipsX && overflowX > NOISE_PX) ||
+            (clipsY && overflowY > NOISE_PX);
+
+          const rect = el.getBoundingClientRect();
+          const offCanvas =
+            rect.left < -NOISE_PX ||
+            rect.top < -NOISE_PX ||
+            rect.right > SLIDE_W + NOISE_PX ||
+            rect.bottom > SLIDE_H + NOISE_PX;
+
+          if (clipped || offCanvas) {
             const path = [];
             let node = el;
             for (let j = 0; j < 4 && node; j++) {
@@ -174,6 +218,7 @@ export async function renderSlide(opts: RenderOptions): Promise<RenderResult> {
             const txt = (el.textContent || '').trim().slice(0, 60);
             out.push({
               selector: path.join(' > '),
+              reason: clipped ? 'clipped' : 'off_canvas',
               overflow_x_px: Math.max(0, overflowX),
               overflow_y_px: Math.max(0, overflowY),
               text_preview: txt,
@@ -189,7 +234,7 @@ export async function renderSlide(opts: RenderOptions): Promise<RenderResult> {
         seenSel.add(o.selector);
         return true;
       }).slice(0, 20);
-    })()`) as Array<{ selector: string; overflow_x_px: number; overflow_y_px: number; text_preview: string }>;
+    })()`) as Array<{ selector: string; reason: 'off_canvas' | 'clipped'; overflow_x_px: number; overflow_y_px: number; text_preview: string }>;
     report.overflows = overflows;
 
     // Screenshot just the viewport — viewer renders the slide flush at (0,0)
