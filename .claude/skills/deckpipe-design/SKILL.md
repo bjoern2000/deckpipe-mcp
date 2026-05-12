@@ -74,11 +74,52 @@ The most common failure: previewing the cover slide and assuming the body slides
 
 A clean report is necessary but not sufficient. A slide can have zero overflows and still be a wall of unreadable text. Always read the screenshot.
 
+## The layout-safety pattern
+
+The single most common bug in agent-authored decks is "content overflows or overlaps the footer." Three causes, one playbook:
+
+1. **`box-sizing` is content-box by default.** A `<div>` with `height: 100%` and `padding: 112px 128px` becomes 100% + 224px tall, overflowing its parent. Open every `deck.stylesheet` with:
+   ```css
+   *, *::before, *::after { box-sizing: border-box; }
+   ```
+   This single line prevents most overflow bugs.
+
+2. **The footer needs reserved space.** A `.footer-line` absolutely positioned at `bottom: 48px` will collide with in-flow content unless the slide's `padding-bottom` reserves room for it. Pattern: `.slide { padding: 112px 128px 160px }`. For full-bleed slides where `.slide` has no padding, apply the same reserve on the inner content container (`.hero-content { padding: 112px 128px 160px }`).
+
+3. **Sweep for overflows after creating.** After `create_deck`, call `get_slide_screenshot` on at least every slide with a big headline, body paragraph, chart, or footer. Read the `overflows` list. Any entry with `reason: "off_canvas"` or `reason: "clipped"` is a real bug — fix with `update_deck` before declaring the deck done.
+
+Baseline stylesheet snippet that gets these right:
+
+```css
+*, *::before, *::after { box-sizing: border-box; }
+
+.slide {
+  width: 1920px;
+  height: 1080px;
+  padding: 112px 128px 160px;  /* bottom reserves footer space */
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.footer-line {
+  position: absolute;
+  bottom: 48px;
+  left: 128px;
+  right: 128px;
+  display: flex;
+  justify-content: space-between;
+  /* lives inside the reserved 160px-bottom band */
+}
+```
+
 ## Common pitfalls
 
 - **Sizing for the wrong viewport.** Pick concrete pixels at HD scale. `font-size: 1rem` (16px) looks tiny at 1920×1080.
 - **Defining CSS per-slide instead of in the stylesheet.** Move shared styles into `deck.stylesheet` once, reference classes from each slide. Per-slide `css` is for one-off overrides.
 - **Not using `data-dp-anchor`.** Comment threads on anchored elements survive structural edits. Threads on auto-pathed elements shift when you reorder. Anchor anything you're likely to iterate on.
 - **JS that depends on exact text.** The viewer lets reviewers edit text inline. Your `js` should select by class or `data-*` attribute, never by `textContent === 'exact phrase'`.
-- **Forgetting `static_render_only`.** For animations that should freeze in print/PDF exports, set `static_render_only: true` so the JS is skipped during screenshot capture.
+- **`static_render_only` for animations.** Set `static_render_only: true` for slides whose JS animates into a final state — Deckpipe skips the JS in screenshot and PDF/print modes so the captured frame shows the HTML's final-state values, not a mid-animation snapshot. If you want the animation to play in the live viewer but the screenshot to look correct, this is the right tool.
+- **Using CSS `background-image: url(...)` for large hero images.** Background images aren't pre-decoded by the viewer's ready signal, so the screenshot can fire before the image lands and the slide renders without it. Use `<img src="..." />` positioned with `position:absolute; inset:0; object-fit:cover` instead — browsers prioritize `<img>` loading and the screenshot pipeline waits for it.
+- **Loading fonts via `@import` inside `stylesheet`.** Shadow-root `adoptedStyleSheets` forbids `@import` (Lit logs a warning). Put `<link rel="stylesheet">` Google Fonts entries in `deck.head` instead, then reference the family in your stylesheet's `font-family`.
 - **Mocking what the screenshot will look like in your head.** You can't. Use `preview_slide`.

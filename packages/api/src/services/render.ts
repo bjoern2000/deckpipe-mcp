@@ -216,11 +216,20 @@ export async function renderSlide(opts: RenderOptions): Promise<RenderResult> {
               node = node.parentElement;
             }
             const txt = (el.textContent || '').trim().slice(0, 60);
+            // For off_canvas elements, report how far the bounding rect extends
+            // past the slide frame on each axis. For clipped elements, report
+            // the scrollWidth/Height overshoot — content that doesn't fit the box.
+            const offX = offCanvas
+              ? Math.max(0, Math.max(0 - rect.left, rect.right - SLIDE_W))
+              : Math.max(0, overflowX);
+            const offY = offCanvas
+              ? Math.max(0, Math.max(0 - rect.top, rect.bottom - SLIDE_H))
+              : Math.max(0, overflowY);
             out.push({
               selector: path.join(' > '),
               reason: clipped ? 'clipped' : 'off_canvas',
-              overflow_x_px: Math.max(0, overflowX),
-              overflow_y_px: Math.max(0, overflowY),
+              overflow_x_px: Math.round(offX),
+              overflow_y_px: Math.round(offY),
               text_preview: txt,
             });
           }

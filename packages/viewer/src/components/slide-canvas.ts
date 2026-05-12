@@ -74,8 +74,9 @@ export class SlideCanvas extends LitElement {
   private jsCleanup: (() => void) | null = null;
   private blurHandler: ((e: FocusEvent) => void) | null = null;
 
-  private isPrintMode(): boolean {
-    return new URLSearchParams(window.location.search).has('print');
+  private isStaticOutputMode(): boolean {
+    const params = new URLSearchParams(window.location.search);
+    return params.has('print') || params.has('screenshot');
   }
 
   protected updated() {
@@ -234,7 +235,7 @@ export class SlideCanvas extends LitElement {
 
   private runUserJs(root: ShadowRoot) {
     if (!this.js) return;
-    if (this.staticRenderOnly && this.isPrintMode()) return;
+    if (this.staticRenderOnly && this.isStaticOutputMode()) return;
 
     const container = root.querySelector('.canvas-root') as HTMLElement | null;
     if (!container) return;

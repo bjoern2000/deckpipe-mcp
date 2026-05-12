@@ -13,8 +13,14 @@ WORKFLOW
 - NEVER recreate a deck to make changes. Recreating loses the URL, edit key, and comment history. Always update in place.
 - CALIBRATE DENSITY FIRST: before authoring a whole deck, build ONE representative content-heavy slide via preview_slide and look at the actual screenshot. The cover/title is the wrong slide to calibrate on — pick one that carries real text. If the user hasn't specified slide count or a reference style (Apple keynote / Pentagram case study / NYT Magazine / investor pitch / status update), ASK before committing — those signals are what tell you how much whitespace to use.
 - ITERATE BEFORE COMMITTING: use preview_slide to render an HTML/CSS/JS draft and get a screenshot + render report. Both preview_slide and get_slide_screenshot return the actual rendered PNG inline — read it. The image is ground truth.
+- SWEEP FOR OVERFLOWS AFTER CREATING: after create_deck, call get_slide_screenshot on every slide that carries dense text, large headlines, charts, or images. Read the "overflows" list. Any entry with reason:"off_canvas" or reason:"clipped" is a real bug — fix with update_deck before declaring the deck done.
 - Round trip on an existing deck: get_deck (read state + open comments) → get_slide_screenshot (see how a slide actually renders) → update_deck (make changes) → reply_to_comment (explain what you changed).
 - Check the "warnings" array in every create/update response. Fix unrecognized fields or unreachable image URLs with a follow-up update_deck call.
+
+LAYOUT SAFETY (the box-sizing + footer-reserve trap)
+- Open every deck.stylesheet with a universal box-sizing reset: `*, *::before, *::after { box-sizing: border-box }`. Without it, an element with `height:100%; padding:Xpx` becomes 100% + 2X in computed height and overflows its parent. This is the #1 cause of "content overlaps the footer" bugs.
+- If a slide has a bottom-fixed footer/page-number row (e.g. `position:absolute; bottom:48px`), the in-flow content's bottom padding must clear it. Safe pattern: `.slide { padding: 112px 128px 160px }`. For full-bleed slides where `.slide` has no padding, apply the same reserve on the inner content container.
+- After authoring the stylesheet, build the most vertically dense slide first (one with big headline + body + chart/diagram + footer) and screenshot it. If a headline + body + chart overflows, you'll see it before propagating the same mistake to every slide.
 
 CONTENT DENSITY
 - One idea per slide. If a slide is carrying a headline + lede + tag row + callout + pull-quote + attribution, you have three slides compressed into one — split it.

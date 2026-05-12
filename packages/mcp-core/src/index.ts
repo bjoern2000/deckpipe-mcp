@@ -28,6 +28,7 @@ WORKFLOW
 - NEVER recreate a deck to make changes. Recreating loses the URL, edit key, and comment history. Always update in place.
 - CALIBRATE DENSITY FIRST: before authoring a whole deck, build ONE representative content-heavy slide via preview_slide and look at the actual screenshot. The cover/title is the wrong slide to calibrate on — pick one that carries real text. If the user hasn't specified slide count or a reference style (Apple keynote / Pentagram case study / NYT Magazine / investor pitch / status update), ASK before committing — those signals are what tell you how much whitespace to use.
 - ITERATE BEFORE COMMITTING: use preview_slide to render an HTML/CSS/JS draft and get a screenshot + render report. Both preview_slide and get_slide_screenshot return the actual rendered PNG inline — read it. The image is ground truth.
+- SWEEP FOR OVERFLOWS AFTER CREATING: after create_deck, call get_slide_screenshot on every slide that carries dense text, large headlines, charts, or images. Read the "overflows" list. Any entry with reason:"off_canvas" or reason:"clipped" is a real bug — fix with update_deck before declaring the deck done. Pay special attention to slides where headlines + body + footer compete for vertical space.
 - Round trip on an existing deck: get_deck (read state + open comments) → get_slide_screenshot (see how a slide actually renders) → update_deck (make changes) → reply_to_comment (explain what you changed).
 - Check the "warnings" array in every create/update response.
 
@@ -43,10 +44,16 @@ THE CANVAS LAYOUT
 - Each slide mounts in an open shadow root, so your CSS is auto-scoped — no BEM, no class prefixes.
 - "js" runs on slide enter with (root, slide) in scope. Return a cleanup function for slide exit. Set static_render_only: true to skip JS in print/PDF and screenshots.
 
+LAYOUT SAFETY (the box-sizing + footer-reserve trap)
+- Open every deck.stylesheet with a universal box-sizing reset: \`*, *::before, *::after { box-sizing: border-box }\`. Without it, an element with \`height:100%; padding:Xpx\` becomes 100% + 2X in computed height and overflows its parent. This is the #1 cause of "content overlaps the footer" bugs.
+- If a slide has a bottom-fixed footer/page-number row (e.g. \`position:absolute; bottom:48px\`), the in-flow content's bottom padding must clear it. A safe pattern is \`.slide { padding: 112px 128px 160px }\` so content never reaches the footer band. Same for any full-bleed slide's \`.hero-content\` analogue — its padding-bottom must reserve ~160px.
+- After authoring the stylesheet, build the most VERTICALLY DENSE slide first (one with big headline + body + chart/diagram + footer) and screenshot it. If a headline + body + chart overflows, you'll see it here before propagating the same mistake to every slide.
+
 DECK-LEVEL THEMING (define once, reference everywhere)
 - stylesheet: global CSS string (up to 100KB) adopted by every canvas slide. Define your design system here. Worked example for a real 1920×1080 design system:
 
-    .slide      { box-sizing: border-box; padding: 112px 144px; font-family: 'Inter', system-ui, sans-serif; color: #0f172a; background: #fafaf9; }
+    *, *::before, *::after { box-sizing: border-box; }
+    .slide      { width: 1920px; height: 1080px; padding: 112px 144px 160px; font-family: 'Inter', system-ui, sans-serif; color: #0f172a; background: #fafaf9; position: relative; overflow: hidden; }
     .h1         { font-family: 'Fraunces', serif; font-size: 128px; line-height: 0.98; letter-spacing: -0.03em; margin: 0; }
     .h2         { font-family: 'Fraunces', serif; font-size: 64px; line-height: 1.05; margin: 0; }
     .lead       { font-size: 32px; line-height: 1.45; color: #475569; max-width: 1500px; }
