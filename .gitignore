@@ -5,3 +5,11 @@ data/images/*
 !data/images/.gitkeep
 *.pdf
 .DS_Store
+
+# Local Claude Code state (skills/ stays tracked)
+.claude/settings.json
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Local API working dir (uploaded images, screenshot cache)
+packages/api/data/
