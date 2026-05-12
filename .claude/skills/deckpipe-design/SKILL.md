@@ -1,11 +1,11 @@
 ---
 name: deckpipe-design
-description: Author visually strong slide decks via the Deckpipe MCP. Use when the user asks to make a deck, build slides, create a presentation, or mentions Deckpipe. Covers the brief-clarification questions to ask upfront, density rules, reference-style cheatsheet, the calibrate-one-slide-first iteration loop, and how to read the render report. Pair with the deckpipe MCP server.
+description: Author visually strong slide decks via the deckpipe MCP. Use when the user asks to make a deck, build slides, create a presentation, or mentions deckpipe. Covers the brief-clarification questions to ask upfront, density rules, reference-style cheatsheet, the calibrate-one-slide-first iteration loop, and how to read the render report. Pair with the deckpipe MCP server.
 ---
 
-# Deckpipe design skill
+# deckpipe design skill
 
-You are authoring slides through the Deckpipe MCP. Each slide is HTML/CSS/JS that Deckpipe renders inside a 1920×1080 shadow root. The MCP tools you'll use most: `preview_slide`, `create_deck`, `update_deck`, `get_slide_screenshot`. This skill is about the *design judgment* layered on top of those tools.
+You are authoring slides through the deckpipe MCP. Each slide is HTML/CSS/JS that deckpipe renders inside a 1920×1080 shadow root. The MCP tools you'll use most: `preview_slide`, `create_deck`, `update_deck`, `get_slide_screenshot`. This skill is about the *design judgment* layered on top of those tools.
 
 ## Before you build — clarify the brief
 
@@ -119,7 +119,7 @@ Baseline stylesheet snippet that gets these right:
 - **Defining CSS per-slide instead of in the stylesheet.** Move shared styles into `deck.stylesheet` once, reference classes from each slide. Per-slide `css` is for one-off overrides.
 - **Not using `data-dp-anchor`.** Comment threads on anchored elements survive structural edits. Threads on auto-pathed elements shift when you reorder. Anchor anything you're likely to iterate on.
 - **JS that depends on exact text.** The viewer lets reviewers edit text inline. Your `js` should select by class or `data-*` attribute, never by `textContent === 'exact phrase'`.
-- **`static_render_only` for animations.** Set `static_render_only: true` for slides whose JS animates into a final state — Deckpipe skips the JS in screenshot and PDF/print modes so the captured frame shows the HTML's final-state values, not a mid-animation snapshot. If you want the animation to play in the live viewer but the screenshot to look correct, this is the right tool.
+- **`static_render_only` for animations.** Set `static_render_only: true` for slides whose JS animates into a final state — deckpipe skips the JS in screenshot and PDF/print modes so the captured frame shows the HTML's final-state values, not a mid-animation snapshot. If you want the animation to play in the live viewer but the screenshot to look correct, this is the right tool.
 - **Using CSS `background-image: url(...)` for large hero images.** Background images aren't pre-decoded by the viewer's ready signal, so the screenshot can fire before the image lands and the slide renders without it. Use `<img src="..." />` positioned with `position:absolute; inset:0; object-fit:cover` instead — browsers prioritize `<img>` loading and the screenshot pipeline waits for it.
 - **Loading fonts via `@import` inside `stylesheet`.** Shadow-root `adoptedStyleSheets` forbids `@import` (Lit logs a warning). Put `<link rel="stylesheet">` Google Fonts entries in `deck.head` instead, then reference the family in your stylesheet's `font-family`.
 - **Mocking what the screenshot will look like in your head.** You can't. Use `preview_slide`.

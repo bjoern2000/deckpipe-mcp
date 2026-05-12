@@ -84,7 +84,7 @@ async function main() {
     });
 
     httpServer.listen(port, () => {
-      console.error(`Deckpipe MCP server running on http://0.0.0.0:${port}/mcp`);
+      console.error(`deckpipe MCP server running on http://0.0.0.0:${port}/mcp`);
     });
   } else {
     // Stdio mode — for CLI (npx deckpipe-mcp).
@@ -92,7 +92,7 @@ async function main() {
     registerTools(server, { apiUrl: config.apiUrl });
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error('Deckpipe MCP server running on stdio');
+    console.error('deckpipe MCP server running on stdio');
   }
 }
 

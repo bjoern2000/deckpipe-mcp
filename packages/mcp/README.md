@@ -1,8 +1,8 @@
 # deckpipe-mcp
 
-MCP server for [Deckpipe](https://deckpipe.dev) — author slide decks as HTML/CSS/JS from any AI agent.
+MCP server for [deckpipe](https://deckpipe.dev) — author slide decks as HTML/CSS/JS from any AI agent.
 
-Each slide is a `canvas` slide: you write the HTML, optional scoped CSS, and optional JS. Deckpipe mounts it in a sandboxed 1920×1080 shadow root, themes it via deck-level CSS variables, and gives every deck a shareable viewer URL with built-in commenting.
+Each slide is a `canvas` slide: you write the HTML, optional scoped CSS, and optional JS. deckpipe mounts it in a sandboxed 1920×1080 shadow root, themes it via deck-level CSS variables, and gives every deck a shareable viewer URL with built-in commenting.
 
 - **Hosted:** [deckpipe.dev](https://deckpipe.dev)
 - **Remote MCP endpoint:** `https://deckpipe.dev/mcp` (Streamable HTTP)
@@ -73,7 +73,7 @@ Every slide is a canvas slide:
 
 ## Commenting and inline editing
 
-Reviewers can comment on **any DOM element** in a canvas slide — Deckpipe auto-assigns a `content_path` to every element at render time. To make a comment thread stable across edits, mark the target element with `data-dp-anchor="<stable-name>"` (e.g. `<h1 data-dp-anchor="hero-title">`). Preserve those IDs in your updates and the thread stays attached.
+Reviewers can comment on **any DOM element** in a canvas slide — deckpipe auto-assigns a `content_path` to every element at render time. To make a comment thread stable across edits, mark the target element with `data-dp-anchor="<stable-name>"` (e.g. `<h1 data-dp-anchor="hero-title">`). Preserve those IDs in your updates and the thread stays attached.
 
 The viewer's edit mode also makes text-bearing leaf elements (`h1`, `p`, `span`, etc.) `contenteditable`. On blur the full html is saved back via PATCH. Your `js` should be resilient to text changes — don't rely on exact text strings to find elements; use selectors or `data-*` attributes.
 
@@ -130,7 +130,7 @@ By default the MCP server connects to `https://deckpipe.dev`. To use a self-host
 
 ## Legacy templated layouts
 
-Deckpipe 0.2 had 25 templated layouts (`title`, `title_and_bullets`, `stats`, `swot`, etc.). They are deprecated and no longer advertised. Existing decks using them still render unchanged and the REST API still accepts them; new slides should always use `canvas`. See [CLAUDE.md → "Resurrecting deprecated layouts"](https://github.com/bjoern2000/deckpipe/blob/master/CLAUDE.md) if you need to re-enable them.
+deckpipe 0.2 had 25 templated layouts (`title`, `title_and_bullets`, `stats`, `swot`, etc.). They are deprecated and no longer advertised. Existing decks using them still render unchanged and the REST API still accepts them; new slides should always use `canvas`. See [CLAUDE.md → "Resurrecting deprecated layouts"](https://github.com/bjoern2000/deckpipe/blob/master/CLAUDE.md) if you need to re-enable them.
 
 ## Support
 

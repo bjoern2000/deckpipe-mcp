@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Deckpipe is an agent-first slide deck rendering engine. Agents author each slide as HTML/CSS/JS (the `canvas` layout); Deckpipe renders it inside a sandboxed shadow root, themes it via deck-level CSS variables, and gives every deck a shareable viewer URL with built-in commenting. Three packages in a Node.js/TypeScript monorepo.
+deckpipe is an agent-first slide deck rendering engine. Agents author each slide as HTML/CSS/JS (the `canvas` layout); deckpipe renders it inside a sandboxed shadow root, themes it via deck-level CSS variables, and gives every deck a shareable viewer URL with built-in commenting. Three packages in a Node.js/TypeScript monorepo.
 
-As of Deckpipe 0.3, `canvas` is the only agent-facing layout. The 25 templated layouts from 0.2 still exist in the codebase and the REST API still accepts them — see "Resurrecting deprecated layouts" below for the resurrection path.
+As of deckpipe 0.3, `canvas` is the only agent-facing layout. The 25 templated layouts from 0.2 still exist in the codebase and the REST API still accepts them — see "Resurrecting deprecated layouts" below for the resurrection path.
 
 ## Commands
 
@@ -107,9 +107,9 @@ To smoke-test the published artifact without actually publishing: `npm pack /pat
 
 ## Licensing
 
-Code is licensed under **FSL-1.1-Apache-2.0** (Functional Source License, Apache 2.0 Future License): free for self-hosting, internal use, education, research; commercial use to offer Deckpipe as a competing hosted service is prohibited until the change date (2030-05-11), after which the entire repo auto-converts to Apache 2.0. Full text in `LICENSE` at the repo root.
+Code is licensed under **FSL-1.1-Apache-2.0** (Functional Source License, Apache 2.0 Future License): free for self-hosting, internal use, education, research; commercial use to offer deckpipe as a competing hosted service is prohibited until the change date (2030-05-11), after which the entire repo auto-converts to Apache 2.0. Full text in `LICENSE` at the repo root.
 
-The "Deckpipe" name is trademark-reserved separately — forks must rename.
+The "deckpipe" name is trademark-reserved separately — forks must rename.
 
 ## Environment
 

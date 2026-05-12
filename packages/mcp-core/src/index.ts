@@ -1,7 +1,7 @@
 /**
  * @deckpipe/mcp-core
  *
- * Single source of truth for the Deckpipe MCP tool definitions. Both the
+ * Single source of truth for the deckpipe MCP tool definitions. Both the
  * remote MCP server (packages/api/src/routes/mcp.ts, mounted at /mcp) and
  * the standalone npm package (packages/mcp, published as `deckpipe-mcp`)
  * call `registerTools(server, { apiUrl })` from here.
@@ -21,7 +21,7 @@ export const DEPRECATED_LAYOUTS = [
   'agenda', 'swot', 'quadrant', 'venn_diagram', 'chart', 'closing',
 ] as const;
 
-export const INSTRUCTIONS = `Deckpipe is a slide deck rendering engine. You author each slide as HTML/CSS/JS — Deckpipe renders it inside a sandboxed 1920×1080 shadow root and gives every deck a shareable viewer URL with built-in commenting.
+export const INSTRUCTIONS = `deckpipe is a slide deck rendering engine. You author each slide as HTML/CSS/JS — deckpipe renders it inside a sandboxed 1920×1080 shadow root and gives every deck a shareable viewer URL with built-in commenting.
 
 WORKFLOW
 - Use create_deck for NEW decks. Use update_deck to modify EXISTING decks.
@@ -65,7 +65,7 @@ DECK-LEVEL THEMING (define once, reference everywhere)
 - head: array of { tag, attrs?, body? } entries injected into the page head. Load Google Fonts here as <link> entries, then set font-family in deck.stylesheet on .h1/.h2/.body classes (or whatever your design system calls them).
 
 COMMENTING
-- Reviewers can comment on ANY DOM element in a canvas slide — Deckpipe auto-assigns a content_path to every element at render time.
+- Reviewers can comment on ANY DOM element in a canvas slide — deckpipe auto-assigns a content_path to every element at render time.
 - For comment threads that survive edits, mark target elements with data-dp-anchor="<stable-name>" (e.g. data-dp-anchor="hero-title"). Preserve those IDs in updates so threads stay attached.
 - Unmarked elements get auto:<index> paths — stable within a render but may shift if you restructure. Use anchors for anything you'll iterate on.
 
@@ -84,7 +84,7 @@ LEGACY LAYOUTS
 - 25 templated layouts (title, title_and_bullets, stats, chart, swot, …) are deprecated and not advertised. Existing decks using them still render. New slides should always use the "canvas" layout.`;
 
 export interface RegisterToolsOptions {
-  /** Base URL of the Deckpipe REST API (no trailing slash). */
+  /** Base URL of the deckpipe REST API (no trailing slash). */
   apiUrl: string;
 }
 
@@ -327,7 +327,7 @@ For image_gallery: pass an array of IDs as image_refs instead of images.`,
         images: 'Use search_images for Unsplash photos or upload_image for your own; in canvas slides, place the returned URL directly in <img src>. Include a credit caption near the image.',
       };
       const deprecated_layouts = {
-        note: 'These 25 templated layouts existed in Deckpipe 0.2 and earlier. They are deprecated for new content and intentionally hidden from this listing. Existing decks using them still render unchanged, and the REST API still accepts them. To re-enable them in the MCP surface, see CLAUDE.md → "Resurrecting deprecated layouts".',
+        note: 'These 25 templated layouts existed in deckpipe 0.2 and earlier. They are deprecated for new content and intentionally hidden from this listing. Existing decks using them still render unchanged, and the REST API still accepts them. To re-enable them in the MCP surface, see CLAUDE.md → "Resurrecting deprecated layouts".',
         names: DEPRECATED_LAYOUTS,
       };
       return { content: [{ type: 'text' as const, text: JSON.stringify({ layouts, customization, style_guide, deprecated_layouts }, null, 2) }] };

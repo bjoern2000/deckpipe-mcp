@@ -1,12 +1,12 @@
 # MCP Agent Instructions
 
-All agent-facing text for Deckpipe MCP tools. This is a review document — the source of truth lives at `packages/mcp-core/src/index.ts`, imported by both the remote MCP transport (`packages/api/src/routes/mcp.ts`) and the standalone npm package (`packages/mcp`, published as `deckpipe-mcp`).
+All agent-facing text for deckpipe MCP tools. This is a review document — the source of truth lives at `packages/mcp-core/src/index.ts`, imported by both the remote MCP transport (`packages/api/src/routes/mcp.ts`) and the standalone npm package (`packages/mcp`, published as `deckpipe-mcp`).
 
 ---
 
 ## Server Instructions (sent automatically on connect)
 
-Deckpipe is a slide deck rendering engine. You author each slide as HTML/CSS/JS — Deckpipe renders it inside a sandboxed 1920×1080 shadow root, themes it via deck-level CSS variables, and gives every deck a shareable viewer URL with built-in commenting.
+deckpipe is a slide deck rendering engine. You author each slide as HTML/CSS/JS — deckpipe renders it inside a sandboxed 1920×1080 shadow root, themes it via deck-level CSS variables, and gives every deck a shareable viewer URL with built-in commenting.
 
 WORKFLOW
 - Use create_deck for NEW decks. Use update_deck to modify EXISTING decks.
@@ -39,7 +39,7 @@ DECK-LEVEL THEMING
 - head: array of { tag, attrs?, body? } entries injected into the page head. Load Google Fonts here as <link> entries, then set font-family in deck.stylesheet on your typography classes.
 
 COMMENTING
-- Reviewers can leave comments on ANY DOM element in a canvas slide — Deckpipe auto-assigns a content_path to every element at render time.
+- Reviewers can leave comments on ANY DOM element in a canvas slide — deckpipe auto-assigns a content_path to every element at render time.
 - To make a comment thread STABLE across edits, mark the target element with data-dp-anchor="<stable-name>" (e.g. data-dp-anchor="hero-title"). Preserve those IDs across updates.
 - Comments on unmarked elements use auto:<index> paths that are stable within a render but may shift if you restructure the HTML.
 

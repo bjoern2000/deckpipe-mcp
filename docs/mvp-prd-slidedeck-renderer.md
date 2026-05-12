@@ -1,4 +1,4 @@
-# Deckpipe — MVP PRD
+# deckpipe — MVP PRD
 
 **Agent-first slide rendering engine**
 Draft v0.6 · March 2026
@@ -11,7 +11,7 @@ AI agents can reason about content and narrative but have no good way to render 
 
 ## Product Thesis
 
-Decouple **slide rendering** from **slide creation**. Deckpipe is a rendering engine with an agent-friendly API. Agents describe *what* goes on slides using a simple JSON schema; Deckpipe handles *how* it looks. Users can view, lightly edit, and export the result.
+Decouple **slide rendering** from **slide creation**. deckpipe is a rendering engine with an agent-friendly API. Agents describe *what* goes on slides using a simple JSON schema; deckpipe handles *how* it looks. Users can view, lightly edit, and export the result.
 
 ---
 
@@ -216,7 +216,7 @@ Seven layouts cover the vast majority of real-world slide needs. All layouts exc
 | `section_break` | `title` | No image support |
 | `image_and_text` | `title`, `body`, `image_url` (required) | Primary — image takes ~60% of slide |
 
-Image sizing and placement is handled by the renderer. Agents never specify dimensions or positions — they just pass a URL (either an external URL or a Deckpipe-hosted URL from `POST /v1/images`). When agents pass external URLs, images are fetched and re-hosted to Railway storage on deck creation to prevent broken links. Users can also drag-and-drop images directly onto slides in the viewer (see section 4), and MCP-connected agents can upload local files like screenshots from the user's desktop (see MCP Server section).
+Image sizing and placement is handled by the renderer. Agents never specify dimensions or positions — they just pass a URL (either an external URL or a deckpipe-hosted URL from `POST /v1/images`). When agents pass external URLs, images are fetched and re-hosted to Railway storage on deck creation to prevent broken links. Users can also drag-and-drop images directly onto slides in the viewer (see section 4), and MCP-connected agents can upload local files like screenshots from the user's desktop (see MCP Server section).
 
 #### Tables
 
@@ -382,7 +382,7 @@ User ──GET viewer──▶ Lit Web App ◀──fetch deck JSON────�
 | **Database** | PostgreSQL | JSONB for deck storage, relational for metadata (timestamps, IP, rate limit counters). Hosted on Railway. |
 | **Image storage** | Railway Volume | Persistent volume mounted at `/data/images/` on the API service. Images served directly by Express via a static file route (`GET /v1/images/:id`). Simple, no external dependencies. Migrate to S3/R2 if storage or CDN needs outgrow Railway. |
 | **Frontend** | Lit (web components) | Each slide layout is a self-contained `<slide-*>` component. Themes via CSS custom properties. Tiny bundle (~5kb runtime). No build-step complexity. |
-| **MCP server** | `@modelcontextprotocol/sdk` | Thin wrapper over the REST API. Exposes Deckpipe tools to any MCP-compatible agent. |
+| **MCP server** | `@modelcontextprotocol/sdk` | Thin wrapper over the REST API. Exposes deckpipe tools to any MCP-compatible agent. |
 | **Hosting** | Railway | API, MCP server, and static frontend all deploy from one monorepo. Postgres as a Railway service. |
 | **PDF export** | Puppeteer (server-side) | Renders the Lit viewer in headless Chrome and prints to PDF. Matches what the user sees exactly. |
 
@@ -424,7 +424,7 @@ deckpipe/
 
 ### MCP Server
 
-The MCP server is the primary agent integration point. It runs as a separate service on Railway and exposes Deckpipe's capabilities as MCP tools. Agents connecting via MCP never need to know about the REST API — the MCP server handles all translation.
+The MCP server is the primary agent integration point. It runs as a separate service on Railway and exposes deckpipe's capabilities as MCP tools. Agents connecting via MCP never need to know about the REST API — the MCP server handles all translation.
 
 **Tools exposed:**
 
@@ -498,11 +498,11 @@ The agent can then call `update_deck` to set the `image_url` on the target slide
 }
 ```
 
-This tool lets agents dynamically discover Deckpipe's capabilities at runtime — no hardcoded layout knowledge required. When we add new layouts or themes, existing agent integrations pick them up automatically.
+This tool lets agents dynamically discover deckpipe's capabilities at runtime — no hardcoded layout knowledge required. When we add new layouts or themes, existing agent integrations pick them up automatically.
 
 **MCP endpoint:** `mcp.deckpipe.dev/sse`
 
-**Tool descriptions matter:** Each tool's `description` field is written to be a self-contained prompt for an LLM — it includes purpose, all parameters, constraints (max bullets, required fields), and a minimal example. An agent should be able to use Deckpipe correctly having read nothing but the tool descriptions.
+**Tool descriptions matter:** Each tool's `description` field is written to be a self-contained prompt for an LLM — it includes purpose, all parameters, constraints (max bullets, required fields), and a minimal example. An agent should be able to use deckpipe correctly having read nothing but the tool descriptions.
 
 ### OpenAPI Spec
 
@@ -585,7 +585,7 @@ Authenticated requests get higher rate limits than the MVP per-IP defaults. Free
 
 ### Phase 2: OAuth 2.0 (backlog)
 
-As more MCP hosts add native OAuth support (Claude Desktop, Copilot Studio, and Cursor are all moving in this direction), Deckpipe will support OAuth 2.0 as a second auth method alongside API keys.
+As more MCP hosts add native OAuth support (Claude Desktop, Copilot Studio, and Cursor are all moving in this direction), deckpipe will support OAuth 2.0 as a second auth method alongside API keys.
 
 **How it would work:**
 - Agent host connects to `mcp.deckpipe.dev/sse` and detects auth is required

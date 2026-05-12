@@ -13,7 +13,7 @@ async function main() {
   // Start server
   const app = createApp();
   app.listen(config.port, () => {
-    console.log(`Deckpipe API running on http://localhost:${config.port}`);
+    console.log(`deckpipe API running on http://localhost:${config.port}`);
   });
 }
 
