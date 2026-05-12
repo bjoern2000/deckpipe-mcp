@@ -11,9 +11,16 @@
   <meta property="og:description" content="agent-first slide canvas. connect the MCP, prompt your agent, get a deck." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://deckpipe.dev" />
-  <meta name="twitter:card" content="summary" />
+  <meta property="og:image" content="https://deckpipe.dev/og-image.jpg" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="2540" />
+  <meta property="og:image:height" content="1520" />
+  <meta property="og:image:alt" content="deckpipe — slide renderer for any agent via MCP" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="deckpipe — slide renderer for agents" />
   <meta name="twitter:description" content="agent-first slide canvas. connect the MCP, prompt your agent, get a deck." />
+  <meta name="twitter:image" content="https://deckpipe.dev/og-image.jpg" />
+  <meta name="twitter:image:alt" content="deckpipe — slide renderer for any agent via MCP" />
   <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
@@ -1088,15 +1095,41 @@
       </p>
     </section>
 
-    <!-- ═══ SKILL (Claude Code) ═══ -->
+    <!-- ═══ SKILL (open agent skills) ═══ -->
     <section id="skill">
-      <div class="section-label"><span class="num">03</span> skill <span style="color: var(--fg-faint); margin-left: 8px; letter-spacing: 0.12em;">/ claude code</span></div>
+      <div class="section-label"><span class="num">03</span> skill <span style="color: var(--fg-faint); margin-left: 8px; letter-spacing: 0.12em;">/ any agent</span></div>
       <h2 class="section-title"><span class="hl">a design skill for your agent.</span></h2>
       <p class="section-lede">
-        a markdown file your Claude Code agent loads automatically. covers the brief-clarification questions, density rules, reference-style cheatsheet, layout-safety pattern, and the post-create overflow sweep — the design judgment we'd otherwise teach your agent through trial and error.
+        a markdown file your agent loads automatically. covers the brief-clarification questions, density rules, reference-style cheatsheet, layout-safety pattern, and the post-create overflow sweep — the design judgment we'd otherwise teach your agent through trial and error.
       </p>
 
       <div class="install-steps">
+        <div class="install-card">
+          <div class="install-head">
+            <div class="title"><span class="dim">01 //</span>install (recommended)</div>
+            <span class="badge">multi-agent</span>
+          </div>
+          <div class="install-body">
+            <pre><code><span class="prompt-sym">$ </span>npx skills add bjoern2000/deckpipe</code></pre>
+            <button class="copy-btn" onclick="copyCode(this, 'npx skills add bjoern2000/deckpipe')" title="Copy">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="install-card">
+          <div class="install-head">
+            <div class="title"><span class="dim">02 //</span>manual (claude code)</div>
+          </div>
+          <div class="install-body">
+            <pre><code><span class="prompt-sym">$ </span>mkdir -p ~/.claude/skills/deckpipe-design
+<span class="prompt-sym">$ </span>curl -o ~/.claude/skills/deckpipe-design/SKILL.md https://deckpipe.dev/skill.md</code></pre>
+            <button class="copy-btn" onclick="copyCode(this, 'mkdir -p ~/.claude/skills/deckpipe-design &amp;&amp; curl -o ~/.claude/skills/deckpipe-design/SKILL.md https://deckpipe.dev/skill.md')" title="Copy">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            </button>
+          </div>
+        </div>
+
         <div class="install-card">
           <div class="install-head">
             <div class="title"><span class="dim">read it //</span>SKILL.md</div>
@@ -1109,23 +1142,10 @@
             </button>
           </div>
         </div>
-
-        <div class="install-card">
-          <div class="install-head">
-            <div class="title"><span class="dim">install //</span>drop into your project</div>
-          </div>
-          <div class="install-body">
-            <pre><code><span class="prompt-sym">$ </span>mkdir -p .claude/skills/deckpipe-design
-<span class="prompt-sym">$ </span>curl -o .claude/skills/deckpipe-design/SKILL.md https://deckpipe.dev/skill.md</code></pre>
-            <button class="copy-btn" onclick="copyCode(this, 'mkdir -p .claude/skills/deckpipe-design &amp;&amp; curl -o .claude/skills/deckpipe-design/SKILL.md https://deckpipe.dev/skill.md')" title="Copy">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-            </button>
-          </div>
-        </div>
       </div>
 
       <p class="see-all" style="margin-top: 32px;">
-        Cursor, Windsurf, or other MCP clients? you can paste the skill content into a system prompt or rules file directly — it's just markdown.
+        <code>npx skills add</code> works with Claude Code, Codex, Cursor, Windsurf, Cline, Roo, and most open-skills-aware agents — it auto-discovers the skill inside the repo and drops it at the right local path. Re-run the command to update.
       </p>
     </section>
 

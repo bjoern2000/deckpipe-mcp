@@ -1,0 +1,43 @@
+# deckpipe
+
+> Agent-first slide deck rendering engine. Agents author each slide as HTML/CSS/JS on a sandboxed 1920×1080 canvas; deckpipe themes, hosts, and renders every deck at a shareable URL with built-in commenting.
+
+deckpipe is open source (FSL-1.1-Apache-2.0) and works with any MCP-aware AI agent — Claude desktop and web (as a connector), Claude Code, Cursor, Windsurf, or custom agents. The remote MCP server lives at `https://deckpipe.dev/mcp`; a local stdio package is published as `deckpipe-mcp` on npm. Every deck is authored as a sequence of `canvas` slides, each one a freeform HTML document with optional CSS and JS, rendered inside a shadow root at 1920×1080.
+
+## Connect
+
+- [Remote MCP server](https://deckpipe.dev/mcp): HTTPS endpoint. Add as a custom connector in Claude desktop/web (Settings → Connectors), or point any remote-MCP-aware client at this URL.
+- [Local MCP package](https://www.npmjs.com/package/deckpipe-mcp): `npx deckpipe-mcp` — stdio transport for Claude Code and other local agents. Configured via `DECKPIPE_API_URL` (defaults to `https://deckpipe.dev`).
+- [GitHub repository](https://github.com/bjoern2000/deckpipe): source code, issues, license.
+
+## Docs
+
+- [SKILL.md](https://deckpipe.dev/skill.md): A markdown skill file for Claude Code or any agent. Covers brief-clarification questions, density rules, reference-style cheatsheet, layout-safety patterns, and the post-create overflow sweep — the design judgment to author good slides.
+- [README](https://github.com/bjoern2000/deckpipe/blob/master/README.md): Project overview, install, full MCP tool list, REST API.
+- [CLAUDE.md](https://github.com/bjoern2000/deckpipe/blob/master/CLAUDE.md): Architecture notes for agents working in the deckpipe codebase itself.
+
+## MCP tools
+
+- `create_deck` — Create a new deck from an array of canvas slides. Returns a viewer URL with an edit key plus a read-only share URL.
+- `update_deck` — Modify an existing deck in place. Supports structural operations (insert / delete / move / replace) and partial content edits by slide index. Never recreate a deck to make changes — edits preserve URL and comment history.
+- `get_deck` — Read deck state plus open comments.
+- `preview_slide` — Render a single slide transiently (no persistence) and return a PNG plus a render report (JS errors, console errors, overflows, font load status). Use this to iterate on a slide before committing.
+- `get_slide_screenshot` — Render a specific slide of an existing deck. Cached on deck.updated_at.
+- `list_layouts` — List supported slide layouts. As of 0.3, only `canvas` is advertised for new content.
+- `list_comments` / `reply_to_comment` / `resolve_comment` — Review-flow tools for collaborating on a deck.
+- `search_images` / `upload_image` — Image helpers. Search returns full-resolution URLs and tracks downloads; upload re-hosts external assets on the deckpipe CDN.
+
+## REST API
+
+- Base: `https://deckpipe.dev/v1`
+- `POST /v1/decks` — Create a deck.
+- `GET /v1/decks/:id` — Read a deck.
+- `PATCH /v1/decks/:id` — Update (partial merge of slide content, plus structural `slide_operations`).
+- `POST /v1/images` — Upload an image.
+- `GET /v1/decks/:id/slides/:n/screenshot?format=jpeg` — Server-rendered slide screenshot, cached per `updated_at`.
+
+## What deckpipe is not
+
+- Not a slide template library. The agent writes the markup; deckpipe renders and hosts it. There are no fixed layouts to pick from for new content.
+- Not a chat interface. Connect an existing agent via MCP — deckpipe is the canvas, not the brain.
+- Not Google Slides / Keynote. There's no drag-and-drop editor. Inline text edits are supported in the viewer; structure changes go through the agent.
