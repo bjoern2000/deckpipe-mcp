@@ -324,13 +324,20 @@ export class ViewerApp extends LitElement {
     super.updated(changedProperties);
 
     if (this.printMode || this.screenshotMode || this.isMobile || this.resizeObserver) return;
-    const mainArea = this.shadowRoot?.querySelector('.main-area');
-    if (mainArea) {
+    const sizingHost = this.shadowRoot?.querySelector('.presenter-layout, .main-area');
+    if (sizingHost) {
       this.resizeObserver = new ResizeObserver((entries) => {
         const { width, height } = entries[0].contentRect;
-        const pad = 48;
-        const availW = width - 48;
-        const availH = height - pad - 48;
+        let availW: number;
+        let availH: number;
+        if (this.presenterMode) {
+          availW = width;
+          availH = height;
+        } else {
+          const pad = 48;
+          availW = width - 48;
+          availH = height - pad - 48;
+        }
         const byWidth = { w: availW, h: availW * 9 / 16 };
         const byHeight = { w: availH * 16 / 9, h: availH };
         if (byWidth.h <= availH) {
@@ -342,7 +349,7 @@ export class ViewerApp extends LitElement {
         }
         console.log(`[deckpipe] resize: ${this.slideWidth.toFixed(0)}x${this.slideHeight.toFixed(0)}, scale=${(this.slideWidth/SLIDE_WIDTH).toFixed(2)}`);
       });
-      this.resizeObserver.observe(mainArea);
+      this.resizeObserver.observe(sizingHost);
     }
   }
 
@@ -984,7 +991,7 @@ export class ViewerApp extends LitElement {
     const scaleFactor = this.slideWidth / SLIDE_WIDTH;
 
     return html`
-      <div class="presenter-layout main-area">
+      <div class="presenter-layout">
         <div class="slide-wrapper" style="width:${this.slideWidth}px;height:${this.slideHeight}px">
           <div class="slide-container" style="transform:scale(${scaleFactor});${customVars}">
             <slide-renderer .slide=${slide} .editable=${false} .deckStylesheet=${this.deck?.stylesheet ?? ''}></slide-renderer>
